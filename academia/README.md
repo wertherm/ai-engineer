@@ -1,0 +1,71 @@
+# Academia de Engenharia de IA
+
+Um curso vivo de **Engenharia de IA Aplicada**, construído em cima do acervo deste repositório: 16 etapas
+progressivas, lições com quiz e laboratório verificável, um projeto único que evolui a cada etapa e
+acompanhamento individual com XP, níveis, conquistas e checkpoints. Os [módulos](../modulos/) continuam sendo o
+material de estudo; a Academia dá a **ordem, a prática avaliada e o registro do progresso**.
+
+Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar não custa nada.
+
+## Comece aqui
+
+1. Escolha o seu `<aluno>` (a pasta em [`alunos/`](alunos/)). Novo aluno: `node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"`.
+2. Faça a [Missão 0 · Diagnóstico](licoes/00-missao-0-diagnostico/README.md): perfil, ambiente e diagnóstico.
+3. Siga para a [Lição 1 · Tokens, contexto, inferência e limites](licoes/01-tokens-contexto-inferencia/README.md).
+4. Ao fim de cada sessão, registre-a ([SINCRONIZACAO.md](SINCRONIZACAO.md)). Para retomar depois de qualquer pausa,
+   abra `alunos/<aluno>/retomada.md`.
+
+## O que tem aqui
+
+| Arquivo ou pasta | Para quê |
+|---|---|
+| [ROADMAP.md](ROADMAP.md) | as 16 etapas, dependências, material existente do repositório e lacunas |
+| [licoes/](licoes/) | Missão 0 e lições (14 seções cada) com quiz, desafio, critérios, rubrica e dicas |
+| [projeto/](projeto/) | o projeto evolutivo (Assistente Técnico) e o marco de cada etapa |
+| [GAMIFICACAO.md](GAMIFICACAO.md) | XP, níveis, checkpoints, conquistas, revisão espaçada, retomada, ranking opcional |
+| [competencias.md](competencias.md) | as 24 competências e os níveis de domínio |
+| [SINCRONIZACAO.md](SINCRONIZACAO.md) | como iniciar, encerrar e retomar sessões, em qualquer assistente de IA |
+| [PROGRESS.md](PROGRESS.md) | visão geral dos alunos (gerada) |
+| [alunos/](alunos/) | uma pasta independente por aluno: perfil, sessões, entregas e `retomada.md` |
+| [templates/](templates/) | lição, relatório de sessão, relatório de laboratório, perfil |
+| [ferramentas/](ferramentas/) | `academia.mjs`: valida, gera o progresso e cria sessões (Node, sem dependências) |
+| [CHANGELOG.md](CHANGELOG.md) | mudanças no currículo e no sistema |
+| [`../AI_CONTEXT.md`](../AI_CONTEXT.md) | regras para o assistente de IA |
+
+## Como os princípios pedagógicos viram mecanismos
+
+| Princípio | Onde está |
+|---|---|
+| Microlições com objetivos explícitos | seções 2 e 4 de cada [lição](templates/licao.md) |
+| Quizzes curtos com correção comentada, sem spoiler | seção 7 + `gabarito.md` separado, aberto só depois de responder |
+| Recuperação ativa e revisão espaçada | revisões sugeridas no `retomada.md` ([intervalos em sessões](GAMIFICACAO.md#revisão-espaçada)) |
+| Laboratórios com critérios objetivos | seção 9 + `verificar.mjs` quando possível |
+| Projeto incremental que reaproveita o código | [projeto/](projeto/) |
+| Feedback individual e checkpoints de domínio | relatório de sessão + [checkpoints](GAMIFICACAO.md#checkpoints-de-domínio) |
+| Gamificação sem confundir XP com domínio | XP por atividade comprovada; nível exige XP **e** checkpoints; competências à parte |
+| Ritmo flexível | XP nunca diminui; sem prazos nem streaks; contagem de revisão em sessões, não em dias |
+| Materiais externos selecionados | seção 5 das lições: cada link com justificativa e data de verificação |
+| Fundamentos × ferramentas | quadro "durável × específico de fornecedor" na microlição e na seção 14 |
+
+## Comandos
+
+```bash
+node academia/ferramentas/academia.mjs validar            # conteúdo, links, segredos e registros dos alunos
+node academia/ferramentas/academia.mjs progresso          # recria retomada.md de cada aluno e PROGRESS.md
+node academia/ferramentas/academia.mjs sessao <aluno>     # cria o arquivo da próxima sessão
+node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"
+node --test "academia/**/*.test.mjs"                      # testes da ferramenta e das lições
+```
+
+Precisa de **Node 22 ou superior** (o repositório usa o Node 24). Não há dependências para instalar. Os laboratórios
+usam um endpoint de LLM compatível com a API de chat: o Ollama do repositório (`bash infra/subir-ia.sh`) ou um
+provedor, só com variáveis de ambiente (`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`; veja
+[`infra/.env.example`](../infra/.env.example)).
+
+## Como adicionar uma lição
+
+1. Copie [templates/licao.md](templates/licao.md) para `licoes/NN-slug/README.md` e escreva as 14 seções; crie o
+   `gabarito.md` ao lado. O plano da etapa já está no [ROADMAP](ROADMAP.md).
+2. Se o laboratório tem verificação automática, inclua `verificar.mjs` e um teste (veja a Lição 1).
+3. Marque a etapa como `pronta` no ROADMAP e registre no [CHANGELOG](CHANGELOG.md).
+4. `node academia/ferramentas/academia.mjs validar`.

@@ -10,6 +10,8 @@ vLLM/OpenShift e **MLOps** com MLflow/Kubeflow). Tudo roda numa máquina Linux *
 ```
 ai-engineer/
 ├── README.md            ← você está aqui
+├── AI_CONTEXT.md        regras para o assistente de IA que ensina com a Academia
+├── academia/            trilha guiada de 16 etapas, projeto evolutivo e acompanhamento dos alunos
 ├── ementa/              PDF da ementa + mapa.md (cada módulo e cada tecnologia → onde está no repo)
 ├── modulos/             um módulo da pós por pasta: README (mapa da ementa) · docs/ · exemplos/ · exercicios/
 ├── trilhas-extras/      llmops-vllm-openshift/ · mlops/
@@ -21,6 +23,14 @@ ai-engineer/
 [referência](referencia/): [cheatsheet](referencia/cheatsheet.md), [glossário](referencia/glossario.md),
 [armadilhas reais](referencia/armadilhas-comuns.md), [boas práticas](referencia/boas-praticas.md),
 [referências oficiais](referencia/referencias.md) e [o que dá para fazer](referencia/o-que-da-para-fazer.md).
+
+## Academia: trilha guiada com acompanhamento
+
+A [Academia de Engenharia de IA](academia/README.md) organiza os módulos abaixo em **16 etapas progressivas**, com
+lições que ensinam e avaliam (quiz com correção comentada, laboratório com critérios objetivos, rubrica), um projeto
+único que evolui a cada etapa e acompanhamento individual com XP, níveis, conquistas e checkpoints, em arquivos
+versionados que qualquer assistente de IA consegue retomar. Os módulos continuam sendo o material de estudo.
+Comece pela [Missão 0](academia/licoes/00-missao-0-diagnostico/README.md) e veja o [roadmap](academia/ROADMAP.md).
 
 ## Trilha
 
