@@ -1,0 +1,23 @@
+Objetivo: Partindo de uma lista vazia, adicione pela interface a tarefa "Pagar boleto", confirme pelo MCP que ela existe, marque-a como concluída pela interface e confirme pelo MCP que ficou concluída.
+Tools MCP descobertas: listar_tarefas, adicionar_tarefa, concluir_tarefa, resetar_estado, mostrar_painel
+
+Plano do LLM, tentativa 1 (410s):
+  1. mcp "resetar_estado" "{}"
+  2. preencher "Nova tarefa" "Pagar boleto"
+  3. clicar "Adicionar" 
+  4. verificar "listar_tarefas" "Pagar boleto"
+  5. preencher "Nova tarefa" 
+  6. clicar "Adicionar" 
+  7. marcar "Pagar boleto" 
+  8. verificar "listar_tarefas" "Pagar boleto"
+  passo 1 (mcp resetar_estado): ok
+  passo 2 (preencher Nova tarefa): ok
+  passo 3 (clicar Adicionar): ok
+  passo 4 (verificar listar_tarefas): FALHOU -> esperava "Pagar boleto" em [{"id":1,"titulo":"Pagar boleto","concluida":false}]
+  passo 5 (preencher Nova tarefa): ok
+  passo 6 (clicar Adicionar): ok
+  passo 7 (marcar Pagar boleto): ok
+  passo 8 (verificar listar_tarefas): FALHOU -> esperava "Pagar boleto" em [{"id":1,"titulo":"Pagar boleto","concluida":true}]
+
+Estado final (via MCP): [{"id":1,"titulo":"Pagar boleto","concluida":true}]
+Resultado: 2 passo(s) falharam

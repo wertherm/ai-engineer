@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- ANTI-PADRÃO: NÃO sirva este arquivo. Ele existe só para ser lido.
+     Qualquer visitante abre o DevTools (aba Network ou Sources) e copia a chave. Com ela:
+     - gasta o seu crédito (a fatura é sua) e esgota sua cota/rate limit;
+     - troca o prompt de sistema e usa o seu modelo para o que quiser;
+     - acessa o que a chave permitir (arquivos, fine-tunes, outros projetos da conta).
+     O próprio SDK `openai` recusa rodar no browser sem `dangerouslyAllowBrowser: true`. -->
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Não faça isso</title></head>
+<body>
+<script type="module">
+  import OpenAI from 'https://cdn.jsdelivr.net/npm/openai@7.36.0/+esm';
+  const openai = new OpenAI({
+    apiKey: 'sk-CHAVE-DE-VERDADE-AQUI',   // vai junto no bundle, visível para todos
+    dangerouslyAllowBrowser: true,        // o nome da opção já avisa
+  });
+  const r = await openai.chat.completions.create({ model: 'modelo-caro', messages: [{ role: 'user', content: 'oi' }] });
+  document.body.textContent = r.choices[0].message.content;
+</script>
+</body></html>

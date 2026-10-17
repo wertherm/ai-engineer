@@ -1,0 +1,7 @@
+# O Prometheus "puxa" (scrape) o /metrics do vLLM a cada 5 s.
+global:
+  scrape_interval: 5s
+scrape_configs:
+  - job_name: vllm
+    static_configs:
+      - targets: ["vllm:8000"]   # nome do serviço no compose = DNS interno da rede do compose

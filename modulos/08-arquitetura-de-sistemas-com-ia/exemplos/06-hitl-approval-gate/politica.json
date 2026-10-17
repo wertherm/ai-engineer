@@ -1,0 +1,7 @@
+{
+  "versao": "2026-10-16",
+  "limiarConfianca": 0.85,
+  "valorMaxAutomatico": 5000,
+  "acoesSempreHumano": ["cancelar_operacao"],
+  "acoesProibidas": ["excluir_cliente"]
+}

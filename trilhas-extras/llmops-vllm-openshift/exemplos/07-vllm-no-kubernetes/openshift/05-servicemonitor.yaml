@@ -1,0 +1,14 @@
+# ServiceMonitor: pede ao Prometheus de "user workload monitoring" do OpenShift para coletar o /metrics do vLLM.
+# Pré-requisito (cluster-admin): enableUserWorkload: true no configmap cluster-monitoring-config.
+# Só enxerga Services do MESMO namespace em que for criado.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vllm
+spec:
+  selector:
+    matchLabels: {app: vllm}
+  endpoints:
+    - port: http             # NOME da porta do Service, não o número
+      path: /metrics
+      interval: 30s

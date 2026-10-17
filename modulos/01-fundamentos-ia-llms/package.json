@@ -1,0 +1,27 @@
+{
+  "name": "m01-fundamentos-ia-llms",
+  "private": true,
+  "type": "module",
+  "description": "Módulo 01 · Fundamentos de IA e LLMs para Programadores",
+  "scripts": {
+    "ex01": "node exemplos/01-tensores/main.js",
+    "ex02": "node exemplos/02-primeira-rede-neural/main.js",
+    "ex03:assets": "node exemplos/03-visao-no-browser/baixar-assets.js",
+    "ex03": "node exemplos/03-visao-no-browser/verificar.js",
+    "ex04": "node exemplos/04-prompt-engineering/main.js",
+    "ex05:indexar": "node exemplos/05-primeiro-rag/indexar.js",
+    "ex05": "node exemplos/05-primeiro-rag/perguntar.js",
+    "ex06": "node exemplos/06-openrouter-e-ollama/main.js",
+    "exercicio01": "node exercicios/01-rede-neural-espirais/solucao/main.js",
+    "exercicio02": "node exercicios/02-rag-chunking-top-k/solucao/main.js",
+    "test": "node --test \"exemplos/**/*.test.js\""
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.1.1",
+    "@tensorflow/tfjs": "4.22.0",
+    "openai": "7.34.0",
+    "pg": "8.23.1",
+    "pgvector": "0.3.0",
+    "playwright-core": "1.64.1"
+  }
+}

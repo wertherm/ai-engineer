@@ -1,0 +1,77 @@
+<header>
+  <h1>Políticas com Fonte</h1>
+  <p>Pergunte sobre as políticas internas da sua empresa. Toda resposta cita o documento de origem.</p>
+</header>
+
+<section class="cartao">
+  <label for="chave">API key da empresa</label>
+  <div class="linha">
+    <input id="chave" [ngModel]="chave()" (ngModelChange)="chave.set($event)" />
+    <button id="conectar" (click)="conectar()">Conectar</button>
+  </div>
+  @if (tenant(); as t) {
+    <p id="tenant">Conectado como <strong>{{ t.nome }}</strong> (plano {{ t.plano }})</p>
+  }
+</section>
+
+@if (tenant()) {
+  <section class="grade">
+    <div class="cartao">
+      <h2>Ferramentas MCP do serviço</h2>
+      <ul id="tools">
+        @for (tool of tools(); track tool.name) {
+          <li><code>{{ tool.name }}</code> <span>{{ tool.description }}</span></li>
+        }
+      </ul>
+      <h2>Documentos (via MCP)</h2>
+      <ul id="documentos">
+        @for (d of documentos(); track d.fonte) {
+          <li><code>{{ d.fonte }}</code> {{ d.chunks }} trechos</li>
+        }
+      </ul>
+    </div>
+
+    <div class="cartao">
+      <label for="pergunta">Pergunta</label>
+      <textarea id="pergunta" rows="3" [ngModel]="pergunta()" (ngModelChange)="pergunta.set($event)"></textarea>
+      <div class="linha">
+        <select id="modo" [ngModel]="modo()" (ngModelChange)="modo.set($event)">
+          <option value="rag">RAG (1 chamada ao LLM)</option>
+          <option value="agente">Agente (várias buscas)</option>
+        </select>
+        <button id="perguntar" (click)="perguntar()" [disabled]="carregando()">Perguntar</button>
+        <button id="buscar" class="secundario" (click)="buscarViaMcp()" [disabled]="carregando()">Só buscar trechos (MCP)</button>
+      </div>
+      @if (carregando()) {
+        <p class="aviso">Consultando... (em CPU o LLM local pode levar minutos)</p>
+      }
+
+      @if (resposta(); as r) {
+        <article id="resposta">
+          <p>{{ r.resposta }}</p>
+          <ul id="citacoes">
+            @for (c of r.citacoes; track $index) {
+              <li>@if (c.n) {<strong>[{{ c.n }}]</strong>} <code>{{ c.fonte }}</code></li>
+            }
+          </ul>
+          <small id="meta">
+            {{ r.verificado ? 'citações verificadas' : 'resposta bloqueada pela guarda' }} ·
+            {{ r.cache ? 'cache semântico' : 'gerada agora' }} · {{ r.ms }} ms
+          </small>
+        </article>
+      }
+
+      @if (trechos().length) {
+        <ol id="trechos">
+          @for (t of trechos(); track $index) {
+            <li><code>{{ t.fonte }}</code> ({{ t.similaridade }}) {{ t.trecho }}</li>
+          }
+        </ol>
+      }
+    </div>
+  </section>
+}
+
+@if (erro()) {
+  <p id="erro" class="erro">{{ erro() }}</p>
+}

@@ -1,0 +1,34 @@
+# Entrega 3 · solução "implantada" localmente: API (REST + MCP) e front Angular (nginx).
+# Reaproveita a infra compartilhada do repositório (Ollama e Postgres de infra/compose.yaml) entrando
+# na rede dela como rede EXTERNA: este compose nunca sobe nem derruba a infra.
+#   subir:  docker compose -f exemplos/03-entrega-3-front-e-implantacao/compose.yaml up -d --build --wait
+#   descer: docker compose -f exemplos/03-entrega-3-front-e-implantacao/compose.yaml down
+name: m11-capstone
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: app/Dockerfile
+    image: m11-politicas-api:1.0.0
+    environment:
+      OPENAI_BASE_URL: http://ollama:11434/v1   # nome do serviço na rede da infra
+      DATABASE_URL: postgres://ia:ia@postgres:5432/ia
+      ORIGENS_PERMITIDAS: http://localhost:31181,http://127.0.0.1:31181
+      LOG_LEVEL: info                          # 1 linha JSON por requisição (docker compose logs -f api)
+    ports: ["127.0.0.1:31180:31100"]           # API direta (agentes MCP, curl)
+    networks: [default, infra]
+    restart: unless-stopped
+
+  web:
+    build: ../../app/web
+    image: m11-politicas-web:1.0.0
+    ports: ["127.0.0.1:31181:80"]              # UI (e /v1, /mcp via proxy)
+    depends_on:
+      api: { condition: service_healthy }
+    networks: [default]                        # o front só enxerga a API, nunca o banco
+    restart: unless-stopped
+
+networks:
+  infra:
+    external: true
+    name: ai-engineer_default

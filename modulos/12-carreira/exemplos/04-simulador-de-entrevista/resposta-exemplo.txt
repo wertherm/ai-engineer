@@ -1,0 +1,1 @@
+Eu usaria RAG quando a informação muda com frequência, porque basta reindexar os documentos. Fine-tuning eu usaria para ensinar o estilo da empresa ao modelo.

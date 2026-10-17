@@ -1,0 +1,14 @@
+[
+  { "tenant": "acme", "pergunta": "Qual o valor do auxílio home office?", "fonte": "home-office.md" },
+  { "tenant": "acme", "pergunta": "Posso dividir minhas férias em partes?", "fonte": "ferias.md" },
+  { "tenant": "acme", "pergunta": "Quanto posso gastar com comida numa viagem a trabalho?", "fonte": "reembolso.md" },
+  { "tenant": "acme", "pergunta": "Perdi meu notebook, a quem aviso e em quanto tempo?", "fonte": "seguranca-da-informacao.md" },
+  { "tenant": "acme", "pergunta": "Posso trabalhar remoto de Portugal por duas semanas?", "fonte": "home-office.md" },
+  { "tenant": "acme", "pergunta": "A empresa paga minha certificação de nuvem?", "fonte": "reembolso.md" },
+  { "tenant": "acme", "pergunta": "Posso colar dados de cliente no ChatGPT?", "fonte": "seguranca-da-informacao.md" },
+  { "tenant": "acme", "pergunta": "Com quanta antecedência peço férias?", "fonte": "ferias.md" },
+  { "tenant": "padaria", "pergunta": "Posso tirar férias em dezembro?", "fonte": "ferias.md" },
+  { "tenant": "padaria", "pergunta": "Posso usar aliança na produção?", "fonte": "uniforme-e-higiene.md" },
+  { "tenant": "padaria", "pergunta": "Quero trocar de turno com uma colega, o que preciso fazer?", "fonte": "turnos-e-faltas.md" },
+  { "tenant": "padaria", "pergunta": "Até quando entrego o atestado médico?", "fonte": "turnos-e-faltas.md" }
+]

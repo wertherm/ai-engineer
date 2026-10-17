@@ -1,0 +1,2 @@
+:root { --destaque: #0b6e4f; --suave: #5f6b66; --cartao: #ffffff; --borda: #d7dedb; --fundo: #f3f6f4; }
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--fundo); color: #1c2421; }

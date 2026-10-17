@@ -1,0 +1,58 @@
+# Pipeline de CI/CD do Micro-SaaS (GitHub Actions). Num repositório próprio, este arquivo vai em
+# .github/workflows/ci.yml (aqui ele mora no módulo só como material de estudo).
+# Os passos de CI rodam localmente com: bash exemplos/03-entrega-3-front-e-implantacao/ci-local.sh
+# O job "deploy" NÃO foi executado localmente (precisa de registry e ambiente reais).
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 24.22.0, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test                      # unitários + contrato REST/MCP com dublês (sem LLM, ~5 s)
+
+  web:
+    runs-on: ubuntu-24.04
+    defaults: { run: { working-directory: app/web } }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 24.22.0, cache: npm, cache-dependency-path: app/web/package-lock.json }
+      - run: npm ci
+      - run: npx ng build
+
+  imagens:
+    needs: [api, web]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t m11-politicas-api:${{ github.sha }} -f app/Dockerfile .
+      - run: docker build -t m11-politicas-web:${{ github.sha }} app/web
+
+  deploy:
+    # Só na main e só depois de tudo verde. Exemplo com GHCR + um host com docker compose via SSH.
+    if: github.ref == 'refs/heads/main'
+    needs: [imagens]
+    runs-on: ubuntu-24.04
+    environment: producao                  # exige aprovação manual configurada no GitHub (gate humano)
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v7
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: |
+          for svc in api web; do
+            ctx=$([ $svc = api ] && echo "-f app/Dockerfile ." || echo "app/web")
+            docker build -t ghcr.io/${{ github.repository }}/politicas-$svc:${{ github.sha }} $ctx
+            docker push ghcr.io/${{ github.repository }}/politicas-$svc:${{ github.sha }}
+          done
+      - run: ssh deploy@${{ vars.HOST_PRODUCAO }} "TAG=${{ github.sha }} docker compose -f /srv/politicas/compose.yaml up -d"

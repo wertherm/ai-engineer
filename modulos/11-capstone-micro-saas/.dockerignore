@@ -1,0 +1,6 @@
+node_modules
+app/web
+docs
+exemplos
+exercicios
+*.md

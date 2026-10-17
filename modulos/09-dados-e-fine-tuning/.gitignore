@@ -1,0 +1,7 @@
+# artefatos temporários do exercício 01 (o cache do Hugging Face fica em .venv/huggingface)
+.cache/
+.venv/
+# adapter treinado (regenerável com o exemplo 03; ~4 MB) e logs de avaliação
+exemplos/03-lora-peft-cpu/adapter/
+exemplos/04-avaliacao-ab/resultados/
+dados/registro-modelos.mock.jsonl

@@ -1,0 +1,18 @@
+:host { display: block; max-width: 1000px; margin: 0 auto; padding: 16px; }
+header h1 { margin: 0; color: var(--destaque); }
+header p { margin: 4px 0 16px; color: var(--suave); }
+.cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.grade { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+@media (max-width: 720px) { .grade { grid-template-columns: 1fr; } }
+.linha { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+input, textarea, select { flex: 1; min-width: 0; padding: 8px; font: inherit; border: 1px solid var(--borda); border-radius: 6px; width: 100%; box-sizing: border-box; }
+button { padding: 8px 14px; font: inherit; border: 0; border-radius: 6px; background: var(--destaque); color: #fff; cursor: pointer; }
+button.secundario { background: var(--suave); }
+button:disabled { opacity: .5; cursor: wait; }
+h2 { font-size: 1rem; margin: 0 0 8px; }
+ul, ol { padding-left: 18px; }
+li { margin-bottom: 6px; }
+li span { display: block; color: var(--suave); font-size: .85rem; }
+#resposta { border-left: 4px solid var(--destaque); padding-left: 12px; margin-top: 16px; }
+.aviso { color: var(--suave); }
+.erro { color: #b00020; }

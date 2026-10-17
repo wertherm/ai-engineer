@@ -1,0 +1,42 @@
+# Três pods quebrados de propósito (cada um com uma causa raiz conhecida = gabarito do agente).
+# Só usam imagens que já estão no nó do kind (imagePullPolicy: IfNotPresent), exceto a quebrada.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: checkout
+  labels: { caso: crash }
+spec:
+  containers:
+    - name: app
+      image: curlimages/curl:8.17.0
+      imagePullPolicy: IfNotPresent
+      # A aplicação morre na inicialização por falta de configuração.
+      command: ["sh", "-c", "echo 'INFO iniciando checkout v2.3'; echo 'ERROR variavel de ambiente DATABASE_URL nao definida' >&2; exit 1"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: catalogo
+  labels: { caso: imagem }
+spec:
+  containers:
+    - name: app
+      # Tag que não existe no registry (erro de digitação no pipeline).
+      image: nginxinc/nginx-unprivileged:1.31.66-alpine
+      imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: relatorios
+  labels: { caso: memoria }
+spec:
+  containers:
+    - name: app
+      image: curlimages/curl:8.17.0
+      imagePullPolicy: IfNotPresent
+      # `tail` guarda tudo na memória quando não há quebra de linha: consome RAM até o limite.
+      command: ["sh", "-c", "echo 'INFO gerando relatorio mensal'; head -c 200m /dev/zero | tail"]
+      resources:
+        requests: { memory: "16Mi" }
+        limits: { memory: "32Mi" }

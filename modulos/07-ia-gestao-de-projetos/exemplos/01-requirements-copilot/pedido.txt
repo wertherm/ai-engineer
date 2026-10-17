@@ -1,0 +1,5 @@
+Reunião com a diretoria comercial: hoje o cliente pede segunda via de boleto pelo WhatsApp e o atendente
+gera na mão. Queremos que o próprio cliente consiga baixar a segunda via no portal, informando o CPF,
+e que o boleto venha com juros e multa recalculados até a data de hoje. Também querem receber um aviso
+por e-mail 3 dias antes do vencimento. Mudança de última hora: o financeiro pediu que boletos vencidos
+há mais de 60 dias NÃO possam ser reemitidos pelo portal (só pelo atendimento).

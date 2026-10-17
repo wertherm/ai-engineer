@@ -1,0 +1,283 @@
+# PIPELINE DEFINITION
+# Name: cancer-clf-treino
+# Description: Treino com portão de recall mínimo
+# Inputs:
+#    C: float [Default: 1.0]
+#    random_state: int [Default: 42.0]
+#    recall_minimo: float [Default: 0.95]
+#    test_size: float [Default: 0.25]
+components:
+  comp-carregar-e-validar:
+    executorLabel: exec-carregar-e-validar
+    inputDefinitions:
+      parameters:
+        random_state:
+          parameterType: NUMBER_INTEGER
+        test_size:
+          parameterType: NUMBER_DOUBLE
+    outputDefinitions:
+      artifacts:
+        teste:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        treino:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-condition-1:
+    dag:
+      tasks:
+        registrar:
+          cachingOptions:
+            enableCache: true
+          componentRef:
+            name: comp-registrar
+          inputs:
+            artifacts:
+              modelo:
+                componentInputArtifact: pipelinechannel--treinar-e-avaliar-modelo
+          taskInfo:
+            name: registrar
+    inputDefinitions:
+      artifacts:
+        pipelinechannel--treinar-e-avaliar-modelo:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+      parameters:
+        pipelinechannel--recall_minimo:
+          parameterType: NUMBER_DOUBLE
+        pipelinechannel--treinar-e-avaliar-Output:
+          parameterType: NUMBER_DOUBLE
+  comp-registrar:
+    executorLabel: exec-registrar
+    inputDefinitions:
+      artifacts:
+        modelo:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+  comp-treinar-e-avaliar:
+    executorLabel: exec-treinar-e-avaliar
+    inputDefinitions:
+      artifacts:
+        teste:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        treino:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+      parameters:
+        C:
+          parameterType: NUMBER_DOUBLE
+    outputDefinitions:
+      artifacts:
+        metricas:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+        modelo:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+      parameters:
+        Output:
+          parameterType: NUMBER_DOUBLE
+deploymentSpec:
+  executors:
+    exec-carregar-e-validar:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - carregar_e_validar
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'scikit-learn==1.9.1'\
+          \ 'pandas==3.0.6'  &&  python3 -m pip install --quiet --no-warn-script-location\
+          \ 'kfp==2.17.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"\
+          3.9\"' && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef carregar_e_validar(test_size: float, random_state: int, treino:\
+          \ dsl.Output[dsl.Dataset], teste: dsl.Output[dsl.Dataset]):\n    from sklearn.datasets\
+          \ import load_breast_cancer\n    from sklearn.model_selection import train_test_split\n\
+          \n    X, y = load_breast_cancer(return_X_y=True, as_frame=True)\n    if\
+          \ X.isna().any().any() or (X < 0).any().any():\n        raise ValueError(\"\
+          dados inv\xE1lidos: nulos ou negativos\")  # falhar aqui interrompe o pipeline\n\
+          \    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=test_size,\
+          \ random_state=random_state, stratify=y)\n    X_tr.assign(target=y_tr).to_csv(treino.path,\
+          \ index=False)  # artefatos trafegam entre passos como arquivos\n    X_te.assign(target=y_te).to_csv(teste.path,\
+          \ index=False)\n\n"
+        image: python:3.12-slim
+    exec-registrar:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - registrar
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.17.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef registrar(modelo: dsl.Input[dsl.Model]):\n    # No OpenShift\
+          \ AI 3.5, aqui entraria o registro no MLflow do projeto ou no Model Registry.\n\
+          \    print(f\"registrando o modelo em {modelo.uri}\")\n\n"
+        image: python:3.12-slim
+    exec-treinar-e-avaliar:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - treinar_e_avaliar
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'scikit-learn==1.9.1'\
+          \ 'pandas==3.0.6'  &&  python3 -m pip install --quiet --no-warn-script-location\
+          \ 'kfp==2.17.0' '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"\
+          3.9\"' && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef treinar_e_avaliar(C: float, treino: dsl.Input[dsl.Dataset], teste:\
+          \ dsl.Input[dsl.Dataset],\n                      modelo: dsl.Output[dsl.Model],\
+          \ metricas: dsl.Output[dsl.Metrics]) -> float:\n    import pickle\n\n  \
+          \  import pandas as pd\n    from sklearn.linear_model import LogisticRegression\n\
+          \    from sklearn.metrics import recall_score, roc_auc_score\n    from sklearn.pipeline\
+          \ import make_pipeline\n    from sklearn.preprocessing import StandardScaler\n\
+          \n    tr, te = pd.read_csv(treino.path), pd.read_csv(teste.path)\n    m\
+          \ = make_pipeline(StandardScaler(), LogisticRegression(C=C, max_iter=1000)).fit(tr.drop(columns=\"\
+          target\"), tr.target)\n    recall = recall_score(te.target, m.predict(te.drop(columns=\"\
+          target\")), pos_label=0)\n    metricas.log_metric(\"recall_maligno\", recall)\n\
+          \    metricas.log_metric(\"roc_auc\", roc_auc_score(te.target, m.predict_proba(te.drop(columns=\"\
+          target\"))[:, 1]))\n    with open(modelo.path, \"wb\") as f:\n        pickle.dump(m,\
+          \ f)\n    return recall\n\n"
+        image: python:3.12-slim
+pipelineInfo:
+  description: "Treino com port\xE3o de recall m\xEDnimo"
+  name: cancer-clf-treino
+root:
+  dag:
+    tasks:
+      carregar-e-validar:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-carregar-e-validar
+        inputs:
+          parameters:
+            random_state:
+              componentInputParameter: random_state
+            test_size:
+              componentInputParameter: test_size
+        taskInfo:
+          name: carregar-e-validar
+      condition-1:
+        componentRef:
+          name: comp-condition-1
+        dependentTasks:
+        - treinar-e-avaliar
+        inputs:
+          artifacts:
+            pipelinechannel--treinar-e-avaliar-modelo:
+              taskOutputArtifact:
+                outputArtifactKey: modelo
+                producerTask: treinar-e-avaliar
+          parameters:
+            pipelinechannel--recall_minimo:
+              componentInputParameter: recall_minimo
+            pipelinechannel--treinar-e-avaliar-Output:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: treinar-e-avaliar
+        taskInfo:
+          name: condition-1
+        triggerPolicy:
+          condition: inputs.parameter_values['pipelinechannel--treinar-e-avaliar-Output']
+            >= inputs.parameter_values['pipelinechannel--recall_minimo']
+      treinar-e-avaliar:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-treinar-e-avaliar
+        dependentTasks:
+        - carregar-e-validar
+        inputs:
+          artifacts:
+            teste:
+              taskOutputArtifact:
+                outputArtifactKey: teste
+                producerTask: carregar-e-validar
+            treino:
+              taskOutputArtifact:
+                outputArtifactKey: treino
+                producerTask: carregar-e-validar
+          parameters:
+            C:
+              componentInputParameter: C
+        taskInfo:
+          name: treinar-e-avaliar
+  inputDefinitions:
+    parameters:
+      C:
+        defaultValue: 1.0
+        isOptional: true
+        parameterType: NUMBER_DOUBLE
+      random_state:
+        defaultValue: 42.0
+        isOptional: true
+        parameterType: NUMBER_INTEGER
+      recall_minimo:
+        defaultValue: 0.95
+        isOptional: true
+        parameterType: NUMBER_DOUBLE
+      test_size:
+        defaultValue: 0.25
+        isOptional: true
+        parameterType: NUMBER_DOUBLE
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.17.0

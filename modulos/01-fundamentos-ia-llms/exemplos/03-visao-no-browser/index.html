@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="data:," />
+  <title>Visão no browser · detecção, tracking e filtro</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 16px; background: #111; color: #eee; }
+    .linha { display: flex; gap: 12px; flex-wrap: wrap; }
+    video, canvas { max-width: 100%; border: 1px solid #444; }
+    #log { white-space: pre; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>Detecção + tracking + filtro (MediaPipe Tasks Vision)</h1>
+  <p>Fonte: <code>assets/amostra.webm</code> (troque por <code>getUserMedia</code> para usar a webcam).</p>
+  <div class="linha">
+    <video id="video" src="assets/amostra.webm" muted playsinline></video>
+    <canvas id="saida"></canvas>
+  </div>
+  <div id="log">carregando modelo...</div>
+
+  <script type="module">
+    // Tudo roda NO BROWSER: o modelo (.tflite) e o runtime (WASM) são servidos localmente;
+    // nenhum frame sai da máquina. É isso que torna "ML na web" interessante (privacidade + latência).
+    import { FilesetResolver, ObjectDetector } from '/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs';
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('saida');
+    const ctx = canvas.getContext('2d');
+    const log = document.getElementById('log');
+
+    const vision = await FilesetResolver.forVisionTasks('/node_modules/@mediapipe/tasks-vision/wasm');
+    const detector = await ObjectDetector.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: 'assets/efficientdet_lite0.tflite', delegate: 'CPU' },
+      runningMode: 'VIDEO',   // VIDEO: detectForVideo(frame, timestamp) — timestamps precisam crescer
+      scoreThreshold: 0.4,
+      maxResults: 6,
+    });
+
+    // ---- Tracking simples por IoU ----
+    // O detector não sabe que o "cat" do frame 10 é o mesmo do frame 11. Um tracker associa
+    // cada detecção à trilha anterior com maior sobreposição (IoU) e mesma classe.
+    let proximoId = 1;
+    let trilhas = []; // { id, label, box }
+    function iou(a, b) {
+      const x1 = Math.max(a.originX, b.originX), y1 = Math.max(a.originY, b.originY);
+      const x2 = Math.min(a.originX + a.width, b.originX + b.width);
+      const y2 = Math.min(a.originY + a.height, b.originY + b.height);
+      const inter = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+      return inter / (a.width * a.height + b.width * b.height - inter);
+    }
+    function rastrear(deteccoes) {
+      const livres = [...trilhas];
+      const novas = deteccoes.map((d) => {
+        const label = d.categories[0].categoryName;
+        let melhor = null, melhorIou = 0.3; // abaixo de 0.3 consideramos objeto novo
+        for (const t of livres) {
+          const v = t.label === label ? iou(t.box, d.boundingBox) : 0;
+          if (v > melhorIou) { melhor = t; melhorIou = v; }
+        }
+        if (melhor) livres.splice(livres.indexOf(melhor), 1);
+        return { id: melhor ? melhor.id : proximoId++, label, score: d.categories[0].score, box: d.boundingBox };
+      });
+      trilhas = novas;
+      return novas;
+    }
+
+    // ---- Filtro: fundo em tons de cinza, objetos detectados coloridos ----
+    function desenhar(objs) {
+      ctx.filter = 'grayscale(1) brightness(0.7)';
+      ctx.drawImage(video, 0, 0);
+      ctx.filter = 'none';
+      for (const o of objs) {
+        const { originX: x, originY: y, width: w, height: h } = o.box;
+        ctx.drawImage(video, x, y, w, h, x, y, w, h); // recorta a região original (colorida)
+        ctx.strokeStyle = '#3fb950'; ctx.lineWidth = 2; ctx.strokeRect(x, y, w, h);
+        ctx.fillStyle = '#3fb950'; ctx.font = '14px sans-serif';
+        ctx.fillText(`#${o.id} ${o.label} ${(o.score * 100).toFixed(0)}%`, x + 4, y + 16);
+      }
+    }
+
+    // Resultado exposto para o teste automatizado (Playwright) ler.
+    window.resultado = { frames: 0, porFrame: [], ids: {}, pronto: false };
+
+    // O modelo demora a carregar: quando chegamos aqui o vídeo pode JÁ ter disparado 'loadeddata'.
+    // Por isso checamos readyState em vez de só registrar o listener (armadilha real deste exemplo).
+    if (video.readyState < 2) await new Promise((ok) => video.addEventListener('loadeddata', ok, { once: true }));
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // requestVideoFrameCallback dispara uma vez por frame decodificado (melhor que setInterval).
+    function aCadaFrame(_agora, meta) {
+      const t0 = performance.now();
+      const { detections } = detector.detectForVideo(video, Math.round(meta.mediaTime * 1000) + 1);
+      const objs = rastrear(detections);
+      desenhar(objs);
+      const r = window.resultado;
+      r.frames++;
+      r.porFrame.push({ ms: performance.now() - t0, objs: objs.map((o) => `#${o.id} ${o.label}`) });
+      for (const o of objs) r.ids[`#${o.id} ${o.label}`] = (r.ids[`#${o.id} ${o.label}`] || 0) + 1;
+      log.textContent = `frame ${r.frames}: ${objs.map((o) => `#${o.id} ${o.label} ${(o.score * 100).toFixed(0)}%`).join(' | ')}`;
+      if (!video.ended) video.requestVideoFrameCallback(aCadaFrame);
+    }
+    video.requestVideoFrameCallback(aCadaFrame);
+    video.play();
+    video.addEventListener('ended', () => { window.resultado.pronto = true; });
+  </script>
+</body>
+</html>

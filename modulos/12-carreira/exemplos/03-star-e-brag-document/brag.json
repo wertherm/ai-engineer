@@ -1,0 +1,12 @@
+{
+  "_nota": "Dados fictícios de exemplo. Pessoa: Engenheira de IA Pleno buscando Sênior.",
+  "pessoa": "Ana (fictícia)",
+  "nivelAlvo": "Sênior",
+  "entradas": [
+    { "data": "2026-03-14", "eixo": "impacto", "titulo": "Reduzi o custo por pergunta do assistente de RH", "antes": 0.011, "depois": 0.004, "unidade": "US$/pergunta", "evidencia": "dashboard de custo + PR de cache" },
+    { "data": "2026-04-02", "eixo": "impacto", "titulo": "Portão de avaliação no CI para prompts", "antes": 0, "depois": 60, "unidade": "casos avaliados por deploy", "evidencia": "pipeline do CI" },
+    { "data": "2026-05-20", "eixo": "escopo", "titulo": "Desenhei o RAG multi-tenant para 3 áreas (RH, Jurídico, TI)", "antes": 1, "depois": 3, "unidade": "áreas atendidas", "evidencia": "ADR-007" },
+    { "data": "2026-06-11", "eixo": "lideranca", "titulo": "Conduzi o post-mortem do incidente de timeout do LLM", "antes": 45, "depois": 8, "unidade": "min para mitigar incidente parecido", "evidencia": "post-mortem + runbook" },
+    { "data": "2026-07-30", "eixo": "lideranca", "titulo": "Mentorei 2 devs júnior em avaliação de LLMs", "antes": 0, "depois": 2, "unidade": "pessoas entregando evals sozinhas", "evidencia": "feedback dos mentorados" }
+  ]
+}

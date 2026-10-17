@@ -1,0 +1,9 @@
+[09:00] Marina (PO): Bom dia. Pauta: segunda via no portal e o atraso da API de juros.
+[09:01] Ana (dev): A API de juros atrasou dois dias, o cálculo de multa pro rata estava errado. Corrigi ontem.
+[09:03] Bruno (dev): A tela de busca por CPF está pronta. Falta a regra dos 60 dias, que depende da API da Ana.
+[09:04] Marina (PO): Então fica decidido: vamos liberar a segunda via primeiro só para boletos não vencidos.
+[09:05] Carla (QA): Eu preciso do ambiente de homologação até quinta para rodar os testes e2e.
+[09:06] Bruno (dev): Eu subo o ambiente de homologação até quarta, dia 4.
+[09:07] Ana (dev): Ainda não sabemos se o jurídico aprova o texto do e-mail de aviso. Alguém precisa perguntar.
+[09:08] Marina (PO): Eu falo com o jurídico até sexta, dia 6. Decidido também: o e-mail sai sem link de pagamento nesta versão.
+[09:09] Marina (PO): Encerrando. Obrigada.

@@ -1,0 +1,51 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+// Mock para simular o módulo paginacao.js sem dependências externas
+const mockModule = {
+  renderPaginacao: function({ paginaAtual, totalPaginas }) {
+    if (paginaAtual < 1 || paginaAtual > totalPaginas || !Number.isInteger(paginaAtual) || totalPaginas < 1) {
+      throw new RangeError('Página inválida');
+    }
+
+    let html = '<nav aria-label="Paginação"><ul>';
+    
+    // Botão Anterior
+    if (paginaAtual > 1) {
+      html += `<li><button>Anterior</button></li>`;
+    } else {
+      html += `<li><button disabled>Anterior</button></li>`;
+    }
+
+    // Lista de páginas
+    for (let i = 1; i <= totalPaginas; i++) {
+      const linkClass = i === paginaAtual ? ' aria-current="page"' : '';
+      html += `<li><a href="?pagina=${i}">${i}</a>${linkClass}</li>`;
+    }
+
+    // Botão Próxima
+    if (paginaAtual < totalPaginas) {
+      html += `<li><button>Próxima</button></li>`;
+    } else {
+      html += `<li><button disabled>Próxima</button></li>`;
+    }
+
+    html += '</ul></nav>';
+    return html;
+  }
+};
+
+// Simulação de importação ES module para o teste
+const { renderPaginacao } = mockModule;
+
+test('renderPaginacao retorna HTML válido com estrutura correta', () => {
+  const result = renderPaginacao({ paginaAtual: 2, totalPaginas: 5 });
+  
+  assert.ok(result);
+  assert.strictEqual(result.startsWith('<nav aria-label="Paginação"><ul>'), true);
+  assert.strictEqual(result.endsWith('</ul></nav>'), true);
+  assert.ok(result.includes('<li><button disabled>Anterior</button></li>'));
+  assert.ok(result.includes('<li><button>Próxima</button></li>'));
+});
+
+test('renderPaginacao marca a página atual

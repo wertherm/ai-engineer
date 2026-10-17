@@ -1,0 +1,33 @@
+{
+  "name": "modulo-05-ia-ux-ui",
+  "private": true,
+  "type": "module",
+  "description": "Módulo 5 · Ferramentas de IA para UX & UI (exemplos e exercícios)",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "ex01": "node exemplos/01-text-to-ui-acessivel/gerar.js",
+    "ex02": "node exemplos/02-ideia-ao-componente-testavel/main.js",
+    "ex02:corrigido": "COMPONENTE=./correcao-humana/paginacao.js node --test exemplos/02-ideia-ao-componente-testavel/aceitacao.test.js",
+    "ex03": "node exemplos/03-app-com-mcp-e2e/agente-e2e.js",
+    "ex03:server": "node exemplos/03-app-com-mcp-e2e/server.js",
+    "ex04": "node exemplos/04-ia-cliente-vs-servidor/verificar.js",
+    "ex04:server": "node exemplos/04-ia-cliente-vs-servidor/servidor.js",
+    "exe01": "node exercicios/01-componente-acessivel/solucao/corrigir.js",
+    "exe02": "node --test exercicios/02-tool-mcp-e-teste-e2e/solucao/e2e.test.js",
+    "test": "node --test \"exemplos/01-text-to-ui-acessivel/*.test.js\" \"exemplos/03-app-com-mcp-e2e/*.test.js\" \"exercicios/02-tool-mcp-e-teste-e2e/solucao/*.test.js\" && npm run ex02:corrigido"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@mcp-ui/server": "6.1.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "express": "5.3.0",
+    "openai": "7.36.0",
+    "pg": "8.23.1",
+    "pgvector": "0.3.0",
+    "playwright-core": "1.64.1",
+    "undici": "8.12.2",
+    "zod": "4.6.7"
+  }
+}

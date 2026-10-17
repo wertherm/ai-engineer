@@ -1,0 +1,29 @@
+# Infra local dos módulos da pós: LLM (Ollama) + banco vetorial (Postgres com pgvector).
+# Subir: bash infra/subir-ia.sh     Parar: bash infra/parar-ia.sh
+name: ai-engineer
+services:
+  ollama:
+    image: ollama/ollama:0.40.5
+    ports: ["11434:11434"]          # API nativa em /api e compatível com OpenAI em /v1
+    volumes:
+      - ollama:/root/.ollama        # modelos baixados ficam no volume (sobrevivem ao "down")
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m        # mantém o modelo na RAM entre chamadas (evita recarregar a cada exemplo)
+      OLLAMA_MAX_LOADED_MODELS: "2" # chat + embeddings ao mesmo tempo
+
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18
+    ports: ["5433:5432"]            # 5433 no host: a 5432 costuma estar ocupada por um Postgres local
+    environment:
+      POSTGRES_USER: ia
+      POSTGRES_PASSWORD: ia          # só para estudo local
+      POSTGRES_DB: ia
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "ia"]
+      interval: 5s
+
+volumes:
+  ollama:
+  pgdata:

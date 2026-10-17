@@ -1,0 +1,23 @@
+# Manifest com problemas PLANTADOS: root, privilegiado, sem limites, tag latest.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-pagamentos
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-pagamentos
+  template:
+    metadata:
+      labels:
+        app: api-pagamentos
+    spec:
+      containers:
+        - name: api
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          securityContext:
+            privileged: true
+            runAsUser: 0

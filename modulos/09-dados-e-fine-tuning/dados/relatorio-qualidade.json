@@ -1,0 +1,34 @@
+{
+  "entrada": 456,
+  "descartes": {
+    "texto_curto_ou_vazio": 2,
+    "rotulo_fora_do_dominio": 3
+  },
+  "aposLimpeza": 451,
+  "distribuicaoAntes": {
+    "cobranca": 107,
+    "acesso": 74,
+    "entrega": 178,
+    "defeito": 58,
+    "cancelamento": 34
+  },
+  "duplicatasExatas": 41,
+  "quaseDuplicatas": 21,
+  "conflitosDeRotulo": 0,
+  "aposDedup": 389,
+  "distribuicaoDepois": {
+    "cobranca": 48,
+    "acesso": 48,
+    "entrega": 48,
+    "defeito": 48,
+    "cancelamento": 32
+  },
+  "vazamentoTreinoValidacao": 0,
+  "treino": 178,
+  "validacao": 46,
+  "diversidadeTreino": {
+    "ttr": 0.129,
+    "distinct2": 0.342,
+    "mediaPalavras": 11.8
+  }
+}

@@ -1,0 +1,429 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Políticas com Fonte · API",
+    "version": "1.0.0",
+    "description": "Micro-SaaS que responde dúvidas sobre as políticas internas de pequenas empresas, com citações verificadas. Multi-tenant por API key."
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key do cliente (tenant)"
+      }
+    },
+    "schemas": {}
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "operacao"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "summary": "Tenant autenticado",
+        "tags": [
+          "politicas"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "nome": {
+                      "type": "string"
+                    },
+                    "plano": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/documentos": {
+      "get": {
+        "summary": "Lista os documentos indexados",
+        "tags": [
+          "politicas"
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fonte": {
+                        "type": "string"
+                      },
+                      "titulo": {
+                        "type": "string"
+                      },
+                      "chunks": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Envia (ou substitui) um documento de política em Markdown",
+        "tags": [
+          "politicas"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fonte",
+                  "texto"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "fonte": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]{1,60}\\.md$",
+                    "description": "nome do arquivo, ex.: ferias.md"
+                  },
+                  "texto": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 20000,
+                    "description": "Markdown: 1ª linha \"# Título\", parágrafos separados por linha em branco"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fonte": {
+                      "type": "string"
+                    },
+                    "chunks": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "erro": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/documentos/{fonte}": {
+      "delete": {
+        "summary": "Remove um documento (e invalida o cache do tenant)",
+        "tags": [
+          "politicas"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,60}\\.md$"
+            },
+            "in": "path",
+            "name": "fonte",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fonte": {
+                      "type": "string"
+                    },
+                    "removidos": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "erro": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/busca": {
+      "post": {
+        "summary": "Busca híbrida de trechos (sem LLM)",
+        "tags": [
+          "politicas"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "consulta"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "consulta": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 300
+                  },
+                  "k": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8,
+                    "default": 4
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "fonte": {
+                        "type": "string"
+                      },
+                      "titulo": {
+                        "type": "string"
+                      },
+                      "conteudo": {
+                        "type": "string"
+                      },
+                      "sim": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/perguntas": {
+      "post": {
+        "summary": "Responde uma pergunta com citações verificadas",
+        "tags": [
+          "politicas"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pergunta"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "pergunta": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  },
+                  "modo": {
+                    "type": "string",
+                    "enum": [
+                      "rag",
+                      "agente"
+                    ],
+                    "default": "rag",
+                    "description": "agente = várias buscas (perguntas complexas)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "resposta": {
+                      "type": "string"
+                    },
+                    "modo": {
+                      "type": "string",
+                      "enum": [
+                        "rag",
+                        "agente"
+                      ]
+                    },
+                    "citacoes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "n": {
+                            "type": "integer"
+                          },
+                          "fonte": {
+                            "type": "string"
+                          },
+                          "trecho": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "verificado": {
+                      "type": "boolean",
+                      "description": "true = toda citação aponta para um trecho recuperado"
+                    },
+                    "cache": {
+                      "type": "boolean"
+                    },
+                    "tokens": {
+                      "type": "integer"
+                    },
+                    "ms": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "erro": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "politicas"
+    },
+    {
+      "name": "operacao"
+    }
+  ]
+}

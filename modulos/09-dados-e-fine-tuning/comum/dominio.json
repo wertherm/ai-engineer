@@ -1,0 +1,5 @@
+{
+  "_comentario": "Fonte única do domínio, lida pelo JS (comum/config.js) e pelo Python (comum/modelo_local.py). Mudar o system prompt muda a distribuição vista no treino: gere o dataset e treine de novo.",
+  "categorias": ["cobranca", "acesso", "entrega", "defeito", "cancelamento"],
+  "system_prompt": "Classifique o ticket de suporte em UMA categoria: cobranca, acesso, entrega, defeito ou cancelamento. Responda somente com a categoria."
+}

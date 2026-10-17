@@ -1,0 +1,55 @@
+# Mesma aplicação do k8s/02-deployment.yaml, adaptada à SCC restricted-v2 do OpenShift:
+#  - sem capabilities extras (SYS_NICE é removida -> o vLLM só avisa "get_mempolicy: Operation not permitted");
+#  - sem runAsUser fixo: o OpenShift sorteia um UID da faixa do projeto (e põe o grupo 0);
+#  - HF_HOME num volume gravável, porque o UID sorteado não é root e não escreve em /root.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  labels: {app: vllm}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: vllm}
+  template:
+    metadata:
+      labels: {app: vllm}
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: vllm
+          image: docker.io/vllm/vllm-openai-cpu:v0.31.0-x86_64
+          args: [Qwen/Qwen2.5-0.5B-Instruct, --dtype=bfloat16, --max-model-len=4096, --served-model-name=qwen-mini]
+          env:
+            - {name: VLLM_CPU_KVCACHE_SPACE, value: "2"}
+            - {name: HF_HOME, value: /models-cache}
+            - {name: HOME, value: /tmp}           # algumas libs gravam em $HOME; /tmp é gravável para qualquer UID
+          ports:
+            - {name: http, containerPort: 8000}  # porta > 1024: não precisa de root
+          resources:
+            requests: {cpu: "2", memory: 4Gi}
+            limits: {cpu: "4", memory: 8Gi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+            failureThreshold: 60                  # 1ª subida baixa o modelo: até 10 min
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 30
+          volumeMounts:
+            - {name: hf-cache, mountPath: /models-cache}
+            - {name: shm, mountPath: /dev/shm}
+      volumes:
+        - name: hf-cache
+          persistentVolumeClaim: {claimName: hf-cache}
+        - name: shm
+          emptyDir: {medium: Memory, sizeLimit: 2Gi}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tarefas</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; max-width: 32rem; margin: 2rem auto; color: #1f1f1f; }
+    form { display: flex; gap: .5rem; align-items: end; }
+    label { display: block; font-weight: 600; }
+    ul { padding-left: 0; list-style: none; }
+    .feita { text-decoration: line-through; color: #555; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Minhas tarefas</h1>
+    <!-- Rótulos e papéis acessíveis não são só para leitores de tela: são o "contrato" que
+         agentes e testes E2E usam (getByLabel/getByRole) em vez de seletores CSS frágeis. -->
+    <form id="form-nova">
+      <div><label for="titulo">Nova tarefa</label><input id="titulo" name="titulo" required maxlength="80"></div>
+      <button type="submit">Adicionar</button>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+    <ul id="lista" aria-label="Lista de tarefas"></ul>
+  </main>
+  <script>
+    const lista = document.getElementById('lista');
+    const status = document.getElementById('status');
+    async function carregar() {
+      const tarefas = await (await fetch('/api/tarefas')).json();
+      lista.innerHTML = '';
+      for (const t of tarefas) {
+        const li = document.createElement('li');
+        const id = `t${t.id}`;
+        li.innerHTML = `<input type="checkbox" id="${id}" ${t.concluida ? 'checked disabled' : ''}> <label for="${id}"></label>`;
+        li.querySelector('label').textContent = t.titulo; // textContent: nada de HTML injetado
+        if (t.concluida) li.querySelector('label').className = 'feita';
+        li.querySelector('input').addEventListener('change', async () => {
+          await fetch(`/api/tarefas/${t.id}/concluir`, { method: 'POST' });
+          status.textContent = `Tarefa "${t.titulo}" concluída`;
+          carregar();
+        });
+        lista.append(li);
+      }
+    }
+    document.getElementById('form-nova').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const campo = document.getElementById('titulo');
+      await fetch('/api/tarefas', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ titulo: campo.value }) });
+      status.textContent = `Tarefa "${campo.value}" adicionada`;
+      campo.value = '';
+      carregar();
+    });
+    carregar();
+  </script>
+</body>
+</html>

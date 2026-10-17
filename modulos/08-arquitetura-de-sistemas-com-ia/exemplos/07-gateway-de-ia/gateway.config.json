@@ -1,0 +1,11 @@
+{
+  "porta": 30806,
+  "tiers": {
+    "barato": { "maxTokens": 30, "precoIn": 0.15, "precoOut": 0.6 },
+    "caro": { "maxTokens": 120, "precoIn": 3, "precoOut": 15 }
+  },
+  "tenants": {
+    "loja-a": { "tiers": ["barato", "caro"], "rateLimit": { "capacidade": 5, "recargaPorSeg": 1 } },
+    "free": { "tiers": ["barato"], "rateLimit": { "capacidade": 1, "recargaPorSeg": 0.01 } }
+  }
+}

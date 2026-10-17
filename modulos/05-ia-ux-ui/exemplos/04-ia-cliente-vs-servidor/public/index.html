@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Central de ajuda</title>
+  <style>
+    body { font: 16px system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; color: #1f1f1f; padding: 0 1rem; }
+    label { display: block; font-weight: 600; margin-top: 1rem; }
+    input { width: 70%; padding: .4rem; }
+    article { border: 1px solid #ccc; border-radius: 6px; padding: .5rem .75rem; margin: .5rem 0; cursor: pointer; }
+    small { color: #555; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Central de ajuda</h1>
+    <!-- Repare: nenhuma chave, nenhum endpoint de modelo aqui. O front só conhece /api/*. -->
+    <form id="form-busca">
+      <label for="q">Buscar na ajuda</label>
+      <input id="q" name="q" maxlength="300" required> <button type="submit">Buscar</button>
+    </form>
+    <section id="resultados" aria-label="Resultados da busca" aria-live="polite"></section>
+
+    <form id="form-chat">
+      <label for="pergunta">Pergunte ao assistente</label>
+      <input id="pergunta" name="pergunta" maxlength="300" required> <button type="submit">Perguntar</button>
+    </form>
+    <p id="resposta" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+    // Personalização no cliente, sem IA: guardamos as categorias que o usuário abriu e mandamos
+    // como "interesses" na próxima busca. Dado de preferência, não segredo: pode ficar no browser.
+    const lerInteresses = () => { try { return JSON.parse(localStorage.getItem('interesses') ?? '[]'); } catch { return []; } };
+    const post = (url, corpo) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) })
+      .then(async (r) => (r.ok ? r.json() : Promise.reject(new Error((await r.json()).erro))));
+
+    document.getElementById('form-busca').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alvo = document.getElementById('resultados');
+      try {
+        const itens = await post('/api/busca', { q: document.getElementById('q').value, interesses: lerInteresses() });
+        alvo.replaceChildren(...itens.map((it) => {
+          const a = document.createElement('article');
+          a.tabIndex = 0;
+          a.dataset.categoria = it.categoria;
+          a.innerHTML = '<h2></h2><p></p><small></small>';
+          a.querySelector('h2').textContent = it.pergunta;     // textContent: sem injeção de HTML
+          a.querySelector('p').textContent = it.resposta;
+          a.querySelector('small').textContent = `${it.categoria} · score ${it.score}`;
+          a.addEventListener('click', () => {
+            const s = new Set([it.categoria, ...lerInteresses()]);
+            localStorage.setItem('interesses', JSON.stringify([...s].slice(0, 5)));
+          });
+          return a;
+        }));
+      } catch (err) { alvo.textContent = err.message; }
+    });
+
+    document.getElementById('form-chat').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alvo = document.getElementById('resposta');
+      alvo.textContent = 'Pensando...';
+      try {
+        const r = await post('/api/chat', { pergunta: document.getElementById('pergunta').value });
+        alvo.textContent = r.resposta;
+      } catch (err) { alvo.textContent = err.message; }
+    });
+  </script>
+</body>
+</html>

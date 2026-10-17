@@ -1,0 +1,27 @@
+{
+  "name": "modulo-08-arquitetura-de-sistemas-com-ia",
+  "private": true,
+  "type": "module",
+  "description": "Módulo 8 · Arquitetura de Sistemas com IA (exemplos e exercícios)",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "ex01": "node exemplos/01-decision-framework/main.js",
+    "ex02": "node exemplos/02-single-agent-simulado/main.js",
+    "ex03": "node exemplos/03-multiagente-com-fila/main.js",
+    "ex04": "node exemplos/04-padroes-de-rag/main.js",
+    "ex05": "node exemplos/05-roteador-e-cache-semantico/main.js",
+    "ex06": "node exemplos/06-hitl-approval-gate/main.js",
+    "ex07": "node exemplos/07-gateway-de-ia/teste.js",
+    "ex07:server": "node exemplos/07-gateway-de-ia/gateway.js",
+    "exe01": "node exercicios/01-tier-e-orcamento/solucao/simulacao.js && node --test 'exercicios/01-tier-e-orcamento/solucao/*.test.js'",
+    "exe02": "node exercicios/02-agentic-rag/solucao/main.js",
+    "test": "node --test 'exemplos/**/*.test.js' 'exercicios/**/*.test.js'"
+  },
+  "dependencies": {
+    "openai": "7.34.0",
+    "pg": "8.23.1",
+    "pgvector": "0.3.0"
+  }
+}

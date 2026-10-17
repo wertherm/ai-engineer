@@ -1,0 +1,26 @@
+# Sistema / editores
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Dependências e builds comuns (ajuste ao ecossistema)
+node_modules/
+dist/
+build/
+target/
+__pycache__/
+.venv/
+*.log
+projeto-final/relatorio.md
+.pytest_cache/
+mlflow.db
+mlartifacts/
+mlruns/
+.kfp-local/
+lote_*.csv

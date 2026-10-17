@@ -1,0 +1,47 @@
+{
+  "name": "modulo-11-capstone-micro-saas",
+  "private": true,
+  "type": "module",
+  "description": "Módulo 11 · Projeto Integrador (Capstone): Micro-SaaS Políticas com Fonte",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "seed": "node app/src/seed.js",
+    "e1": "node exemplos/01-entrega-1-rag-cli/cli.js",
+    "e2:server": "node app/src/server.js",
+    "e2": "bash exemplos/02-entrega-2-api-e-mcp/demo.sh",
+    "e2:inspector": "bash exemplos/02-entrega-2-api-e-mcp/inspector.sh",
+    "e3:web": "bash exemplos/03-entrega-3-front-e-implantacao/build-web.sh",
+    "e3:subir": "docker compose -f exemplos/03-entrega-3-front-e-implantacao/compose.yaml up -d --build --wait",
+    "e3:ui": "node exemplos/03-entrega-3-front-e-implantacao/ui.e2e.js",
+    "e3:agente": "node exemplos/03-entrega-3-front-e-implantacao/agente-mcp.js",
+    "e3:descer": "docker compose -f exemplos/03-entrega-3-front-e-implantacao/compose.yaml down",
+    "e3:ci": "bash exemplos/03-entrega-3-front-e-implantacao/ci-local.sh",
+    "e4": "node exemplos/04-orquestracao-adk/main.js",
+    "exe01": "INTEGRACAO=1 vitest run --reporter=verbose exercicios/01-cota-por-cliente",
+    "exe02": "node exercicios/02-avaliacao-no-ci/solucao/avaliar.js",
+    "lint": "eslint app exemplos exercicios",
+    "test": "vitest run app/test exemplos",
+    "test:integracao": "INTEGRACAO=1 vitest run app/test/integracao.test.js"
+  },
+  "dependencies": {
+    "@fastify/swagger": "9.9.2",
+    "@fastify/swagger-ui": "6.1.2",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "fastify": "5.12.7",
+    "openai": "7.36.0",
+    "pg": "8.23.1",
+    "pgvector": "0.3.0",
+    "undici": "8.12.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@google/adk": "2.3.0",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "playwright-core": "1.64.1",
+    "vitest": "5.0.5"
+  }
+}

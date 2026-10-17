@@ -1,0 +1,26 @@
+# Plataforma LLMOps mínima: o modelo servido (vLLM) + quem observa (Prometheus).
+# Subir:  docker compose up -d      (pare antes o vLLM dos exemplos: bash ../../../infra/parar-vllm.sh)
+services:
+  vllm:
+    image: vllm/vllm-openai-cpu:v0.31.0-x86_64
+    command: [Qwen/Qwen2.5-0.5B-Instruct, --dtype=bfloat16, --max-model-len=4096, --served-model-name=qwen-mini]
+    environment:
+      VLLM_CPU_KVCACHE_SPACE: "2"
+      VLLM_CPU_OMP_THREADS_BIND: "0-5"
+    ports: ["8000:8000"]
+    shm_size: 4g
+    cap_add: [SYS_NICE]
+    security_opt: [seccomp=unconfined]
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 10s
+      start_period: 300s
+
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    ports: ["9090:9090"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on: [vllm]

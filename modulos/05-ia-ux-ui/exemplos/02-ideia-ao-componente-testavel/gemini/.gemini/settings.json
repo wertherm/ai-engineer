@@ -1,0 +1,18 @@
+{
+  "general": {
+    "defaultApprovalMode": "default",
+    "checkpointing": { "enabled": true }
+  },
+  "context": {
+    "fileName": ["GEMINI.md", "AGENTS.md"]
+  },
+  "mcpServers": {
+    "app-tarefas": {
+      "httpUrl": "http://127.0.0.1:30510/mcp",
+      "headers": { "Authorization": "Bearer tok-e2e-demo" },
+      "timeout": 30000,
+      "trust": false,
+      "includeTools": ["listar_tarefas", "adicionar_tarefa", "concluir_tarefa"]
+    }
+  }
+}

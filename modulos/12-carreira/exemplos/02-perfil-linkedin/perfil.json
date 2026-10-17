@@ -1,0 +1,15 @@
+{
+  "_nota": "Persona fictícia. Os projetos citados são os deste repositório (ai-engineer); os números vêm das saídas reais dos READMEs.",
+  "headline": "Engenheiro de Software | Apaixonado por tecnologia e inovação | Buscando novos desafios",
+  "headlineNova": "Engenheiro de IA Aplicada | RAG, agentes e MCP em produção | LLMOps com vLLM e avaliação automatizada",
+  "sobre": "Sou engenheiro de software com 6 anos de experiência em back-end Node.js e PostgreSQL. Gosto de aprender coisas novas e de trabalhar em equipe. Atualmente estudando inteligência artificial.",
+  "sobreNovo": "Coloco LLMs em produção com custo e qualidade medidos. Meu projeto mais recente é um portão de promoção para LLMs: nenhuma versão de modelo ou prompt sobe sem passar por avaliação e SLO (TTFT p95 <= 750 ms e 29.5 tokens/s em CPU, vLLM 0.31.0).\n\nProjetos (código e saída real no GitHub):\n- Portão de promoção LLMOps: saúde, avaliação, carga e SLO; exit 0/1 para o CI.\n- Servidor MCP corporativo: CRM e billing no Postgres expostos a agentes, com service token, rate limit e auditoria.\n- Agentes com LangGraph.js: human-in-the-loop, guardrails e memória no pgvector.\n- RAG com Postgres + pgvector e LLM local (Ollama), sem chave de API.\n\nAntes de IA, 6 anos de back-end Node.js e PostgreSQL: é o que me faz pensar em filas, retries e custo antes do prompt.\n\nEscrevo toda semana sobre o que aprendo colocando IA em produção. Aberto a conversar sobre vagas de AI Engineer: mensagem aqui.",
+  "skills": ["Node.js", "PostgreSQL", "Docker", "Python"],
+  "skillsNovas": ["RAG", "LLMOps", "Model Context Protocol (MCP)", "LangGraph", "vLLM", "pgvector", "Avaliação de LLMs", "Node.js", "PostgreSQL", "Kubernetes"],
+  "aprendizados": [
+    "Por que o thinking do qwen3.5 deixava as respostas lentas em CPU e como desligar (reasoning_effort)",
+    "TTFT x ITL: as duas latências que importam num LLM e como medir com o /metrics do vLLM",
+    "MCP vs function calling: quando vale padronizar as tools da empresa",
+    "Portão de promoção: CI/CD para prompt e modelo com exit 0/1"
+  ]
+}

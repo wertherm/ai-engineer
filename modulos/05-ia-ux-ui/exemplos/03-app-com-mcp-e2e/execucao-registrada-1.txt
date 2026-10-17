@@ -1,0 +1,23 @@
+Objetivo: Partindo de uma lista vazia, adicione pela interface a tarefa "Pagar boleto", confirme pelo MCP que ela existe, marque-a como concluída pela interface e confirme pelo MCP que ficou concluída.
+Tools MCP descobertas: listar_tarefas, adicionar_tarefa, concluir_tarefa, resetar_estado, mostrar_painel
+
+Plano do LLM (368s):
+  1. mcp "resetar_estado" "{}"
+  2. preencher "Nova tarefa" "Pagar boleto"
+  3. clicar "Adicionar" "{}"
+  4. mcp "listar_tarefas" "{}"
+  5. verificar "Pagar boleto" "Pagar boleto"
+  6. marcar "Pagar boleto" "{}"
+  7. mcp "listar_tarefas" "{}"
+  8. verificar "concluida" "true"
+  passo 1 (mcp resetar_estado): ok
+  passo 2 (preencher Nova tarefa): ok
+  passo 3 (clicar Adicionar): ok
+  passo 4 (mcp listar_tarefas): ok
+  passo 5 (verificar Pagar boleto): FALHOU -> Pagar boleto: MCP error -32602: Tool Pagar boleto not found
+  passo 6 (marcar Pagar boleto): ok
+  passo 7 (mcp listar_tarefas): ok
+  passo 8 (verificar concluida): FALHOU -> concluida: MCP error -32602: Tool concluida not found
+
+Estado final (via MCP): [{"id":1,"titulo":"Pagar boleto","concluida":true}]
+Resultado: 2 passo(s) falharam

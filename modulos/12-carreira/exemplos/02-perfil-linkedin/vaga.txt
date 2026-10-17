@@ -1,0 +1,7 @@
+Vaga ILUSTRATIVA (texto criado para este exemplo, não é uma vaga real).
+
+AI Engineer Pleno/Sênior. Você vai construir assistentes com RAG sobre a base de conhecimento da empresa,
+agentes que chamam nossas APIs internas (MCP é um diferencial), pipelines de avaliação de LLMs e
+observabilidade de custo e latência. Requisitos: Python ou TypeScript/Node.js, PostgreSQL, bancos vetoriais
+(pgvector ou similar), Docker e Kubernetes, experiência com LangChain/LangGraph, prompt engineering e
+noções de fine-tuning. Desejável: vLLM, LLMOps/MLOps.

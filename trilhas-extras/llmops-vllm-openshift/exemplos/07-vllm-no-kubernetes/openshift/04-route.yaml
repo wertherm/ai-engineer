@@ -1,0 +1,15 @@
+# Route: o jeito OpenShift de expor um Service para fora do cluster (no Kubernetes puro seria um Ingress).
+# tls.termination=edge: o roteador (HAProxy) termina o HTTPS e fala HTTP com o pod.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: vllm
+  annotations:
+    # Inferência em CPU é lenta: o timeout padrão do roteador (costuma ser 30 s) cortaria respostas longas.
+    haproxy.router.openshift.io/timeout: 120s
+spec:
+  to: {kind: Service, name: vllm}
+  port: {targetPort: http}
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

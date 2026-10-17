@@ -1,0 +1,12 @@
+# Contrato de qualidade (SLO) que uma versão precisa cumprir para ser promovida.
+# Valores calibrados para CPU com 8 núcleos e o Qwen2.5-0.5B: em GPU, aperte bastante.
+avaliacao:
+  taxa_minima_aprovacao: 1.0     # 100% dos casos obrigatórios
+carga:
+  concorrencia: 4
+  requisicoes: 8
+  tokens_saida: 32
+limites:
+  ttft_p95_ms: 15000             # p95 do tempo até o 1º token, sob carga
+  itl_medio_ms: 400              # ritmo médio entre tokens
+  throughput_min_tok_s: 8        # tokens de saída por segundo, somando todas as requisições

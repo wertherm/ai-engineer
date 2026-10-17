@@ -1,0 +1,25 @@
+{
+  "capacidadePorSprint": 10,
+  "okrs": [
+    { "id": "O1", "objetivo": "Reduzir custo de atendimento", "krs": [
+      { "id": "KR1.1", "descricao": "Cair 30% os chamados de segunda via" },
+      { "id": "KR1.2", "descricao": "Autoatendimento em 60% das solicitações" } ] },
+    { "id": "O2", "objetivo": "Diminuir inadimplência", "krs": [
+      { "id": "KR2.1", "descricao": "Inadimplência de 30 dias abaixo de 4%" } ] }
+  ],
+  "itens": [
+    { "id": "HU-01", "titulo": "Segunda via no portal", "reach": 4000, "impact": 2, "confidence": 0.8, "effort": 5,
+      "businessValue": 13, "timeCriticality": 8, "riskReduction": 3, "jobSize": 5, "kr": "KR1.1", "dependeDe": [] },
+    { "id": "HU-02", "titulo": "Bloquear reemissão > 60 dias", "reach": 300, "impact": 1, "confidence": 1, "effort": 1,
+      "businessValue": 5, "timeCriticality": 13, "riskReduction": 13, "jobSize": 1, "kr": "KR2.1", "dependeDe": ["HU-01"],
+      "regulatorio": true },
+    { "id": "HU-03", "titulo": "Aviso por e-mail 3 dias antes", "reach": 9000, "impact": 1, "confidence": 0.7, "effort": 3,
+      "businessValue": 8, "timeCriticality": 5, "riskReduction": 2, "jobSize": 3, "kr": "KR2.1", "dependeDe": [] },
+    { "id": "HU-04", "titulo": "Chatbot de dúvidas de boleto", "reach": 6000, "impact": 1, "confidence": 0.4, "effort": 8,
+      "businessValue": 8, "timeCriticality": 2, "riskReduction": 1, "jobSize": 8, "kr": "KR1.2", "dependeDe": [] },
+    { "id": "HU-05", "titulo": "Tema escuro no portal", "reach": 2000, "impact": 0.25, "confidence": 0.9, "effort": 2,
+      "businessValue": 2, "timeCriticality": 1, "riskReduction": 1, "jobSize": 2, "kr": null, "dependeDe": [] },
+    { "id": "HU-06", "titulo": "Pix copia-e-cola na segunda via", "reach": 3500, "impact": 2, "confidence": 0.8, "effort": 3,
+      "businessValue": 13, "timeCriticality": 5, "riskReduction": 2, "jobSize": 3, "kr": "KR1.2", "dependeDe": ["HU-01"] }
+  ]
+}

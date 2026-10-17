@@ -1,0 +1,14 @@
+[
+  { "sprint": 1,  "planejado": 30, "entregue": 28, "escopoAdicionado": 2, "horasExtras": 4,  "diasBloqueados": 0, "bugsNovos": 3 },
+  { "sprint": 2,  "planejado": 30, "entregue": 29, "escopoAdicionado": 1, "horasExtras": 2,  "diasBloqueados": 1, "bugsNovos": 2 },
+  { "sprint": 3,  "planejado": 32, "entregue": 30, "escopoAdicionado": 3, "horasExtras": 5,  "diasBloqueados": 0, "bugsNovos": 4 },
+  { "sprint": 4,  "planejado": 30, "entregue": 31, "escopoAdicionado": 2, "horasExtras": 3,  "diasBloqueados": 1, "bugsNovos": 3 },
+  { "sprint": 5,  "planejado": 31, "entregue": 27, "escopoAdicionado": 4, "horasExtras": 6,  "diasBloqueados": 2, "bugsNovos": 5 },
+  { "sprint": 6,  "planejado": 30, "entregue": 29, "escopoAdicionado": 2, "horasExtras": 4,  "diasBloqueados": 0, "bugsNovos": 3 },
+  { "sprint": 7,  "planejado": 32, "entregue": 30, "escopoAdicionado": 3, "horasExtras": 3,  "diasBloqueados": 1, "bugsNovos": 2 },
+  { "sprint": 8,  "planejado": 30, "entregue": 28, "escopoAdicionado": 2, "horasExtras": 5,  "diasBloqueados": 1, "bugsNovos": 4 },
+  { "sprint": 9,  "planejado": 31, "entregue": 26, "escopoAdicionado": 5, "horasExtras": 8,  "diasBloqueados": 2, "bugsNovos": 5 },
+  { "sprint": 10, "planejado": 30, "entregue": 24, "escopoAdicionado": 6, "horasExtras": 10, "diasBloqueados": 2, "bugsNovos": 6 },
+  { "sprint": 11, "planejado": 30, "entregue": 22, "escopoAdicionado": 8, "horasExtras": 14, "diasBloqueados": 3, "bugsNovos": 6 },
+  { "sprint": 12, "planejado": 30, "entregue": 18, "escopoAdicionado": 9, "horasExtras": 21, "diasBloqueados": 5, "bugsNovos": 9 }
+]

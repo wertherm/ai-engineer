@@ -1,0 +1,9 @@
+# No OpenShift (SCC restricted-v2) hostPath é proibido: o cache do modelo vai num volume persistente.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hf-cache
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests: {storage: 5Gi}

@@ -1,0 +1,6 @@
+{
+  "sprint": "Sprint 14", "projeto": "Portal de Boletos",
+  "pontosPlanejados": 30, "pontosEntregues": 21, "diasRestantes": 3, "diasTotais": 10,
+  "bugsAbertos": 4, "bugsCriticos": 1, "itensBloqueados": ["HU-02 Regra dos 60 dias"],
+  "orcamentoPrevisto": 120000, "orcamentoGasto": 96000, "percentualEscopoConcluido": 70
+}

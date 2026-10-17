@@ -1,0 +1,33 @@
+{
+  "_aviso": "Preços HIPOTÉTICOS, só para o cálculo. Antes de decidir, copie os valores atuais da página de preços do seu provedor e da sua nuvem (links no README).",
+  "feature": "assistente de suporte com RAG",
+  "uso": {
+    "requisicoes_por_dia": 20000,
+    "dias_por_mes": 30,
+    "tokens_entrada_por_req": 2500,
+    "tokens_saida_por_req": 300,
+    "fracao_entrada_em_cache": 0.6,
+    "taxa_retentativa": 0.05
+  },
+  "guardrails": {
+    "chamada_classificador_por_req": true,
+    "tokens_entrada_classificador": 400,
+    "tokens_saida_classificador": 5
+  },
+  "api": {
+    "usd_por_milhao_entrada": 1.0,
+    "usd_por_milhao_entrada_cache": 0.1,
+    "usd_por_milhao_saida": 4.0,
+    "usd_por_milhao_entrada_classificador": 0.1,
+    "usd_por_milhao_saida_classificador": 0.4
+  },
+  "self_hosting": {
+    "gpus": 2,
+    "usd_por_gpu_hora": 2.5,
+    "horas_por_mes": 730,
+    "tokens_saida_por_segundo_por_gpu": 1500,
+    "custo_fixo_mensal_usd": 3000,
+    "_nota": "custo fixo = parte do tempo de engenharia/plantão, observabilidade e armazenamento"
+  },
+  "cambio_brl_por_usd": 5.5
+}

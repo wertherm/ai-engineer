@@ -1,0 +1,14 @@
+{
+  "inicio": "2026-11-02",
+  "pessoas": { "ana": 1.0, "bruno": 1.0, "carla": 0.5 },
+  "tarefas": [
+    { "id": "T1", "nome": "API de recálculo de juros", "dono": "ana",   "otimista": 3, "provavel": 5, "pessimista": 9,  "dependeDe": [] },
+    { "id": "T2", "nome": "Tela de busca por CPF",     "dono": "bruno", "otimista": 2, "provavel": 3, "pessimista": 5,  "dependeDe": [] },
+    { "id": "T3", "nome": "Geração do PDF",            "dono": "ana",   "otimista": 2, "provavel": 4, "pessimista": 8,  "dependeDe": ["T1"] },
+    { "id": "T4", "nome": "Regra dos 60 dias",         "dono": "bruno", "otimista": 1, "provavel": 2, "pessimista": 4,  "dependeDe": ["T1", "T2"] },
+    { "id": "T5", "nome": "Agendador de e-mails",      "dono": "carla", "otimista": 3, "provavel": 4, "pessimista": 7,  "dependeDe": [] },
+    { "id": "T6", "nome": "Testes e2e + homologação",  "dono": "bruno", "otimista": 2, "provavel": 3, "pessimista": 6,  "dependeDe": ["T3", "T4", "T5"] }
+  ],
+  "throughputSemanalHistorico": [4, 6, 3, 5, 7, 2, 5, 6, 4, 5, 3, 6],
+  "itensRestantesNoBacklog": 28
+}

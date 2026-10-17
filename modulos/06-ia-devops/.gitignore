@@ -1,0 +1,7 @@
+# Diretórios de trabalho do OpenTofu gerados pelos exemplos
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate*
+trabalho*/
+saida/
+

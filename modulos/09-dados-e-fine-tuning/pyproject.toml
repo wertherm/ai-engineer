@@ -1,0 +1,26 @@
+[project]
+name = "modulo-09-fine-tuning"
+version = "0.1.0"
+description = "Módulo 9: LoRA/PEFT real em CPU (torch CPU + transformers + peft + datasets)"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "torch==2.14.1",
+    "transformers==5.20.1",
+    "peft==0.21.2",
+    "datasets==5.1.0",
+    "accelerate==1.15.0",
+    "safetensors==0.8.0",
+]
+
+# Projeto próprio do módulo (não é workspace da raiz): o torch vem do índice de CPU do PyTorch
+# para não baixar ~3 GB de bibliotecas CUDA que não servem numa máquina sem GPU.
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

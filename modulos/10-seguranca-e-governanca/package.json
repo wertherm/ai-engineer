@@ -1,0 +1,27 @@
+{
+  "name": "modulo-10-seguranca-e-governanca",
+  "private": true,
+  "type": "module",
+  "description": "Módulo 10 · Segurança e Governança em IA (exemplos e exercícios em JavaScript)",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "ex01": "uv run python exemplos/01-explicabilidade/explicar.py",
+    "ex02": "uv run python exemplos/02-vieses-e-equidade/equidade.py",
+    "ex03": "node exemplos/03-prompt-injection/bateria.js",
+    "ex03:test": "node --test exemplos/03-prompt-injection/guardas.test.js",
+    "ex04": "node exemplos/04-pii-e-mascaramento/demo.js",
+    "ex04:test": "node --test exemplos/04-pii-e-mascaramento/pii.test.js",
+    "ex05": "node exemplos/05-custos-e-orcamento/custos.js",
+    "ex05:orcamento": "node exemplos/05-custos-e-orcamento/orcamento.js && node exemplos/05-custos-e-orcamento/orcamento.js --com-cota",
+    "exe01": "uv run python exercicios/01-model-card-e-matriz-de-risco/solucao/model_card.py",
+    "exe02:vulneravel": "node exercicios/02-endurecer-o-prompt/bateria.js exercicios/02-endurecer-o-prompt/vulneravel.js",
+    "exe02": "node exercicios/02-endurecer-o-prompt/bateria.js exercicios/02-endurecer-o-prompt/solucao/endurecido.js",
+    "test": "npm run ex03:test && npm run ex04:test && npm run ex05 && npm run ex05:orcamento"
+  },
+  "dependencies": {
+    "openai": "7.34.0",
+    "pg": "8.23.1"
+  }
+}

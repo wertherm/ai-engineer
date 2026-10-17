@@ -1,0 +1,5 @@
+node_modules/
+# saídas geradas pelos exemplos
+exemplos/01-requirements-copilot/backlog.gerado.json
+exemplos/04-reuniao-ata-status-report/acoes.ics
+exercicios/02-checklist-governanca/solucao/auditoria.json

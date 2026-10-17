@@ -1,0 +1,30 @@
+import { renderPaginacao } from './paginacao.js';
+
+// Teste 1: Renderização básica com validação de entrada inválida (RangeError)
+test('lança RangeError para paginaAtual inválido', () => {
+  assert.throws(() => renderPaginacao({ paginaAtual: 'abc', totalPaginas: 5 }), RangeError);
+});
+
+// Teste 2: Renderização básica com validação de totalPaginas inválida (RangeError)
+test('lança RangeError para totalPaginas inválido', () => {
+  assert.throws(() => renderPaginacao({ paginaAtual: 1, totalPaginas: 0 }), RangeError);
+});
+
+// Teste 3: Estrutura HTML e atributos de acessibilidade (aria-current)
+test('inclui aria-current na página atual e estrutura correta', () => {
+  const html = renderPaginacao({ paginaAtual: 2, totalPaginas: 5 });
+  assert.ok(html.includes('<nav aria-label="Paginação">'));
+  assert.ok(html.includes('<ul>'));
+  assert.ok(html.includes('aria-current="page"'));
+});
+
+// Teste 4: Botões de navegação e estados de disabled
+test('botões Anterior/Próxima estão corretamente habilitados ou desabilitados', () => {
+  const html = renderPaginacao({ paginaAtual: 1, totalPaginas: 5 });
+  assert.ok(html.includes('<button>Anterior</button>'));
+  assert.ok(html.includes('disabled')); // Deve estar disabled na primeira página
+  
+  const html2 = renderPaginacao({ paginaAtual: 5, totalPaginas: 5 });
+  assert.ok(html2.includes('<button>Próxima</button>'));
+  assert.ok(html2.includes('disabled')); // Deve estar disabled na última página
+});

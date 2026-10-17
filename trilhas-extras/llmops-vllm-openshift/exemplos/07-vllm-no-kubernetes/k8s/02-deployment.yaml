@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  namespace: llmops
+  labels: {app: vllm}
+spec:
+  replicas: 1
+  # RollingUpdate (padrão) sobe o pod novo ANTES de matar o velho. Com 1 nó e um pod que pede 4 CPUs,
+  # não cabem os dois e o novo fica Pending para sempre. Recreate: derruba o velho e sobe o novo.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: {app: vllm}
+  template:
+    metadata:
+      labels: {app: vllm}
+    spec:
+      # O Kubernetes injeta variáveis <SERVICE>_PORT para cada Service do namespace. Um Service chamado
+      # "vllm" gera VLLM_PORT=tcp://..., que colide com a variável VLLM_PORT do próprio vLLM e derruba o boot:
+      #   ValueError: VLLM_PORT 'tcp://10.96.x.x:8000' appears to be a URI.
+      enableServiceLinks: false
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai-cpu:v0.31.0-x86_64
+          imagePullPolicy: IfNotPresent      # usa a imagem que o "kind load" copiou para o nó
+          # O ENTRYPOINT da imagem já é o "vllm serve": aqui vão só os argumentos.
+          args:
+            - Qwen/Qwen2.5-0.5B-Instruct
+            - --dtype=bfloat16
+            - --max-model-len=4096
+            - --served-model-name=qwen-mini
+          env:
+            - {name: VLLM_CPU_KVCACHE_SPACE, value: "2"}       # GiB de KV cache
+            - {name: VLLM_CPU_OMP_THREADS_BIND, value: "0-5"}
+            - {name: HF_HUB_OFFLINE, value: "1"}               # usa só o cache montado, sem ir à internet
+          ports:
+            - {name: http, containerPort: 8000}
+          resources:
+            requests: {cpu: "4", memory: 4Gi}   # o scheduler só coloca o pod num nó com isso livre
+            limits: {memory: 8Gi}               # passou disso -> OOMKilled
+          securityContext:
+            capabilities:
+              add: [SYS_NICE]                   # recomendado pela doc de CPU; o OpenShift (restricted-v2) NÃO deixa
+          # Subir leva ~1–2 min (carrega o modelo e aquece). Sem startupProbe, o liveness mataria o pod no boot.
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+            failureThreshold: 30                # até 5 min para ficar pronto
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 30
+          volumeMounts:
+            - {name: hf-cache, mountPath: /root/.cache/huggingface}
+            - {name: shm, mountPath: /dev/shm}
+      volumes:
+        - name: hf-cache
+          hostPath: {path: /hf-cache, type: Directory}   # montado pelo extraMounts do kind
+        - name: shm                                       # equivalente ao "docker run --shm-size=4g"
+          emptyDir: {medium: Memory, sizeLimit: 4Gi}

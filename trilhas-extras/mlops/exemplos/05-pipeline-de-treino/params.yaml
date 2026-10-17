@@ -1,0 +1,10 @@
+# Tudo o que define um treino fica versionado aqui, e não espalhado pelo código.
+dados:
+  test_size: 0.25
+  random_state: 42
+modelo:
+  tipo: LogisticRegression
+  C: 1.0
+portao:                       # critérios para a versão nova virar champion
+  recall_maligno_minimo: 0.95  # em câncer, deixar passar um maligno é o erro caro
+  roc_auc_minimo: 0.99

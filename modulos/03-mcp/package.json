@@ -1,0 +1,30 @@
+{
+  "name": "modulo-03-mcp",
+  "private": true,
+  "type": "module",
+  "description": "Módulo 3 · MCP – Model Context Protocol (exemplos e exercícios)",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "ex01": "node exemplos/01-servidor-stdio/client.js",
+    "ex02:seed": "node exemplos/02-empresa-como-mcp/db.js",
+    "ex02": "node exemplos/02-empresa-como-mcp/client.js",
+    "ex03": "node exemplos/03-ponte-mcp-llm/agente.js",
+    "ex04": "node exemplos/04-mcp-http-producao/teste.js",
+    "ex04:server": "node exemplos/04-mcp-http-producao/server.js",
+    "ex05": "node exemplos/05-testar-e-compor/compor.js",
+    "ex05:inspector": "bash exemplos/05-testar-e-compor/inspector.sh",
+    "ex05:gateway": "node exemplos/05-testar-e-compor/gateway.js",
+    "exe01": "node --test exercicios/01-mcp-de-suporte/solucao/*.test.js",
+    "exe02": "node exercicios/02-escopos-e-limite-por-token/solucao/teste.js",
+    "test": "npm run ex01 && npm run ex02 && npm run ex04 && npm run ex05 && npm run exe01 && npm run exe02"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "express": "5.3.0",
+    "openai": "7.34.0",
+    "pg": "8.23.1",
+    "zod": "4.6.7"
+  }
+}

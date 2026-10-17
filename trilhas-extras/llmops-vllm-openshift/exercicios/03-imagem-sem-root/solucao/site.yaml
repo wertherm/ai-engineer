@@ -1,0 +1,47 @@
+# Solução do exercício 03: o mesmo site, compatível com a SCC restricted-v2 do OpenShift.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: site
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: site}
+  template:
+    metadata:
+      labels: {app: site}
+    spec:
+      containers:
+        - name: nginx
+          # 1. Imagem feita para rodar sem root: escuta na 8080 e grava cache/pid em pastas do grupo 0
+          #    (a mesma ideia do "chgrp -R 0 && chmod -R g=u" do guia de imagens da Red Hat).
+          image: docker.io/nginxinc/nginx-unprivileged:1.31.6-alpine
+          ports:
+            - {name: http, containerPort: 8080}   # 2. porta > 1024
+          securityContext:                       # 3. declarar o que a SCC/Pod Security exige
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+            runAsNonRoot: true
+            seccompProfile: {type: RuntimeDefault}
+            # 4. sem runAsUser fixo: quem escolhe o UID é o OpenShift (faixa do projeto)
+          readinessProbe:
+            httpGet: {path: /, port: http}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: site
+spec:
+  selector: {app: site}
+  ports:
+    - {name: http, port: 80, targetPort: http}   # o Service pode continuar na 80: só o container muda
+---
+# 5. No OpenShift, exponha com uma Route (aqui com TLS edge). O kind não tem Route: valide no OpenShift.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: site
+spec:
+  to: {kind: Service, name: site}
+  port: {targetPort: http}
+  tls: {termination: edge}

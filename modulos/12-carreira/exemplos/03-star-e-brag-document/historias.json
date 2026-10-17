@@ -1,0 +1,18 @@
+[
+  {
+    "_nota": "História fictícia, para treino. Use as suas com números reais.",
+    "id": "custo-do-rag",
+    "situacao": "No assistente interno de RH, o custo do LLM dobrou em dois meses e a diretoria ameaçou desligar o produto.",
+    "tarefa": "Eu era a pessoa responsável pelo back-end do assistente e precisava cortar custo sem perder qualidade.",
+    "acao": "Primeiro eu medi: instrumentei tokens de entrada e saída por requisição e descobri que 70% do custo vinha de contexto de RAG com 12 trechos. Montei um conjunto de 60 perguntas com respostas esperadas para não otimizar no escuro. Testei reduzir para 4 trechos com re-ranking e adicionei cache de respostas para perguntas repetidas. Descartei trocar o modelo por um menor porque a avaliação caiu 15 pontos. Apresentei os números ao time de produto antes de mudar e combinei um rollback automático se a nota caísse.",
+    "resultado": "O custo por pergunta caiu de US$ 0,011 para US$ 0,004 (-64%) e a nota na avaliação subiu de 82% para 86%. O produto continuou no ar e o conjunto de avaliação virou portão obrigatório no CI. Aprendi a medir antes de opinar."
+  },
+  {
+    "_nota": "História fictícia e propositalmente fraca.",
+    "id": "migracao-fraca",
+    "situacao": "A gente tinha um sistema antigo que era muito lento e todo mundo reclamava, era um sistema muito importante para a empresa e tinha muitos problemas de performance e manutenção havia anos, e ninguém queria mexer nele.",
+    "tarefa": "O time precisava migrar.",
+    "acao": "Nós fizemos a migração para microsserviços e usamos Kubernetes.",
+    "resultado": "Ficou bem melhor e o pessoal gostou."
+  }
+]

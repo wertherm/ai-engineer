@@ -1,0 +1,19 @@
+{
+  "name": "modulo-09-dados-e-fine-tuning",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ex01:brutos": "node exemplos/01-preparacao-de-dataset/gerar-brutos.js",
+    "ex01": "node exemplos/01-preparacao-de-dataset/preparar.js",
+    "ex01:validar": "node exemplos/01-preparacao-de-dataset/validar-jsonl.js dados/treino.jsonl dados/validacao.jsonl",
+    "ex02:custo": "node exemplos/02-fine-tuning-openai-api/estimar-custo.js",
+    "ex02:openai": "node exemplos/02-fine-tuning-openai-api/fine-tune-openai.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "js-tiktoken": "1.0.21",
+    "openai": "7.34.0",
+    "pg": "8.23.1",
+    "undici": "8.12.2"
+  }
+}

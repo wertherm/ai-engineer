@@ -1,0 +1,35 @@
+{
+  "name": "modulo-04-agentes-autonomos",
+  "private": true,
+  "type": "module",
+  "description": "Módulo 4 · Criação de Agentes Autônomos (exemplos e exercícios)",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "ex01": "node exemplos/01-agent-loop-do-zero/main.js",
+    "ex02": "node exemplos/02-react-vs-plan-execute/main.js",
+    "ex02:langchain": "node exemplos/02-react-vs-plan-execute/react-langchain.js",
+    "ex03": "node exemplos/03-tools-externas/main.js",
+    "ex04:s1": "node exemplos/04-reflection-e-memoria/main.js 1",
+    "ex04:s2": "node exemplos/04-reflection-e-memoria/main.js 2",
+    "ex05": "node exemplos/05-gerenciamento-de-contexto/main.js",
+    "ex06": "node exemplos/06-langgraph-hitl-guardrails/main.js",
+    "ex07": "node exemplos/07-multiagente-supervisor/main.js",
+    "exe01": "node exercicios/01-tool-nova-e-orcamento/solucao/main.js",
+    "exe02": "node exercicios/02-linear-para-langgraph/solucao/main.js",
+    "exe02:inicial": "node exercicios/02-linear-para-langgraph/inicial/linear.js",
+    "tudo": "npm run ex01 && npm run ex02 && npm run ex02:langchain && npm run ex03 && npm run ex04:s1 && npm run ex04:s2 && npm run ex05 && npm run ex06 && npm run ex07 && npm run exe01 && npm run exe02"
+  },
+  "dependencies": {
+    "@langchain/core": "1.2.18",
+    "@langchain/langgraph": "1.5.0",
+    "@langchain/openai": "1.6.2",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "langchain": "1.5.18",
+    "openai": "7.34.0",
+    "pg": "8.23.1",
+    "pgvector": "0.3.0",
+    "zod": "4.6.7"
+  }
+}

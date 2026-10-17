@@ -1,0 +1,148 @@
+[
+  {
+    "id": "rag-vs-fine-tuning",
+    "categoria": "arquitetura",
+    "nivel": "pleno",
+    "pergunta": "Quando você usaria RAG e quando usaria fine-tuning?",
+    "pontosChave": [
+      { "ponto": "RAG para conhecimento que muda ou precisa de fonte citável", "padrao": "muda|atualiz|fonte|cita" },
+      { "ponto": "fine-tuning para forma, estilo, formato ou tarefa estreita, não para fatos", "padrao": "estilo|formato|tom|comportamento|tarefa espec" },
+      { "ponto": "custo e esforço: dados rotulados, retreino, avaliação", "padrao": "custo|dados rotulados|retrein|dataset" },
+      { "ponto": "começar por prompt + RAG e medir antes de treinar", "padrao": "come[çc]|primeiro|antes|prompt" },
+      { "ponto": "podem ser combinados", "padrao": "combin|junt|os dois|ambos" }
+    ],
+    "respostaModelo": "Começo por prompt engineering e RAG, e só considero fine-tuning com uma avaliação mostrando que eles não bastam. RAG resolve CONHECIMENTO: dados que mudam, que precisam de permissão por usuário ou de fonte citável; atualizar é reindexar, não retreinar. Fine-tuning resolve COMPORTAMENTO: formato rígido, tom, uma tarefa estreita repetida milhões de vezes (onde um modelo menor ajustado sai mais barato) — e exige dados rotulados, pipeline de treino e reavaliação a cada versão do modelo base. Não é bom para ensinar fatos novos. Os dois combinam: um modelo ajustado para seguir o formato, alimentado por RAG.",
+    "armadilhas": ["dizer que fine-tuning 'ensina a base de conhecimento'", "não falar de avaliação para decidir"]
+  },
+  {
+    "id": "quando-usar-agentes",
+    "categoria": "agentes",
+    "nivel": "pleno",
+    "pergunta": "Quando faz sentido usar um agente em vez de um fluxo fixo (workflow)?",
+    "pontosChave": [
+      { "ponto": "agente quando o caminho não é conhecido de antemão", "padrao": "n[ãa]o (é )?conhecid|imprevis|din[âa]mic|aberto|descobre no meio" },
+      { "ponto": "workflow quando os passos são conhecidos: mais barato, previsível e testável", "padrao": "previs|test|determin|barat" },
+      { "ponto": "custo e latência crescem com o número de passos do loop", "padrao": "custo|lat[êe]ncia|passos|itera" },
+      { "ponto": "guardrails: limite de passos, human-in-the-loop, permissões das tools", "padrao": "limite|humano|human|hitl|guardrail|permiss" }
+    ],
+    "respostaModelo": "Uso workflow (cadeia fixa de passos) sempre que consigo desenhar os passos de antemão: é mais barato, mais rápido e dá para testar cada etapa. Agente faz sentido quando o caminho depende do que se descobre no meio — investigar um incidente, pesquisar em fontes variadas — e o ganho de flexibilidade paga o custo extra de várias chamadas ao LLM. Mesmo assim coloco guardrails: limite de passos e de custo, tools com o mínimo de permissão, aprovação humana para ações irreversíveis e trilha de auditoria.",
+    "armadilhas": ["'agente para tudo'", "não citar limite de passos/custo"]
+  },
+  {
+    "id": "reduzir-custo",
+    "categoria": "custo",
+    "nivel": "pleno",
+    "pergunta": "A conta do LLM dobrou. Como você reduziria o custo sem perder qualidade?",
+    "pontosChave": [
+      { "ponto": "medir primeiro: tokens de entrada/saída por rota", "padrao": "medi|instrument|tokens|observ" },
+      { "ponto": "conjunto de avaliação para garantir que a qualidade não caiu", "padrao": "avalia|eval|qualidade" },
+      { "ponto": "cache (de prompt e de resposta)", "padrao": "cache" },
+      { "ponto": "reduzir contexto: menos trechos, resumo, re-ranking", "padrao": "contexto|trechos|chunks|re-?rank|resum" },
+      { "ponto": "roteamento para modelo menor nas tarefas fáceis", "padrao": "modelo menor|rotea|cascata|barato" }
+    ],
+    "respostaModelo": "Primeiro meço: tokens de entrada e saída por rota e por cliente, porque normalmente 20% das rotas geram a maior parte do custo. Antes de mexer, fixo um conjunto de avaliação para não trocar custo por qualidade sem ver. Depois ataco na ordem do maior ganho: cache de prompt (prefixo fixo) e de respostas repetidas; menos contexto (menos trechos com re-ranking, histórico resumido); limite de max_tokens e saída estruturada; roteamento das tarefas fáceis para um modelo menor; batch para o que não é tempo real. Cada mudança entra com a avaliação passando.",
+    "armadilhas": ["trocar de modelo sem avaliação", "esquecer que tokens de ENTRADA dominam em RAG"]
+  },
+  {
+    "id": "falhas-do-provedor",
+    "categoria": "resiliencia",
+    "nivel": "pleno",
+    "pergunta": "Como seu sistema lida com falhas do provedor de LLM (timeout, 429, 5xx)?",
+    "pontosChave": [
+      { "ponto": "timeout explícito", "padrao": "timeout" },
+      { "ponto": "retry com backoff exponencial e jitter, só para erros transitórios", "padrao": "retry|retentativa|backoff|jitter" },
+      { "ponto": "fallback para outro modelo/provedor ou resposta degradada", "padrao": "fallback|outro (modelo|provedor)|degrad" },
+      { "ponto": "circuit breaker / limite de concorrência", "padrao": "circuit|disjuntor|concorr|fila" },
+      { "ponto": "idempotência e observabilidade (logs, métricas, alerta)", "padrao": "idempot|log|m[ée]trica|alert" }
+    ],
+    "respostaModelo": "Trato o LLM como qualquer dependência externa instável. Toda chamada tem timeout. Erros transitórios (429, 5xx, timeout) têm retry com backoff exponencial e jitter, com teto de tentativas; 4xx de validação não têm retry. Se o provedor continua falhando, um circuit breaker abre e caio para um fallback: outro modelo/provedor ou uma resposta degradada honesta ('não consegui agora'). Limito a concorrência com fila para não estourar rate limit, garanto idempotência em ações com efeito colateral e registro tudo (latência, erro, tokens) com alerta por SLO.",
+    "armadilhas": ["retry infinito / sem jitter", "retry em erro 400"]
+  },
+  {
+    "id": "avaliar-llm",
+    "categoria": "avaliacao",
+    "nivel": "pleno",
+    "pergunta": "Como você avalia se uma mudança de prompt ou modelo melhorou o sistema?",
+    "pontosChave": [
+      { "ponto": "conjunto de avaliação versionado com casos reais e de borda", "padrao": "conjunto|casos|dataset|golden" },
+      { "ponto": "métricas automáticas e LLM-as-judge com rubrica", "padrao": "judge|juiz|rubrica|m[ée]trica" },
+      { "ponto": "rodar no CI como portão de regressão", "padrao": "ci|regress|port[ãa]o|pipeline" },
+      { "ponto": "medir custo e latência junto com qualidade", "padrao": "custo|lat[êe]ncia" },
+      { "ponto": "validar online: A/B, feedback do usuário", "padrao": "a/b|online|feedback|produ[çc][ãa]o" }
+    ],
+    "respostaModelo": "Com um conjunto de avaliação versionado: casos reais de produção, casos de borda e casos que já quebraram. Para cada caso, verificações determinísticas quando possível (formato, campos, contém a fonte) e LLM-as-judge com rubrica quando não, calibrado contra notas humanas. Isso roda no CI como portão: a mudança só entra se não regredir, e o relatório mostra qualidade, custo e latência lado a lado. Depois do deploy, confirmo online com A/B ou feedback dos usuários, e casos novos que falharem voltam para o conjunto.",
+    "armadilhas": ["'testei umas perguntas e ficou bom'", "LLM-as-judge sem calibrar"]
+  },
+  {
+    "id": "prompt-injection",
+    "categoria": "seguranca",
+    "nivel": "pleno",
+    "pergunta": "Como você protege um assistente com RAG e tools contra prompt injection?",
+    "pontosChave": [
+      { "ponto": "não existe filtro perfeito: limitar o estrago", "padrao": "n[ãa]o (h[áa]|existe)|imposs|limitar|estrago|blast" },
+      { "ponto": "menor privilégio nas tools e permissões do usuário no retrieval", "padrao": "privil[ée]gio|permiss|escopo" },
+      { "ponto": "confirmação humana para ações sensíveis", "padrao": "humano|human|confirm|aprova" },
+      { "ponto": "separar instruções de dados e validar saídas", "padrao": "separ|delimit|valid|sanitiz" },
+      { "ponto": "monitorar e testar com ataques (red team)", "padrao": "red team|ataque|monitor|log" }
+    ],
+    "respostaModelo": "Parto da premissa de que nenhum filtro detecta 100% das injeções, então desenho para limitar o estrago. O retrieval respeita as permissões do usuário (o modelo só vê o que o usuário poderia ver). As tools têm o menor privilégio possível e ações irreversíveis pedem confirmação humana. Conteúdo recuperado entra delimitado como dado, nunca como instrução, e a saída é validada (schema, URLs permitidas) antes de executar algo. Por fim, um conjunto de ataques conhecidos roda no CI e os logs são monitorados.",
+    "armadilhas": ["'coloco no prompt para ignorar instruções maliciosas'"]
+  },
+  {
+    "id": "latencia-rag",
+    "categoria": "desempenho",
+    "nivel": "senior",
+    "pergunta": "Seu RAG tem p95 de 8 s. Como você investiga e reduz?",
+    "pontosChave": [
+      { "ponto": "quebrar a latência por etapa (embedding, busca, LLM)", "padrao": "etapa|trace|span|quebrar|cada fase" },
+      { "ponto": "TTFT vs tempo de geração; streaming", "padrao": "ttft|stream|primeiro token" },
+      { "ponto": "reduzir tokens de entrada e de saída", "padrao": "tokens|contexto|max_tokens" },
+      { "ponto": "índice vetorial (HNSW) e cache", "padrao": "hnsw|[íi]ndice|cache" },
+      { "ponto": "paralelizar e escolher modelo/região", "padrao": "paralel|modelo menor|regi[ãa]o" }
+    ],
+    "respostaModelo": "Primeiro meço por etapa com tracing: embedding da pergunta, busca vetorial, re-ranking, LLM (separando TTFT do tempo de geração). Quase sempre o grosso é o LLM: reduzo tokens de entrada (menos trechos, prompt mais curto, cache de prefixo) e de saída (max_tokens, resposta mais objetiva), e ligo streaming para o usuário ver o primeiro token cedo. Na busca, confiro se há índice HNSW e se o filtro por permissão usa índice. Etapas independentes rodam em paralelo; tarefas simples vão para um modelo menor.",
+    "armadilhas": ["otimizar a busca vetorial quando 90% do tempo é o LLM"]
+  },
+  {
+    "id": "chunking",
+    "categoria": "rag",
+    "nivel": "junior",
+    "pergunta": "Como você escolhe o tamanho dos chunks num RAG?",
+    "pontosChave": [
+      { "ponto": "depende do documento: respeitar a estrutura (seções, parágrafos)", "padrao": "estrutura|se[çc][ãa]o|par[áa]grafo|depende" },
+      { "ponto": "trade-off: pequeno = preciso mas sem contexto; grande = contexto e ruído/custo", "padrao": "pequen|grande|ru[íi]do|contexto" },
+      { "ponto": "sobreposição (overlap)", "padrao": "overlap|sobrepos" },
+      { "ponto": "decidir medindo recall/precisão no conjunto de avaliação", "padrao": "recall|precis|avalia|medi" }
+    ],
+    "respostaModelo": "Não existe tamanho universal. Começo respeitando a estrutura do documento (seções, parágrafos, itens de lista) com um tamanho médio e um pouco de sobreposição, e meço. Chunk pequeno acha o trecho exato mas perde contexto; chunk grande traz contexto, mas dilui o embedding e aumenta tokens e custo. Escolho comparando recall@k e a qualidade da resposta num conjunto de perguntas reais para 2–3 tamanhos.",
+    "armadilhas": ["número mágico sem medir"]
+  },
+  {
+    "id": "explicar-decisao",
+    "categoria": "comunicacao",
+    "nivel": "senior",
+    "pergunta": "Explique uma decisão técnica que você tomou e as alternativas que descartou.",
+    "pontosChave": [
+      { "ponto": "contexto e restrições (o problema, não a solução)", "padrao": "contexto|restri[çc]|problema|requisito" },
+      { "ponto": "alternativas consideradas", "padrao": "alternativ|consider|op[çc]" },
+      { "ponto": "critério de escolha explícito (custo, prazo, risco)", "padrao": "crit[ée]rio|custo|prazo|risco" },
+      { "ponto": "consequências e o que faria diferente", "padrao": "consequ|trade|faria diferente|revis" }
+    ],
+    "respostaModelo": "Uso o formato de um ADR: contexto (o problema e as restrições, ex.: time de 3 pessoas, prazo de 6 semanas, dados sensíveis), opções (ex.: pgvector no Postgres existente, um banco vetorial gerenciado, Elasticsearch), critério (custo operacional, latência, o time já sabe operar Postgres, dados não saem da VPC), decisão (pgvector) e consequências (limite de escala que aceitamos e o sinal que nos faria revisitar: passar de dezenas de milhões de vetores ou p95 da busca acima do SLO).",
+    "armadilhas": ["só falar da solução escolhida", "não dizer o que faria revisitar a decisão"]
+  },
+  {
+    "id": "live-coding-retry",
+    "categoria": "live-coding",
+    "nivel": "pleno",
+    "pergunta": "Implemente (falando em voz alta) uma função que chama o LLM com retry e backoff exponencial.",
+    "pontosChave": [
+      { "ponto": "esclarecer requisitos antes de codar (quais erros, quantas tentativas)", "padrao": "pergunt|esclare|requisit|quais erros" },
+      { "ponto": "casos de borda: erro não transitório, última tentativa, timeout", "padrao": "borda|edge|400|n[ãa]o transit|[úu]ltima" },
+      { "ponto": "backoff exponencial com jitter e teto", "padrao": "exponen|jitter|teto|m[áa]ximo" },
+      { "ponto": "testar com um fake que falha N vezes", "padrao": "test|fake|mock|simul" }
+    ],
+    "respostaModelo": "Antes de codar, pergunto: quais erros são transitórios (429, 5xx, timeout), quantas tentativas, existe orçamento de tempo total? Depois escrevo a assinatura e um teste com um fake que falha 2 vezes e depois responde. Implementação: laço de 0 a maxTentativas; em erro transitório espero base * 2^tentativa + jitter aleatório, limitado a um teto; em erro não transitório relanço na hora; na última tentativa relanço o erro original. Falo a complexidade (tempo total máximo) e o que melhoraria (respeitar o header Retry-After).",
+    "armadilhas": ["codar calado", "não testar o caminho de erro"]
+  }
+]

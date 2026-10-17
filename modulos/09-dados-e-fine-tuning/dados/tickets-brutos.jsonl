@@ -1,0 +1,456 @@
+{"id":1,"canal":"email","texto":"Oi, boa tarde. Paguei via pix e o pedido 65662 continua como pendente de pagamento.","categoria":"cobranca"}
+{"id":2,"canal":"email","texto":" oi, boa tarde. paguei via pix e o pedido 65662 continua como pendente de pagamento.  ","categoria":"Cobrança"}
+{"id":3,"canal":"app","texto":"O rastreio do tênis de corrida não atualiza desde semana passada. Obrigado. CPF 123.456.789-02, tel (11) 97876-5432","categoria":"Logística"}
+{"id":4,"canal":"email","texto":"Socorro! O pedido 35799 consta como entregue mas não recebi nada. Grata!","categoria":"entrega"}
+{"id":5,"canal":"app","texto":"<p>Aparece&nbsp;erro&nbsp;403&nbsp;quando&nbsp;tento&nbsp;acessar&nbsp;meus&nbsp;pedidos.&nbsp;Grata!</p><br>","categoria":"acesso"}
+{"id":6,"canal":"chat","texto":"A tela do notebook veio com manchas. Att.","categoria":"Defeito"}
+{"id":7,"canal":"app","texto":"Prezados, O liquidificador veio com a embalagem violada e arranhado. Obrigado. Meu e-mail é cliente79@exemplo.com.br","categoria":"troca"}
+{"id":8,"canal":"chat","texto":"Oi, Quero mudar o endereço de entrega do pedido 35939. Obrigado.","categoria":"Logística"}
+{"id":9,"canal":"app","texto":"<p>Oi,&nbsp;O&nbsp;desconto&nbsp;do&nbsp;cupom&nbsp;não&nbsp;foi&nbsp;aplicado&nbsp;na&nbsp;cobrança.&nbsp;Att.</p><br>","categoria":" cobrança "}
+{"id":10,"canal":"chat","texto":"<p>Fui&nbsp;cobrado&nbsp;duas&nbsp;vezes&nbsp;pelo&nbsp;pedido&nbsp;84534.&nbsp;Aguardo&nbsp;retorno.</p><br>","categoria":" cobrança "}
+{"id":11,"canal":"chat","texto":"<p>A&nbsp;transportadora&nbsp;disse&nbsp;que&nbsp;meu&nbsp;endereço&nbsp;não&nbsp;existe.&nbsp;Valeu!</p><br>","categoria":"entrega"}
+{"id":12,"canal":"chat","texto":"<p>Oi,&nbsp;A&nbsp;fatura&nbsp;do&nbsp;cartão&nbsp;veio&nbsp;com&nbsp;um&nbsp;valor&nbsp;maior&nbsp;que&nbsp;o&nbsp;do&nbsp;cafeteira.&nbsp;Grata!</p><br>","categoria":"Cobrança"}
+{"id":13,"canal":"email","texto":"<p>Boa&nbsp;noite,&nbsp;pessoal.&nbsp;O&nbsp;carregador&nbsp;do&nbsp;mochila&nbsp;não&nbsp;funciona.&nbsp;Aguardo&nbsp;retorno.</p><br>","categoria":"troca"}
+{"id":14,"canal":"email","texto":"<p>Bom&nbsp;dia!&nbsp;O&nbsp;fone&nbsp;bluetooth&nbsp;faz&nbsp;um&nbsp;barulho&nbsp;estranho.&nbsp;Valeu!</p><br>","categoria":"defeito"}
+{"id":15,"canal":"chat","texto":"A nota fiscal do pedido 56245 está com valor errado. Valeu!","categoria":"financeiro"}
+{"id":16,"canal":"chat","texto":"<p>Oi,&nbsp;boa&nbsp;tarde.&nbsp;A&nbsp;transportadora&nbsp;disse&nbsp;que&nbsp;meu&nbsp;endereço&nbsp;não&nbsp;existe.&nbsp;Grata!</p><br>","categoria":"logistica"}
+{"id":17,"canal":"app","texto":"Olá, O pedido 72306 consta como entregue mas não recebi nada. Aguardo retorno.","categoria":"Logística"}
+{"id":18,"canal":"chat","texto":"Bom dia! O pedido 99191 consta como entregue mas não recebi nada. Valeu!","categoria":"logistica"}
+{"id":19,"canal":"email","texto":"Prezados, Esqueci a senha e o e-mail de recuperação não chega. Obrigado. Meu e-mail é cliente12@exemplo.com.br","categoria":"acesso"}
+{"id":20,"canal":"chat","texto":"   OLÁ, FUI COBRADO DUAS VEZES PELO PEDIDO 15438. PRECISO DE AJUDA URGENTE.   ","categoria":"COBRANCA"}
+{"id":21,"canal":"email","texto":"Socorro! O notebook não liga de jeito nenhum. Att.","categoria":"produto com defeito"}
+{"id":22,"canal":"chat","texto":"Oi, O entregador deixou o pacote com o vizinho errado.","categoria":"logistica"}
+{"id":23,"canal":"email","texto":"Olá, Comprei por engano, preciso cancelar antes do envio. Valeu!","categoria":"cancelamento"}
+{"id":24,"canal":"email","texto":"Bom dia! Parcelei em 3x mas cobraram à vista. Grata!","categoria":"Cobrança"}
+{"id":25,"canal":"chat","texto":"Socorro! Parcelei em 3x mas cobraram à vista. Att. CPF 123.456.789-04, tel (11) 90876-5432","categoria":"cobranca"}
+{"id":26,"canal":"app","texto":"Prezados, Apareceu uma cobrança que eu não reconheço no meu cartão. Valeu!","categoria":"COBRANCA"}
+{"id":27,"canal":"email","texto":"Oi, boa tarde. Cancelem o pedido 23851, achei mais barato em outro lugar. Obrigado.","categoria":"Cancelamento"}
+{"id":28,"canal":"app","texto":"Oi, boa tarde. O notebook esquenta demais e desliga sozinho.","categoria":"troca"}
+{"id":29,"canal":"chat","texto":"Boa noite, pessoal. A nota fiscal do pedido 43691 está com valor errado. Aguardo retorno.","categoria":"cobranca"}
+{"id":30,"canal":"email","texto":" boa noite, pessoal. a nota fiscal do pedido 43691 está com valor errado. aguardo retorno.  ","categoria":"COBRANCA"}
+{"id":31,"canal":"email","texto":"Olá, O pedido 68571 consta como entregue mas não recebi nada.","categoria":"entrega"}
+{"id":32,"canal":"app","texto":"O notebook veio com a embalagem violada e arranhado. Valeu!","categoria":"produto com defeito"}
+{"id":33,"canal":"chat","texto":"Bom dia! O pedido 71396 consta como entregue mas não recebi nada.","categoria":"entrega"}
+{"id":34,"canal":"email","texto":"Boa noite, pessoal. Quero o reembolso do valor cobrado a mais. Preciso de ajuda urgente.","categoria":"COBRANCA"}
+{"id":35,"canal":"email","texto":"Prezados, Comprei por engano, preciso cancelar antes do envio.","categoria":"Cancelamento"}
+{"id":36,"canal":"chat","texto":"Prezados, Aparece erro 403 quando tento acessar meus pedidos. Grata! Meu e-mail é cliente577@exemplo.com.br","categoria":"ACESSO"}
+{"id":37,"canal":"email","texto":"Bom dia! O código de verificação por SMS não chega.","categoria":"Acesso"}
+{"id":38,"canal":"app","texto":"Oi, boa tarde. A tela do tênis de corrida veio com manchas. Obrigado.","categoria":"defeito"}
+{"id":39,"canal":"email","texto":"Quero cancelar o pedido 15101.","categoria":"CANCELAR"}
+{"id":40,"canal":"app","texto":"Boa noite, pessoal. Quero mudar o endereço de entrega do pedido 96413. Att.","categoria":"logistica"}
+{"id":41,"canal":"chat","texto":"Prezados, Paguei via pix e o pedido 67818 continua como pendente de pagamento.","categoria":"cobranca"}
+{"id":42,"canal":"app","texto":"O boleto do pedido 46873 venceu e não consigo gerar outro. Aguardo retorno.","categoria":" cobrança "}
+{"id":43,"canal":"email","texto":"Bom dia! A transportadora disse que meu endereço não existe. Valeu!","categoria":"Entrega"}
+{"id":44,"canal":"email","texto":"   OI, CANCELEM O PEDIDO 37724, ACHEI MAIS BARATO EM OUTRO LUGAR. ATT.   ","categoria":"cancelamento"}
+{"id":45,"canal":"chat","texto":"Socorro! Paguei via pix e o pedido 48212 continua como pendente de pagamento.","categoria":"cobranca"}
+{"id":46,"canal":"email","texto":"Oi, boa tarde. Alguém trocou a senha da minha conta sem eu saber. CPF 123.456.789-00, tel (11) 98876-5432","categoria":"Acesso"}
+{"id":47,"canal":"chat","texto":"Prezados, O fone bluetooth parou de funcionar depois de 16 dias de uso. Preciso de ajuda urgente.","categoria":"Defeito"}
+{"id":48,"canal":"app","texto":"Boa noite, pessoal. O app fica pedindo login toda hora.","categoria":"ACESSO"}
+{"id":49,"canal":"app","texto":"O estorno do mochila ainda não caiu na minha conta. Aguardo retorno.","categoria":"Cobrança"}
+{"id":50,"canal":"chat","texto":"Socorro! Quero mudar o endereço de entrega do pedido 15870.","categoria":"Logística"}
+{"id":51,"canal":"chat","texto":"   PREZADOS, A TRANSPORTADORA DISSE QUE MEU ENDEREÇO NÃO EXISTE. OBRIGADO.   ","categoria":"ENTREGA "}
+{"id":52,"canal":"app","texto":"Boa noite, pessoal. O mochila faz um barulho estranho. Valeu! CPF 123.456.789-02, tel (11) 92876-5432","categoria":"produto com defeito"}
+{"id":53,"canal":"email","texto":"Bom dia! Paguei via pix e o pedido 17912 continua como pendente de pagamento. Valeu!","categoria":" cobrança "}
+{"id":54,"canal":"chat","texto":"   OLÁ, O RASTREIO DO SMARTWATCH NÃO ATUALIZA DESDE SEMANA PASSADA. PRECISO DE AJUDA URGENTE.   ","categoria":"entrega"}
+{"id":55,"canal":"app","texto":"O entregador deixou o pacote com o vizinho errado. Preciso de ajuda urgente.","categoria":"Logística"}
+{"id":56,"canal":"app","texto":"Prezados, Qual a previsão de chegada do pedido 26852? Aguardo retorno.","categoria":"Entrega"}
+{"id":57,"canal":"chat","texto":"Bom dia! Não consigo entrar na minha conta. Aguardo retorno.","categoria":"acesso"}
+{"id":58,"canal":"email","texto":"Bom dia! Não consigo entrar na minha conta. Aguardo retorno.","categoria":"ACESSO"}
+{"id":59,"canal":"app","texto":"Boa noite, pessoal. Meu pedido 16214 está atrasado há 21 dias. Att.","categoria":"Logística"}
+{"id":60,"canal":"chat","texto":"Recebi o pedido de outra pessoa no lugar do meu.","categoria":"logistica"}
+{"id":61,"canal":"app","texto":"Paguei via pix e o pedido 58283 continua como pendente de pagamento. Preciso de ajuda urgente.","categoria":"cobranca"}
+{"id":62,"canal":"chat","texto":"Oi, Parcelei em 3x mas cobraram à vista. Grata!","categoria":"Cobrança"}
+{"id":63,"canal":"app","texto":"Minha conta foi bloqueada depois de errar a senha. Obrigado.","categoria":"Acesso"}
+{"id":64,"canal":"email","texto":"<p>Oi,&nbsp;boa&nbsp;tarde.&nbsp;A&nbsp;transportadora&nbsp;disse&nbsp;que&nbsp;meu&nbsp;endereço&nbsp;não&nbsp;existe.&nbsp;Obrigado.</p><br>","categoria":"logistica"}
+{"id":65,"canal":"app","texto":"Prezados, A transportadora disse que meu endereço não existe. Meu e-mail é cliente646@exemplo.com.br","categoria":"Entrega"}
+{"id":66,"canal":"app","texto":"O rastreio do cadeira gamer não atualiza desde semana passada. Grata!","categoria":"Logística"}
+{"id":67,"canal":"email","texto":"Bom dia! A transportadora disse que meu endereço não existe. CPF 123.456.789-00, tel (11) 98876-5432","categoria":"Entrega"}
+{"id":68,"canal":"email","texto":"Bom dia! O cadeira gamer faz um barulho estranho. Valeu!","categoria":"troca"}
+{"id":69,"canal":"email","texto":"Bom dia! O cadeira gamer faz um barulho estranho. Valeu!","categoria":"Defeito"}
+{"id":70,"canal":"app","texto":"   OI, O CÓDIGO DE VERIFICAÇÃO POR SMS NÃO CHEGA.   ","categoria":"ACESSO"}
+{"id":71,"canal":"email","texto":"   OI, O CÓDIGO DE VERIFICAÇÃO POR SMS NÃO CHEGA.   ","categoria":"acesso"}
+{"id":72,"canal":"chat","texto":"A transportadora disse que meu endereço não existe. Aguardo retorno.","categoria":"entrega"}
+{"id":73,"canal":"chat","texto":"Comprei por engano, preciso cancelar antes do envio.","categoria":"CANCELAR"}
+{"id":74,"canal":"email","texto":"Oi, O estorno do fone bluetooth ainda não caiu na minha conta. CPF 123.456.789-07, tel (11) 98876-5432","categoria":"COBRANCA"}
+{"id":75,"canal":"chat","texto":"Prezados, Quero mudar o endereço de entrega do pedido 54188. Aguardo retorno.","categoria":"ENTREGA "}
+{"id":76,"canal":"app","texto":"Olá, Fui cobrado duas vezes pelo pedido 16099. Aguardo retorno.","categoria":"financeiro"}
+{"id":77,"canal":"email","texto":"Oi, boa tarde. Recebi o pedido de outra pessoa no lugar do meu. Att.","categoria":"ENTREGA "}
+{"id":78,"canal":"chat","texto":"Olá, Fui cobrado duas vezes pelo pedido 27561. Preciso de ajuda urgente.","categoria":"COBRANCA"}
+{"id":79,"canal":"app","texto":"Boa noite, pessoal. Paguei via pix e o pedido 81390 continua como pendente de pagamento. Valeu! CPF 123.456.789-00, tel (11) 97876-5432","categoria":"financeiro"}
+{"id":80,"canal":"app","texto":"Prezados, O pedido 68764 consta como entregue mas não recebi nada.","categoria":"Logística"}
+{"id":81,"canal":"chat","texto":"<p>Alguém&nbsp;trocou&nbsp;a&nbsp;senha&nbsp;da&nbsp;minha&nbsp;conta&nbsp;sem&nbsp;eu&nbsp;saber.&nbsp;Obrigado.</p><br>","categoria":"login"}
+{"id":82,"canal":"chat","texto":"Oi, boa tarde. O app fica pedindo login toda hora. Aguardo retorno.","categoria":"acesso"}
+{"id":83,"canal":"app","texto":"Bom dia! Quero o reembolso do valor cobrado a mais.","categoria":"COBRANCA"}
+{"id":84,"canal":"app","texto":"Boa noite, pessoal. O entregador deixou o pacote com o vizinho errado.","categoria":"logistica"}
+{"id":85,"canal":"email","texto":"Socorro! A transportadora disse que meu endereço não existe. Obrigado.","categoria":"Logística"}
+{"id":86,"canal":"app","texto":"Oi, O rastreio do notebook não atualiza desde semana passada. Att.","categoria":"Logística"}
+{"id":87,"canal":"chat","texto":"<p>Bom&nbsp;dia!&nbsp;A&nbsp;transportadora&nbsp;disse&nbsp;que&nbsp;meu&nbsp;endereço&nbsp;não&nbsp;existe.&nbsp;Grata!</p><br>","categoria":"ENTREGA "}
+{"id":88,"canal":"app","texto":"Olá, Não consigo alterar o e-mail cadastrado.","categoria":"login"}
+{"id":89,"canal":"app","texto":"<p>Olá,&nbsp;Meu&nbsp;pedido&nbsp;56967&nbsp;está&nbsp;atrasado&nbsp;há&nbsp;12&nbsp;dias.&nbsp;Obrigado.</p><br>","categoria":"logistica"}
+{"id":90,"canal":"app","texto":"Bom dia! Como cancelo o pedido 92666 que ainda não foi enviado? Preciso de ajuda urgente. Meu e-mail é cliente311@exemplo.com.br","categoria":"CANCELAR"}
+{"id":91,"canal":"chat","texto":"Boa noite, pessoal. O notebook faz um barulho estranho. CPF 123.456.789-08, tel (11) 97876-5432","categoria":"defeito"}
+{"id":92,"canal":"app","texto":"Olá, Parcelei em 3x mas cobraram à vista. Obrigado.","categoria":"financeiro"}
+{"id":93,"canal":"email","texto":"Recebi o pedido de outra pessoa no lugar do meu. Valeu!","categoria":"Entrega"}
+{"id":94,"canal":"chat","texto":"Oi, O prazo de entrega do mochila passou e ninguém responde. Aguardo retorno. Meu e-mail é cliente471@exemplo.com.br","categoria":"ENTREGA "}
+{"id":95,"canal":"email","texto":"Oi, boa tarde. Recebi o pedido de outra pessoa no lugar do meu. Att.","categoria":"ENTREGA "}
+{"id":96,"canal":"email","texto":"Oi, O prazo de entrega do liquidificador passou e ninguém responde. Att.","categoria":"entrega"}
+{"id":97,"canal":"email","texto":"<p>Socorro!&nbsp;Meu&nbsp;pedido&nbsp;84034&nbsp;está&nbsp;atrasado&nbsp;há&nbsp;8&nbsp;dias.&nbsp;Valeu!</p><br>","categoria":"Entrega"}
+{"id":98,"canal":"chat","texto":"Bom dia! Qual a previsão de chegada do pedido 68869? Aguardo retorno. Meu e-mail é cliente290@exemplo.com.br","categoria":"Entrega"}
+{"id":99,"canal":"app","texto":"Oi, boa tarde. Meu pedido 85398 está atrasado há 11 dias. Valeu!","categoria":"Entrega"}
+{"id":100,"canal":"email","texto":"Boa noite, pessoal. O boleto do pedido 32849 venceu e não consigo gerar outro. Obrigado.","categoria":"COBRANCA"}
+{"id":101,"canal":"email","texto":"   BOA NOITE, PESSOAL. O RASTREIO DO SMARTWATCH NÃO ATUALIZA DESDE SEMANA PASSADA. ATT.   ","categoria":"ENTREGA "}
+{"id":102,"canal":"app","texto":"   OLÁ, QUAL A PREVISÃO DE CHEGADA DO PEDIDO 24799?   ","categoria":"ENTREGA "}
+{"id":103,"canal":"email","texto":"<p>Olá,&nbsp;Recebi&nbsp;o&nbsp;pedido&nbsp;de&nbsp;outra&nbsp;pessoa&nbsp;no&nbsp;lugar&nbsp;do&nbsp;meu.&nbsp;Valeu!</p><br>","categoria":"ENTREGA "}
+{"id":104,"canal":"app","texto":"Prezados, Qual a previsão de chegada do pedido 19501?","categoria":"Logística"}
+{"id":105,"canal":"email","texto":"Socorro! Quero mudar o endereço de entrega do pedido 75224. Att. CPF 123.456.789-01, tel (11) 98876-5432","categoria":"Logística"}
+{"id":106,"canal":"email","texto":"Boa noite, pessoal. Meu pedido 67100 está atrasado há 19 dias. Obrigado.","categoria":"entrega"}
+{"id":107,"canal":"app","texto":"Olá, O pedido 61073 consta como entregue mas não recebi nada. Grata!","categoria":"logistica"}
+{"id":108,"canal":"app","texto":"<p>Boa&nbsp;noite,&nbsp;pessoal.&nbsp;Parcelei&nbsp;em&nbsp;3x&nbsp;mas&nbsp;cobraram&nbsp;à&nbsp;vista.&nbsp;Valeu!</p><br>","categoria":"financeiro"}
+{"id":109,"canal":"email","texto":"Olá, Recebi o pedido de outra pessoa no lugar do meu. Valeu!","categoria":"ENTREGA "}
+{"id":110,"canal":"app","texto":"Oi, boa tarde. O entregador deixou o pacote com o vizinho errado. Preciso de ajuda urgente. CPF 123.456.789-07, tel (11) 93876-5432","categoria":"logistica"}
+{"id":111,"canal":"email","texto":"Oi, boa tarde. O entregador deixou o pacote com o vizinho errado. Preciso de ajuda urgente. CPF 123.456.789-07, tel (11) 93876-5432","categoria":"Entrega"}
+{"id":112,"canal":"app","texto":"Socorro! O desconto do cupom não foi aplicado na cobrança. Valeu!","categoria":"cobranca"}
+{"id":113,"canal":"email","texto":"Fui cobrado duas vezes pelo pedido 48833.","categoria":"financeiro"}
+{"id":114,"canal":"email","texto":"Boa noite, pessoal. O login com Google parou de funcionar. CPF 123.456.789-07, tel (11) 91876-5432","categoria":"Acesso"}
+{"id":115,"canal":"email","texto":"Prezados, Quero mudar o endereço de entrega do pedido 62360. Valeu! CPF 123.456.789-06, tel (11) 94876-5432","categoria":"ENTREGA "}
+{"id":116,"canal":"chat","texto":"A fatura do cartão veio com um valor maior que o do liquidificador. Valeu!","categoria":"financeiro"}
+{"id":117,"canal":"email","texto":"Bom dia! A nota fiscal do pedido 38967 está com valor errado.","categoria":"financeiro"}
+{"id":118,"canal":"email","texto":"<p>Socorro!&nbsp;Não&nbsp;consigo&nbsp;entrar&nbsp;na&nbsp;minha&nbsp;conta.&nbsp;Att.</p><br>","categoria":"acesso"}
+{"id":119,"canal":"app","texto":"Prezados, O boleto do pedido 82253 venceu e não consigo gerar outro. Obrigado.","categoria":"COBRANCA"}
+{"id":120,"canal":"app","texto":"Socorro! O rastreio do notebook não atualiza desde semana passada. Preciso de ajuda urgente.","categoria":"ENTREGA "}
+{"id":121,"canal":"chat","texto":"Bom dia! O pedido 28539 consta como entregue mas não recebi nada. Preciso de ajuda urgente.","categoria":"entrega"}
+{"id":122,"canal":"chat","texto":"Boa noite, pessoal. Fui cobrado duas vezes pelo pedido 27347.","categoria":"COBRANCA"}
+{"id":123,"canal":"app","texto":"Boa noite, pessoal. A tela do notebook veio com manchas. Preciso de ajuda urgente.","categoria":"defeito"}
+{"id":124,"canal":"email","texto":"O prazo de entrega do smartwatch passou e ninguém responde. Obrigado. Meu e-mail é cliente964@exemplo.com.br","categoria":"Entrega"}
+{"id":125,"canal":"chat","texto":"<p>Oi,&nbsp;boa&nbsp;tarde.&nbsp;Meu&nbsp;pedido&nbsp;22458&nbsp;está&nbsp;atrasado&nbsp;há&nbsp;20&nbsp;dias.</p><br>","categoria":"Logística"}
+{"id":126,"canal":"email","texto":"Prezados, Quero o reembolso do valor cobrado a mais. Grata!","categoria":"financeiro"}
+{"id":127,"canal":"email","texto":"Olá, O estorno do notebook ainda não caiu na minha conta. Valeu! Meu e-mail é cliente148@exemplo.com.br","categoria":"cobranca"}
+{"id":128,"canal":"chat","texto":"Socorro! O liquidificador não liga de jeito nenhum. Att.","categoria":"produto com defeito"}
+{"id":129,"canal":"email","texto":" socorro! o liquidificador não liga de jeito nenhum. att.  ","categoria":"produto com defeito"}
+{"id":130,"canal":"email","texto":"Prezados, O estorno do tênis de corrida ainda não caiu na minha conta. Preciso de ajuda urgente.","categoria":"financeiro"}
+{"id":131,"canal":"email","texto":"Bom dia! O rastreio do notebook não atualiza desde semana passada.","categoria":"logistica"}
+{"id":132,"canal":"email","texto":"Oi, boa tarde. Quero mudar o endereço de entrega do pedido 73008. Att.","categoria":"logistica"}
+{"id":133,"canal":"app","texto":"Socorro! Recebi o pedido de outra pessoa no lugar do meu. Preciso de ajuda urgente.","categoria":"entrega"}
+{"id":134,"canal":"app","texto":"A transportadora disse que meu endereço não existe. Att.","categoria":"entrega"}
+{"id":135,"canal":"email","texto":"Alguém trocou a senha da minha conta sem eu saber. Preciso de ajuda urgente. Meu e-mail é cliente297@exemplo.com.br","categoria":"login"}
+{"id":136,"canal":"app","texto":"Oi, O pedido 51947 consta como entregue mas não recebi nada. Preciso de ajuda urgente.","categoria":"ENTREGA "}
+{"id":137,"canal":"app","texto":"Veio faltando uma peça do liquidificador. Att.","categoria":"Defeito"}
+{"id":138,"canal":"email","texto":" veio faltando uma peça do liquidificador. att.  ","categoria":"troca"}
+{"id":139,"canal":"email","texto":"Oi, boa tarde. Meu pedido 10597 está atrasado há 12 dias. Aguardo retorno.","categoria":"Entrega"}
+{"id":140,"canal":"app","texto":"Oi, boa tarde. O smartwatch parou de funcionar depois de 15 dias de uso. Obrigado.","categoria":"troca"}
+{"id":141,"canal":"app","texto":"Bom dia! Qual a previsão de chegada do pedido 45418? Obrigado.","categoria":"ENTREGA "}
+{"id":142,"canal":"email","texto":"Bom dia! O prazo de entrega do mochila passou e ninguém responde. Grata! CPF 123.456.789-01, tel (11) 90876-5432","categoria":"Entrega"}
+{"id":143,"canal":"chat","texto":"Oi, boa tarde. Esqueci a senha e o e-mail de recuperação não chega. Valeu!","categoria":"ACESSO"}
+{"id":144,"canal":"app","texto":"Prezados, O notebook chegou quebrado.","categoria":"troca"}
+{"id":145,"canal":"email","texto":"O tênis de corrida faz um barulho estranho. Grata!","categoria":"defeito"}
+{"id":146,"canal":"email","texto":"   OI, BOA TARDE. APARECE ERRO 403 QUANDO TENTO ACESSAR MEUS PEDIDOS.   ","categoria":"acesso"}
+{"id":147,"canal":"chat","texto":"Qual a previsão de chegada do pedido 10839? Grata!","categoria":"ENTREGA "}
+{"id":148,"canal":"app","texto":"Oi, boa tarde. Alguém trocou a senha da minha conta sem eu saber. Grata!","categoria":"login"}
+{"id":149,"canal":"app","texto":"<p>Boa&nbsp;noite,&nbsp;pessoal.&nbsp;Recebi&nbsp;o&nbsp;pedido&nbsp;de&nbsp;outra&nbsp;pessoa&nbsp;no&nbsp;lugar&nbsp;do&nbsp;meu.&nbsp;Preciso&nbsp;de&nbsp;ajuda&nbsp;urgente.</p><br>","categoria":"entrega"}
+{"id":150,"canal":"chat","texto":"Oi, Comprei por engano, preciso cancelar antes do envio. Grata!","categoria":"CANCELAR"}
+{"id":151,"canal":"app","texto":"Oi, Meu pedido 95967 está atrasado há 17 dias. Aguardo retorno. CPF 123.456.789-06, tel (11) 96876-5432","categoria":"Logística"}
+{"id":152,"canal":"app","texto":"   OLÁ, PARCELEI EM 3X MAS COBRARAM À VISTA. GRATA!   ","categoria":"financeiro"}
+{"id":153,"canal":"app","texto":"<p>Oi,&nbsp;Minha&nbsp;sessão&nbsp;expira&nbsp;assim&nbsp;que&nbsp;eu&nbsp;faço&nbsp;login.&nbsp;Aguardo&nbsp;retorno.</p><br>","categoria":"acesso"}
+{"id":154,"canal":"app","texto":"Olá, Recebi o pedido de outra pessoa no lugar do meu.","categoria":"entrega"}
+{"id":155,"canal":"email","texto":"Quero mudar o endereço de entrega do pedido 33428. Obrigado.","categoria":"Logística"}
+{"id":156,"canal":"chat","texto":"Bom dia! Não consigo alterar o e-mail cadastrado. Aguardo retorno.","categoria":"acesso"}
+{"id":157,"canal":"chat","texto":"Oi, Quero mudar o endereço de entrega do pedido 32492. Meu e-mail é cliente170@exemplo.com.br","categoria":"ENTREGA "}
+{"id":158,"canal":"email","texto":"Socorro! O cadeira gamer não liga de jeito nenhum. Grata!","categoria":"produto com defeito"}
+{"id":159,"canal":"email","texto":"Bom dia! Esqueci a senha e o e-mail de recuperação não chega. Valeu!","categoria":"login"}
+{"id":160,"canal":"email","texto":"<p>O&nbsp;prazo&nbsp;de&nbsp;entrega&nbsp;do&nbsp;fone&nbsp;bluetooth&nbsp;passou&nbsp;e&nbsp;ninguém&nbsp;responde.</p><br>","categoria":"Logística"}
+{"id":161,"canal":"email","texto":"Olá, O estorno do tênis de corrida ainda não caiu na minha conta. Att.","categoria":"COBRANCA"}
+{"id":162,"canal":"chat","texto":"Socorro! O liquidificador ficou parado no centro de distribuição. Aguardo retorno.","categoria":"entrega"}
+{"id":163,"canal":"app","texto":"   OLÁ, A TELA DO LIQUIDIFICADOR VEIO COM MANCHAS.   ","categoria":"troca"}
+{"id":164,"canal":"email","texto":"    olá, a tela do liquidificador veio com manchas.     ","categoria":"troca"}
+{"id":165,"canal":"chat","texto":"Bom dia! Comprei por engano, preciso cancelar antes do envio. Att.","categoria":"CANCELAR"}
+{"id":166,"canal":"chat","texto":"Boa noite, pessoal. Quero o reembolso do valor cobrado a mais. Obrigado.","categoria":"financeiro"}
+{"id":167,"canal":"app","texto":"   OI, QUERO ENCERRAR MINHA CONTA E CANCELAR TUDO. ATT.   ","categoria":"Cancelamento"}
+{"id":168,"canal":"app","texto":"Olá, Paguei via pix e o pedido 52706 continua como pendente de pagamento. Grata! Meu e-mail é cliente815@exemplo.com.br","categoria":"cobranca"}
+{"id":169,"canal":"chat","texto":"<p>O&nbsp;código&nbsp;de&nbsp;verificação&nbsp;por&nbsp;SMS&nbsp;não&nbsp;chega.</p><br>","categoria":"ACESSO"}
+{"id":170,"canal":"email","texto":"Bom dia! Parcelei em 3x mas cobraram à vista. Aguardo retorno.","categoria":"cobranca"}
+{"id":171,"canal":"email","texto":"Prezados, Qual a previsão de chegada do pedido 89582? Obrigado.","categoria":"ENTREGA "}
+{"id":172,"canal":"chat","texto":"Bom dia! Quero mudar o endereço de entrega do pedido 24752. CPF 123.456.789-08, tel (11) 96876-5432","categoria":"entrega"}
+{"id":173,"canal":"email","texto":"O entregador deixou o pacote com o vizinho errado. Aguardo retorno. CPF 123.456.789-01, tel (11) 97876-5432","categoria":"logistica"}
+{"id":174,"canal":"app","texto":"<p>O&nbsp;prazo&nbsp;de&nbsp;entrega&nbsp;do&nbsp;smartwatch&nbsp;passou&nbsp;e&nbsp;ninguém&nbsp;responde.&nbsp;Aguardo&nbsp;retorno.</p><br>","categoria":"ENTREGA "}
+{"id":175,"canal":"chat","texto":"Minha sessão expira assim que eu faço login.","categoria":"acesso"}
+{"id":176,"canal":"email","texto":"Minha sessão expira assim que eu faço login.","categoria":"ACESSO"}
+{"id":177,"canal":"email","texto":"Socorro! O entregador deixou o pacote com o vizinho errado. Preciso de ajuda urgente.","categoria":"logistica"}
+{"id":178,"canal":"chat","texto":"Oi, boa tarde. Minha sessão expira assim que eu faço login. Att.","categoria":"login"}
+{"id":179,"canal":"app","texto":"Boa noite, pessoal. A tela do cafeteira veio com manchas. Grata!","categoria":"troca"}
+{"id":180,"canal":"chat","texto":"Oi, boa tarde. O prazo de entrega do notebook passou e ninguém responde. Obrigado.","categoria":"Entrega"}
+{"id":181,"canal":"chat","texto":"   OI, O NOTEBOOK NÃO LIGA DE JEITO NENHUM. PRECISO DE AJUDA URGENTE.   ","categoria":"Defeito"}
+{"id":182,"canal":"app","texto":"O pedido 88046 consta como entregue mas não recebi nada. Att.","categoria":"ENTREGA "}
+{"id":183,"canal":"email","texto":"Meu pedido 64455 está atrasado há 2 dias.","categoria":"Entrega"}
+{"id":184,"canal":"chat","texto":"Oi, Quero mudar o endereço de entrega do pedido 85589. Obrigado.","categoria":"logistica"}
+{"id":185,"canal":"app","texto":"Oi, boa tarde. A transportadora disse que meu endereço não existe. Att.","categoria":"Entrega"}
+{"id":186,"canal":"chat","texto":"Prezados, O tênis de corrida chegou quebrado. Preciso de ajuda urgente.","categoria":"troca"}
+{"id":187,"canal":"email","texto":"Prezados, O desconto do cupom não foi aplicado na cobrança. Preciso de ajuda urgente. CPF 123.456.789-02, tel (11) 97876-5432","categoria":"Cobrança"}
+{"id":188,"canal":"email","texto":"Olá, O pedido 21317 consta como entregue mas não recebi nada. CPF 123.456.789-01, tel (11) 91876-5432","categoria":"ENTREGA "}
+{"id":189,"canal":"email","texto":"Prezados, O carregador do liquidificador não funciona. Preciso de ajuda urgente. CPF 123.456.789-00, tel (11) 93876-5432","categoria":"defeito"}
+{"id":190,"canal":"chat","texto":"   PREZADOS, A NOTA FISCAL DO PEDIDO 80646 ESTÁ COM VALOR ERRADO. VALEU!   ","categoria":"cobranca"}
+{"id":191,"canal":"chat","texto":"Bom dia! Meu pedido 35604 está atrasado há 18 dias. Grata! CPF 123.456.789-02, tel (11) 92876-5432","categoria":"Logística"}
+{"id":192,"canal":"email","texto":"<p>Socorro!&nbsp;Meu&nbsp;pedido&nbsp;48418&nbsp;está&nbsp;atrasado&nbsp;há&nbsp;13&nbsp;dias.&nbsp;Aguardo&nbsp;retorno.</p><br>","categoria":"Logística"}
+{"id":193,"canal":"app","texto":"Oi, O rastreio do mochila não atualiza desde semana passada. Grata!","categoria":"entrega"}
+{"id":194,"canal":"app","texto":"<p>Recebi&nbsp;o&nbsp;pedido&nbsp;de&nbsp;outra&nbsp;pessoa&nbsp;no&nbsp;lugar&nbsp;do&nbsp;meu.&nbsp;Valeu!</p><br>","categoria":"ENTREGA "}
+{"id":195,"canal":"app","texto":"O botão do cadeira gamer está travado.","categoria":"troca"}
+{"id":196,"canal":"app","texto":"Olá, Minha sessão expira assim que eu faço login. Preciso de ajuda urgente.","categoria":"ACESSO"}
+{"id":197,"canal":"email","texto":"Oi, boa tarde. Cancelem o pedido 33178, achei mais barato em outro lugar. Att.","categoria":"CANCELAR"}
+{"id":198,"canal":"app","texto":"Olá, O prazo de entrega do notebook passou e ninguém responde.","categoria":"logistica"}
+{"id":199,"canal":"chat","texto":"Oi, A fatura do cartão veio com um valor maior que o do cadeira gamer. Grata!","categoria":"financeiro"}
+{"id":200,"canal":"app","texto":"Olá, Não consigo entrar na minha conta. Preciso de ajuda urgente. CPF 123.456.789-08, tel (11) 94876-5432","categoria":"Acesso"}
+{"id":201,"canal":"email","texto":"Prezados, A fatura do cartão veio com um valor maior que o do smartwatch. Meu e-mail é cliente109@exemplo.com.br","categoria":"Cobrança"}
+{"id":202,"canal":"chat","texto":"Oi, boa tarde. A nota fiscal do pedido 69348 está com valor errado. Att.","categoria":"COBRANCA"}
+{"id":203,"canal":"app","texto":"Olá, Parcelei em 3x mas cobraram à vista. Aguardo retorno. Meu e-mail é cliente619@exemplo.com.br","categoria":"financeiro"}
+{"id":204,"canal":"chat","texto":"Socorro! Quero mudar o endereço de entrega do pedido 87980.","categoria":"ENTREGA "}
+{"id":205,"canal":"app","texto":"Oi, Não consigo entrar na minha conta. Obrigado.","categoria":"acesso"}
+{"id":206,"canal":"app","texto":"Oi, boa tarde. Quero o reembolso do valor cobrado a mais. Aguardo retorno.","categoria":"Cobrança"}
+{"id":207,"canal":"email","texto":" oi, boa tarde. quero o reembolso do valor cobrado a mais. aguardo retorno.  ","categoria":"Cobrança"}
+{"id":208,"canal":"chat","texto":"Minha sessão expira assim que eu faço login. Obrigado.","categoria":"ACESSO"}
+{"id":209,"canal":"chat","texto":"Prezados, Fui cobrado duas vezes pelo pedido 93167. Grata!","categoria":"financeiro"}
+{"id":210,"canal":"app","texto":"Bom dia! Recebi o pedido de outra pessoa no lugar do meu.","categoria":"ENTREGA "}
+{"id":211,"canal":"app","texto":"Prezados, O cafeteira ficou parado no centro de distribuição. Grata!","categoria":"Logística"}
+{"id":212,"canal":"app","texto":"<p>Prezados,&nbsp;A&nbsp;nota&nbsp;fiscal&nbsp;do&nbsp;pedido&nbsp;19299&nbsp;está&nbsp;com&nbsp;valor&nbsp;errado.&nbsp;Att.</p><br>","categoria":"financeiro"}
+{"id":213,"canal":"app","texto":"<p>Oi,&nbsp;O&nbsp;fone&nbsp;bluetooth&nbsp;ficou&nbsp;parado&nbsp;no&nbsp;centro&nbsp;de&nbsp;distribuição.&nbsp;Obrigado.</p><br>","categoria":"Entrega"}
+{"id":214,"canal":"email","texto":"Bom dia! O liquidificador ficou parado no centro de distribuição. Preciso de ajuda urgente.","categoria":"logistica"}
+{"id":215,"canal":"app","texto":"Bom dia! Recebi o pedido de outra pessoa no lugar do meu.","categoria":"Entrega"}
+{"id":216,"canal":"chat","texto":"Bom dia! Qual a previsão de chegada do pedido 51796?","categoria":"ENTREGA "}
+{"id":217,"canal":"chat","texto":"Boa noite, pessoal. Meu pedido 23204 está atrasado há 13 dias. Aguardo retorno.","categoria":"Entrega"}
+{"id":218,"canal":"app","texto":"Boa noite, pessoal. Apareceu uma cobrança que eu não reconheço no meu cartão. Obrigado.","categoria":" cobrança "}
+{"id":219,"canal":"chat","texto":"Qual a previsão de chegada do pedido 56389? Att.","categoria":"Logística"}
+{"id":220,"canal":"chat","texto":"Boa noite, pessoal. Qual a previsão de chegada do pedido 76076? Valeu! Meu e-mail é cliente407@exemplo.com.br","categoria":"Logística"}
+{"id":221,"canal":"email","texto":"<p>Boa&nbsp;noite,&nbsp;pessoal.&nbsp;Minha&nbsp;conta&nbsp;foi&nbsp;bloqueada&nbsp;depois&nbsp;de&nbsp;errar&nbsp;a&nbsp;senha.&nbsp;Obrigado.</p><br>","categoria":"ACESSO"}
+{"id":222,"canal":"email","texto":"<p>Oi,&nbsp;O&nbsp;cafeteira&nbsp;chegou&nbsp;quebrado.&nbsp;Preciso&nbsp;de&nbsp;ajuda&nbsp;urgente.</p><br>","categoria":"defeito"}
+{"id":223,"canal":"app","texto":"Oi, boa tarde. Minha sessão expira assim que eu faço login. Grata!","categoria":"acesso"}
+{"id":224,"canal":"app","texto":"Oi, boa tarde. O entregador deixou o pacote com o vizinho errado. Grata! CPF 123.456.789-08, tel (11) 97876-5432","categoria":"logistica"}
+{"id":225,"canal":"chat","texto":"Prezados, Quero exercer o direito de arrependimento do cadeira gamer.","categoria":"cancelamento"}
+{"id":226,"canal":"chat","texto":"Socorro! Esqueci a senha e o e-mail de recuperação não chega. Grata!","categoria":"acesso"}
+{"id":227,"canal":"email","texto":"Oi, boa tarde. Quero mudar o endereço de entrega do pedido 50594. Meu e-mail é cliente115@exemplo.com.br","categoria":"ENTREGA "}
+{"id":228,"canal":"app","texto":"<p>Socorro!&nbsp;Minha&nbsp;sessão&nbsp;expira&nbsp;assim&nbsp;que&nbsp;eu&nbsp;faço&nbsp;login.&nbsp;Valeu!</p><br>","categoria":"ACESSO"}
+{"id":229,"canal":"app","texto":"Socorro! Parcelei em 3x mas cobraram à vista.","categoria":"cobranca"}
+{"id":230,"canal":"email","texto":" socorro! parcelei em 3x mas cobraram à vista.  ","categoria":"cobranca"}
+{"id":231,"canal":"app","texto":"Olá, Parcelei em 3x mas cobraram à vista. Obrigado.","categoria":"financeiro"}
+{"id":232,"canal":"chat","texto":"Meu pedido 23442 está atrasado há 9 dias. Grata!","categoria":"entrega"}
+{"id":233,"canal":"email","texto":"   PREZADOS, A FATURA DO CARTÃO VEIO COM UM VALOR MAIOR QUE O DO NOTEBOOK. ATT.   ","categoria":"COBRANCA"}
+{"id":234,"canal":"email","texto":"O notebook parou de funcionar depois de 19 dias de uso. Grata!","categoria":"produto com defeito"}
+{"id":235,"canal":"email","texto":"O notebook parou de funcionar depois de 19 dias de uso. Grata!","categoria":"produto com defeito"}
+{"id":236,"canal":"email","texto":"Bom dia! O boleto do pedido 93066 venceu e não consigo gerar outro.","categoria":"Cobrança"}
+{"id":237,"canal":"chat","texto":"Olá, O mochila faz um barulho estranho. Aguardo retorno.","categoria":"produto com defeito"}
+{"id":238,"canal":"chat","texto":"Bom dia! Quero cancelar minha assinatura do clube de frete.","categoria":"Cancelamento"}
+{"id":239,"canal":"chat","texto":"<p>Bom&nbsp;dia!&nbsp;Apareceu&nbsp;uma&nbsp;cobrança&nbsp;que&nbsp;eu&nbsp;não&nbsp;reconheço&nbsp;no&nbsp;meu&nbsp;cartão.</p><br>","categoria":"cobranca"}
+{"id":240,"canal":"app","texto":"Socorro! O cadeira gamer não liga de jeito nenhum. Aguardo retorno.","categoria":"Defeito"}
+{"id":241,"canal":"email","texto":"Bom dia! O smartwatch chegou quebrado. Preciso de ajuda urgente.","categoria":"troca"}
+{"id":242,"canal":"email","texto":"   APARECE ERRO 403 QUANDO TENTO ACESSAR MEUS PEDIDOS. ATT.   ","categoria":"Acesso"}
+{"id":243,"canal":"app","texto":"Oi, boa tarde. Minha sessão expira assim que eu faço login. CPF 123.456.789-00, tel (11) 94876-5432","categoria":"acesso"}
+{"id":244,"canal":"email","texto":"Prezados, A nota fiscal do pedido 13062 está com valor errado. Obrigado.","categoria":"cobranca"}
+{"id":245,"canal":"chat","texto":"Socorro! O rastreio do cadeira gamer não atualiza desde semana passada. Valeu!","categoria":"Logística"}
+{"id":246,"canal":"app","texto":"Olá, O fone bluetooth ficou parado no centro de distribuição. Grata!","categoria":"Logística"}
+{"id":247,"canal":"chat","texto":"<p>Boa&nbsp;noite,&nbsp;pessoal.&nbsp;O&nbsp;tênis&nbsp;de&nbsp;corrida&nbsp;não&nbsp;liga&nbsp;de&nbsp;jeito&nbsp;nenhum.&nbsp;Aguardo&nbsp;retorno.</p><br>","categoria":"defeito"}
+{"id":248,"canal":"email","texto":"Quero o reembolso do valor cobrado a mais. Att.","categoria":"cobranca"}
+{"id":249,"canal":"app","texto":"Socorro! O código de verificação por SMS não chega. Aguardo retorno.","categoria":"Acesso"}
+{"id":250,"canal":"app","texto":"   OI, BOA TARDE. O TÊNIS DE CORRIDA NÃO LIGA DE JEITO NENHUM.   ","categoria":"troca"}
+{"id":251,"canal":"chat","texto":"Parcelei em 3x mas cobraram à vista.","categoria":"Cobrança"}
+{"id":252,"canal":"email","texto":" parcelei em 3x mas cobraram à vista.  ","categoria":" cobrança "}
+{"id":253,"canal":"chat","texto":"Boa noite, pessoal. Paguei via pix e o pedido 48686 continua como pendente de pagamento. Grata!","categoria":"COBRANCA"}
+{"id":254,"canal":"chat","texto":"Olá, Fui cobrado duas vezes pelo pedido 40268. Grata!","categoria":"financeiro"}
+{"id":255,"canal":"app","texto":"Socorro! Apareceu uma cobrança que eu não reconheço no meu cartão.","categoria":" cobrança "}
+{"id":256,"canal":"app","texto":"Esqueci a senha e o e-mail de recuperação não chega. Valeu! CPF 123.456.789-08, tel (11) 94876-5432","categoria":"acesso"}
+{"id":257,"canal":"app","texto":"Oi, Fui cobrado duas vezes pelo pedido 76705.","categoria":"Cobrança"}
+{"id":258,"canal":"app","texto":"<p>Oi,&nbsp;Não&nbsp;consigo&nbsp;alterar&nbsp;o&nbsp;e-mail&nbsp;cadastrado.&nbsp;Valeu!</p><br>","categoria":"ACESSO"}
+{"id":259,"canal":"chat","texto":"O rastreio do notebook não atualiza desde semana passada.","categoria":"Logística"}
+{"id":260,"canal":"chat","texto":"O pedido 39085 consta como entregue mas não recebi nada. Preciso de ajuda urgente.","categoria":"entrega"}
+{"id":261,"canal":"app","texto":"   PREZADOS, CANCELEM O PEDIDO 78195, ACHEI MAIS BARATO EM OUTRO LUGAR.   ","categoria":"Cancelamento"}
+{"id":262,"canal":"chat","texto":"<p>Oi,&nbsp;boa&nbsp;tarde.&nbsp;O&nbsp;liquidificador&nbsp;esquenta&nbsp;demais&nbsp;e&nbsp;desliga&nbsp;sozinho.&nbsp;Valeu!</p><br>","categoria":"defeito"}
+{"id":263,"canal":"app","texto":"O notebook faz um barulho estranho. Valeu!","categoria":"defeito"}
+{"id":264,"canal":"chat","texto":"Socorro! Quero cancelar o pedido 36545. Obrigado.","categoria":"CANCELAR"}
+{"id":265,"canal":"chat","texto":"Prezados, Quero encerrar minha conta e cancelar tudo. Valeu!","categoria":"Cancelamento"}
+{"id":266,"canal":"email","texto":"Bom dia! Quero encerrar minha conta e cancelar tudo.","categoria":"CANCELAR"}
+{"id":267,"canal":"email","texto":" bom dia! quero encerrar minha conta e cancelar tudo.  ","categoria":"CANCELAR"}
+{"id":268,"canal":"app","texto":"Oi, O entregador deixou o pacote com o vizinho errado. Valeu!","categoria":"Logística"}
+{"id":269,"canal":"email","texto":"<p>Oi,&nbsp;O&nbsp;estorno&nbsp;do&nbsp;tênis&nbsp;de&nbsp;corrida&nbsp;ainda&nbsp;não&nbsp;caiu&nbsp;na&nbsp;minha&nbsp;conta.&nbsp;Grata!</p><br>","categoria":"financeiro"}
+{"id":270,"canal":"app","texto":"Prezados, Recebi o pedido de outra pessoa no lugar do meu. Att. CPF 123.456.789-01, tel (11) 94876-5432","categoria":"entrega"}
+{"id":271,"canal":"email","texto":"Esqueci a senha e o e-mail de recuperação não chega.","categoria":"login"}
+{"id":272,"canal":"app","texto":"Bom dia! Minha sessão expira assim que eu faço login.","categoria":"ACESSO"}
+{"id":273,"canal":"email","texto":"<p>Socorro!&nbsp;Quero&nbsp;mudar&nbsp;o&nbsp;endereço&nbsp;de&nbsp;entrega&nbsp;do&nbsp;pedido&nbsp;38485.</p><br>","categoria":"Logística"}
+{"id":274,"canal":"app","texto":"Bom dia! A nota fiscal do pedido 79391 está com valor errado. Preciso de ajuda urgente.","categoria":"cobranca"}
+{"id":275,"canal":"chat","texto":"Não consigo entrar na minha conta.","categoria":"acesso"}
+{"id":276,"canal":"chat","texto":"Olá, Recebi o pedido de outra pessoa no lugar do meu. Obrigado.","categoria":"logistica"}
+{"id":277,"canal":"email","texto":"Socorro! O código de verificação por SMS não chega. Preciso de ajuda urgente.","categoria":"ACESSO"}
+{"id":278,"canal":"chat","texto":"   BOA NOITE, PESSOAL. QUERO CANCELAR MINHA ASSINATURA DO CLUBE DE FRETE. AGUARDO RETORNO.   ","categoria":"Cancelamento"}
+{"id":279,"canal":"email","texto":"   BOA NOITE, PESSOAL. QUERO CANCELAR MINHA ASSINATURA DO CLUBE DE FRETE. AGUARDO RETORNO.   ","categoria":"CANCELAR"}
+{"id":280,"canal":"chat","texto":"O entregador deixou o pacote com o vizinho errado.","categoria":"entrega"}
+{"id":281,"canal":"email","texto":"<p>Bom&nbsp;dia!&nbsp;O&nbsp;entregador&nbsp;deixou&nbsp;o&nbsp;pacote&nbsp;com&nbsp;o&nbsp;vizinho&nbsp;errado.</p><br>","categoria":"ENTREGA "}
+{"id":282,"canal":"email","texto":"Oi, Meu pedido 62559 está atrasado há 11 dias. Aguardo retorno.","categoria":"ENTREGA "}
+{"id":283,"canal":"chat","texto":"Boa noite, pessoal. Meu pedido 96695 está atrasado há 9 dias. Valeu! Meu e-mail é cliente937@exemplo.com.br","categoria":"Logística"}
+{"id":284,"canal":"email","texto":"Olá, Quero mudar o endereço de entrega do pedido 22503. Valeu!","categoria":"ENTREGA "}
+{"id":285,"canal":"app","texto":"<p>Apareceu&nbsp;uma&nbsp;cobrança&nbsp;que&nbsp;eu&nbsp;não&nbsp;reconheço&nbsp;no&nbsp;meu&nbsp;cartão.&nbsp;Att.</p><br>","categoria":"financeiro"}
+{"id":286,"canal":"chat","texto":"Oi, O entregador deixou o pacote com o vizinho errado. Obrigado.","categoria":"logistica"}
+{"id":287,"canal":"chat","texto":"Olá, Minha conta foi bloqueada depois de errar a senha. Aguardo retorno. CPF 123.456.789-04, tel (11) 96876-5432","categoria":"ACESSO"}
+{"id":288,"canal":"app","texto":"Boa noite, pessoal. Qual a previsão de chegada do pedido 13855? Grata! CPF 123.456.789-00, tel (11) 97876-5432","categoria":"ENTREGA "}
+{"id":289,"canal":"email","texto":" boa noite, pessoal. qual a previsão de chegada do pedido 13855? grata! cpf 123.456.789-00, tel (11) 97876-5432  ","categoria":"Entrega"}
+{"id":290,"canal":"email","texto":"Olá, O desconto do cupom não foi aplicado na cobrança. Meu e-mail é cliente920@exemplo.com.br","categoria":"Cobrança"}
+{"id":291,"canal":"chat","texto":"Oi, boa tarde. Como cancelo o pedido 75756 que ainda não foi enviado?","categoria":"CANCELAR"}
+{"id":292,"canal":"email","texto":"Oi, boa tarde. Alguém trocou a senha da minha conta sem eu saber. Valeu! Meu e-mail é cliente548@exemplo.com.br","categoria":"Acesso"}
+{"id":293,"canal":"email","texto":"Veio faltando uma peça do mochila. Grata!","categoria":"troca"}
+{"id":294,"canal":"email","texto":" veio faltando uma peça do mochila. grata!  ","categoria":"Defeito"}
+{"id":295,"canal":"app","texto":"Olá, Meu pedido 40956 está atrasado há 12 dias. Preciso de ajuda urgente.","categoria":"Entrega"}
+{"id":296,"canal":"app","texto":"Socorro! Como cancelo o pedido 37783 que ainda não foi enviado? Obrigado.","categoria":"cancelamento"}
+{"id":297,"canal":"chat","texto":"Boa noite, pessoal. Esqueci a senha e o e-mail de recuperação não chega.","categoria":"login"}
+{"id":298,"canal":"app","texto":"Olá, Quero cancelar o pedido 25534. Preciso de ajuda urgente.","categoria":"CANCELAR"}
+{"id":299,"canal":"chat","texto":"<p>Bom&nbsp;dia!&nbsp;O&nbsp;pedido&nbsp;31308&nbsp;consta&nbsp;como&nbsp;entregue&nbsp;mas&nbsp;não&nbsp;recebi&nbsp;nada.&nbsp;Valeu!</p><br>","categoria":"Entrega"}
+{"id":300,"canal":"chat","texto":"<p>Quero&nbsp;o&nbsp;reembolso&nbsp;do&nbsp;valor&nbsp;cobrado&nbsp;a&nbsp;mais.&nbsp;Obrigado.</p><br>","categoria":"financeiro"}
+{"id":301,"canal":"chat","texto":"Boa noite, pessoal. O liquidificador chegou quebrado. Grata!","categoria":"produto com defeito"}
+{"id":302,"canal":"app","texto":"Bom dia! A nota fiscal do pedido 89329 está com valor errado. Aguardo retorno.","categoria":"cobranca"}
+{"id":303,"canal":"email","texto":"Prezados, O prazo de entrega do tênis de corrida passou e ninguém responde. Preciso de ajuda urgente.","categoria":"logistica"}
+{"id":304,"canal":"email","texto":"   OI, BOA TARDE. RECEBI O PEDIDO DE OUTRA PESSOA NO LUGAR DO MEU. VALEU!   ","categoria":"ENTREGA "}
+{"id":305,"canal":"app","texto":"Bom dia! O notebook esquenta demais e desliga sozinho. CPF 123.456.789-07, tel (11) 96876-5432","categoria":"Defeito"}
+{"id":306,"canal":"app","texto":"   MEU PEDIDO 82312 ESTÁ ATRASADO HÁ 5 DIAS.   ","categoria":"Logística"}
+{"id":307,"canal":"email","texto":"   MEU PEDIDO 82312 ESTÁ ATRASADO HÁ 5 DIAS.   ","categoria":"Entrega"}
+{"id":308,"canal":"email","texto":"O estorno do cadeira gamer ainda não caiu na minha conta. Preciso de ajuda urgente. CPF 123.456.789-05, tel (11) 97876-5432","categoria":"Cobrança"}
+{"id":309,"canal":"chat","texto":"Prezados, O cafeteira chegou quebrado.","categoria":"defeito"}
+{"id":310,"canal":"email","texto":"Olá, Recebi o pedido de outra pessoa no lugar do meu. Obrigado. CPF 123.456.789-00, tel (11) 94876-5432","categoria":"Entrega"}
+{"id":311,"canal":"email","texto":"Desisti da compra do notebook, como cancelo? Att.","categoria":"CANCELAR"}
+{"id":312,"canal":"email","texto":"Socorro! Recebi o pedido de outra pessoa no lugar do meu. Aguardo retorno.","categoria":"logistica"}
+{"id":313,"canal":"chat","texto":"Qual a previsão de chegada do pedido 12438? CPF 123.456.789-01, tel (11) 96876-5432","categoria":"ENTREGA "}
+{"id":314,"canal":"chat","texto":"Socorro! Quero cancelar minha assinatura do clube de frete. Aguardo retorno.","categoria":"CANCELAR"}
+{"id":315,"canal":"chat","texto":"Oi, Apareceu uma cobrança que eu não reconheço no meu cartão. Aguardo retorno.","categoria":"COBRANCA"}
+{"id":316,"canal":"chat","texto":"Quero mudar o endereço de entrega do pedido 89110. Grata!","categoria":"ENTREGA "}
+{"id":317,"canal":"email","texto":"Prezados, O carregador do tênis de corrida não funciona. Valeu!","categoria":"produto com defeito"}
+{"id":318,"canal":"email","texto":"A transportadora disse que meu endereço não existe. Valeu!","categoria":"Logística"}
+{"id":319,"canal":"email","texto":"Olá, Alguém trocou a senha da minha conta sem eu saber. Aguardo retorno. CPF 123.456.789-02, tel (11) 96876-5432","categoria":"Acesso"}
+{"id":320,"canal":"app","texto":"   O MOCHILA VEIO COM A EMBALAGEM VIOLADA E ARRANHADO. GRATA!   ","categoria":"troca"}
+{"id":321,"canal":"chat","texto":"Paguei via pix e o pedido 71542 continua como pendente de pagamento. Grata! Meu e-mail é cliente320@exemplo.com.br","categoria":"COBRANCA"}
+{"id":322,"canal":"app","texto":"Bom dia! O entregador deixou o pacote com o vizinho errado.","categoria":"Entrega"}
+{"id":323,"canal":"chat","texto":"<p>Desisti&nbsp;da&nbsp;compra&nbsp;do&nbsp;notebook,&nbsp;como&nbsp;cancelo?&nbsp;Grata!</p><br>","categoria":"cancelamento"}
+{"id":324,"canal":"app","texto":"Socorro! O app fica pedindo login toda hora.","categoria":"Acesso"}
+{"id":325,"canal":"email","texto":"Oi, boa tarde. O rastreio do fone bluetooth não atualiza desde semana passada. Grata!","categoria":"Logística"}
+{"id":326,"canal":"email","texto":"Oi, boa tarde. O rastreio do fone bluetooth não atualiza desde semana passada. Grata!","categoria":"logistica"}
+{"id":327,"canal":"chat","texto":"Boa noite, pessoal. Quero cancelar minha assinatura do clube de frete.","categoria":"Cancelamento"}
+{"id":328,"canal":"app","texto":"<p>A&nbsp;fatura&nbsp;do&nbsp;cartão&nbsp;veio&nbsp;com&nbsp;um&nbsp;valor&nbsp;maior&nbsp;que&nbsp;o&nbsp;do&nbsp;liquidificador.</p><br>","categoria":"cobranca"}
+{"id":329,"canal":"email","texto":"A fatura do cartão veio com um valor maior que o do notebook.","categoria":"financeiro"}
+{"id":330,"canal":"email","texto":"A fatura do cartão veio com um valor maior que o do notebook.","categoria":"cobranca"}
+{"id":331,"canal":"chat","texto":"<p>Bom&nbsp;dia!&nbsp;O&nbsp;cadeira&nbsp;gamer&nbsp;veio&nbsp;com&nbsp;a&nbsp;embalagem&nbsp;violada&nbsp;e&nbsp;arranhado.&nbsp;Preciso&nbsp;de&nbsp;ajuda&nbsp;urgente.</p><br>","categoria":"produto com defeito"}
+{"id":332,"canal":"chat","texto":"Não consigo alterar o e-mail cadastrado. Obrigado. Meu e-mail é cliente107@exemplo.com.br","categoria":"acesso"}
+{"id":333,"canal":"app","texto":"A nota fiscal do pedido 63267 está com valor errado.","categoria":"financeiro"}
+{"id":334,"canal":"email","texto":"Bom dia! Qual a previsão de chegada do pedido 67524? Preciso de ajuda urgente.","categoria":"entrega"}
+{"id":335,"canal":"email","texto":"Prezados, A nota fiscal do pedido 19710 está com valor errado. Grata!","categoria":"COBRANCA"}
+{"id":336,"canal":"chat","texto":"Socorro! Quero mudar o endereço de entrega do pedido 44474. Obrigado.","categoria":"entrega"}
+{"id":337,"canal":"chat","texto":"Oi, Paguei via pix e o pedido 95414 continua como pendente de pagamento.","categoria":"cobranca"}
+{"id":338,"canal":"app","texto":"Oi, boa tarde. O app fica pedindo login toda hora.","categoria":"Acesso"}
+{"id":339,"canal":"email","texto":"Oi, O mochila ficou parado no centro de distribuição. Aguardo retorno.","categoria":"Entrega"}
+{"id":340,"canal":"email","texto":"   OLÁ, QUERO ENCERRAR MINHA CONTA E CANCELAR TUDO.   ","categoria":"Cancelamento"}
+{"id":341,"canal":"chat","texto":"O boleto do pedido 68532 venceu e não consigo gerar outro.","categoria":"COBRANCA"}
+{"id":342,"canal":"email","texto":"Olá, O pedido 11528 consta como entregue mas não recebi nada. Preciso de ajuda urgente.","categoria":"entrega"}
+{"id":343,"canal":"chat","texto":"Olá, O boleto do pedido 53686 venceu e não consigo gerar outro. Att.","categoria":"Cobrança"}
+{"id":344,"canal":"email","texto":"Olá, O smartwatch não liga de jeito nenhum. Att.","categoria":"Defeito"}
+{"id":345,"canal":"app","texto":"O cafeteira parou de funcionar depois de 15 dias de uso. Obrigado. Meu e-mail é cliente687@exemplo.com.br","categoria":"defeito"}
+{"id":346,"canal":"chat","texto":"   PREZADOS, O RASTREIO DO FONE BLUETOOTH NÃO ATUALIZA DESDE SEMANA PASSADA. PRECISO DE AJUDA URGENTE.   ","categoria":"entrega"}
+{"id":347,"canal":"email","texto":"<p>O&nbsp;desconto&nbsp;do&nbsp;cupom&nbsp;não&nbsp;foi&nbsp;aplicado&nbsp;na&nbsp;cobrança.&nbsp;Valeu!</p><br>","categoria":"financeiro"}
+{"id":348,"canal":"email","texto":"Boa noite, pessoal. O entregador deixou o pacote com o vizinho errado. Att. CPF 123.456.789-03, tel (11) 98876-5432","categoria":"ENTREGA "}
+{"id":349,"canal":"app","texto":"Bom dia! O boleto do pedido 96478 venceu e não consigo gerar outro.","categoria":"Cobrança"}
+{"id":350,"canal":"chat","texto":"O entregador deixou o pacote com o vizinho errado. Valeu! Meu e-mail é cliente883@exemplo.com.br","categoria":"Logística"}
+{"id":351,"canal":"app","texto":"Boa noite, pessoal. A transportadora disse que meu endereço não existe. Aguardo retorno.","categoria":"ENTREGA "}
+{"id":352,"canal":"chat","texto":"   O PEDIDO 14587 CONSTA COMO ENTREGUE MAS NÃO RECEBI NADA.   ","categoria":"Logística"}
+{"id":353,"canal":"email","texto":"   O PEDIDO 14587 CONSTA COMO ENTREGUE MAS NÃO RECEBI NADA.   ","categoria":"logistica"}
+{"id":354,"canal":"chat","texto":"Olá, O entregador deixou o pacote com o vizinho errado. Obrigado. CPF 123.456.789-06, tel (11) 92876-5432","categoria":"logistica"}
+{"id":355,"canal":"email","texto":"Recebi o pedido de outra pessoa no lugar do meu. Att.","categoria":"ENTREGA "}
+{"id":356,"canal":"app","texto":"Socorro! O prazo de entrega do notebook passou e ninguém responde. Aguardo retorno.","categoria":"logistica"}
+{"id":357,"canal":"email","texto":"Socorro! O rastreio do fone bluetooth não atualiza desde semana passada.","categoria":"Logística"}
+{"id":358,"canal":"app","texto":"Socorro! Apareceu uma cobrança que eu não reconheço no meu cartão.","categoria":" cobrança "}
+{"id":359,"canal":"app","texto":"Oi, A fatura do cartão veio com um valor maior que o do fone bluetooth. Att.","categoria":"financeiro"}
+{"id":360,"canal":"chat","texto":"O desconto do cupom não foi aplicado na cobrança.","categoria":" cobrança "}
+{"id":361,"canal":"email","texto":"O desconto do cupom não foi aplicado na cobrança.","categoria":"COBRANCA"}
+{"id":362,"canal":"email","texto":"Recebi o pedido de outra pessoa no lugar do meu. Grata!","categoria":"Entrega"}
+{"id":363,"canal":"email","texto":"O desconto do cupom não foi aplicado na cobrança. Obrigado.","categoria":"financeiro"}
+{"id":364,"canal":"app","texto":"   BOA NOITE, PESSOAL. PARCELEI EM 3X MAS COBRARAM À VISTA.   ","categoria":" cobrança "}
+{"id":365,"canal":"app","texto":"<p>Olá,&nbsp;O&nbsp;botão&nbsp;do&nbsp;liquidificador&nbsp;está&nbsp;travado.&nbsp;Valeu!</p><br>","categoria":"defeito"}
+{"id":366,"canal":"email","texto":"Oi, boa tarde. Qual a previsão de chegada do pedido 13658? Obrigado.","categoria":"Logística"}
+{"id":367,"canal":"email","texto":"Oi, A transportadora disse que meu endereço não existe.","categoria":"logistica"}
+{"id":368,"canal":"chat","texto":"<p>Olá,&nbsp;O&nbsp;tênis&nbsp;de&nbsp;corrida&nbsp;faz&nbsp;um&nbsp;barulho&nbsp;estranho.&nbsp;Grata!</p><br>","categoria":"troca"}
+{"id":369,"canal":"app","texto":"   QUAL A PREVISÃO DE CHEGADA DO PEDIDO 86866? VALEU!   ","categoria":"entrega"}
+{"id":370,"canal":"email","texto":"   QUAL A PREVISÃO DE CHEGADA DO PEDIDO 86866? VALEU!   ","categoria":"Logística"}
+{"id":371,"canal":"app","texto":"Socorro! Não consigo alterar o e-mail cadastrado.","categoria":"ACESSO"}
+{"id":372,"canal":"app","texto":"Boa noite, pessoal. Quero cancelar minha assinatura do clube de frete. Valeu! CPF 123.456.789-01, tel (11) 97876-5432","categoria":"Cancelamento"}
+{"id":373,"canal":"app","texto":"Olá, A nota fiscal do pedido 57141 está com valor errado. Obrigado.","categoria":"financeiro"}
+{"id":374,"canal":"app","texto":"Bom dia! Parcelei em 3x mas cobraram à vista.","categoria":"COBRANCA"}
+{"id":375,"canal":"app","texto":"Oi, Esqueci a senha e o e-mail de recuperação não chega. Preciso de ajuda urgente.","categoria":"ACESSO"}
+{"id":376,"canal":"email","texto":" oi, esqueci a senha e o e-mail de recuperação não chega. preciso de ajuda urgente.  ","categoria":"Acesso"}
+{"id":377,"canal":"app","texto":"Oi, O prazo de entrega do liquidificador passou e ninguém responde. Obrigado.","categoria":"ENTREGA "}
+{"id":378,"canal":"email","texto":"Oi, boa tarde. Meu pedido 38543 está atrasado há 17 dias. Obrigado.","categoria":"Logística"}
+{"id":379,"canal":"app","texto":"Comprei por engano, preciso cancelar antes do envio. Obrigado.","categoria":"CANCELAR"}
+{"id":380,"canal":"app","texto":"Socorro! Não consigo entrar na minha conta. Att. CPF 123.456.789-01, tel (11) 90876-5432","categoria":"acesso"}
+{"id":381,"canal":"chat","texto":"Oi, Quero mudar o endereço de entrega do pedido 61085. Meu e-mail é cliente135@exemplo.com.br","categoria":"Logística"}
+{"id":382,"canal":"app","texto":"   OI, MEU PEDIDO 43163 ESTÁ ATRASADO HÁ 12 DIAS. PRECISO DE AJUDA URGENTE.   ","categoria":"logistica"}
+{"id":383,"canal":"email","texto":"Oi, Minha sessão expira assim que eu faço login. Aguardo retorno.","categoria":"ACESSO"}
+{"id":384,"canal":"chat","texto":"Oi, boa tarde. O prazo de entrega do cadeira gamer passou e ninguém responde. Att.","categoria":"Logística"}
+{"id":385,"canal":"app","texto":"Bom dia! O app fica pedindo login toda hora. Grata!","categoria":"Acesso"}
+{"id":386,"canal":"email","texto":"Olá, O mochila não liga de jeito nenhum. Att.","categoria":"produto com defeito"}
+{"id":387,"canal":"chat","texto":"Oi, boa tarde. Alguém trocou a senha da minha conta sem eu saber. Valeu!","categoria":"ACESSO"}
+{"id":388,"canal":"chat","texto":"Não consigo entrar na minha conta. CPF 123.456.789-03, tel (11) 97876-5432","categoria":"Acesso"}
+{"id":389,"canal":"email","texto":"Oi, O boleto do pedido 43970 venceu e não consigo gerar outro.","categoria":"COBRANCA"}
+{"id":390,"canal":"email","texto":"Prezados, Minha sessão expira assim que eu faço login. Obrigado.","categoria":"Acesso"}
+{"id":391,"canal":"email","texto":"<p>Prezados,&nbsp;A&nbsp;transportadora&nbsp;disse&nbsp;que&nbsp;meu&nbsp;endereço&nbsp;não&nbsp;existe.&nbsp;Att.</p><br>","categoria":"entrega"}
+{"id":392,"canal":"email","texto":"Olá, Aparece erro 403 quando tento acessar meus pedidos. Grata!","categoria":"Acesso"}
+{"id":393,"canal":"chat","texto":"Bom dia! O prazo de entrega do cadeira gamer passou e ninguém responde. Grata!","categoria":"ENTREGA "}
+{"id":394,"canal":"email","texto":" bom dia! o prazo de entrega do cadeira gamer passou e ninguém responde. grata!  ","categoria":"Logística"}
+{"id":395,"canal":"app","texto":"Prezados, Alguém trocou a senha da minha conta sem eu saber. Preciso de ajuda urgente. Meu e-mail é cliente104@exemplo.com.br","categoria":"login"}
+{"id":396,"canal":"email","texto":"Olá, Quero o reembolso do valor cobrado a mais. Valeu! CPF 123.456.789-01, tel (11) 96876-5432","categoria":"COBRANCA"}
+{"id":397,"canal":"chat","texto":"<p>Olá,&nbsp;O&nbsp;código&nbsp;de&nbsp;verificação&nbsp;por&nbsp;SMS&nbsp;não&nbsp;chega.&nbsp;Aguardo&nbsp;retorno.</p><br>","categoria":"Acesso"}
+{"id":398,"canal":"chat","texto":"Bom dia! O entregador deixou o pacote com o vizinho errado. Att.","categoria":"Logística"}
+{"id":399,"canal":"app","texto":"Oi, O tênis de corrida chegou quebrado. Grata!","categoria":"troca"}
+{"id":400,"canal":"chat","texto":"Parcelei em 3x mas cobraram à vista. Grata!","categoria":"COBRANCA"}
+{"id":401,"canal":"app","texto":"Oi, O pedido 51695 consta como entregue mas não recebi nada. Valeu! Meu e-mail é cliente913@exemplo.com.br","categoria":"entrega"}
+{"id":402,"canal":"email","texto":"Oi, O pedido 51695 consta como entregue mas não recebi nada. Valeu! Meu e-mail é cliente913@exemplo.com.br","categoria":"logistica"}
+{"id":403,"canal":"email","texto":"O prazo de entrega do cadeira gamer passou e ninguém responde. Obrigado.","categoria":"Entrega"}
+{"id":404,"canal":"chat","texto":"Oi, O entregador deixou o pacote com o vizinho errado. Obrigado.","categoria":"logistica"}
+{"id":405,"canal":"chat","texto":"Oi, boa tarde. Esqueci a senha e o e-mail de recuperação não chega. Meu e-mail é cliente55@exemplo.com.br","categoria":"login"}
+{"id":406,"canal":"email","texto":" oi, boa tarde. esqueci a senha e o e-mail de recuperação não chega. meu e-mail é cliente55@exemplo.com.br  ","categoria":"Acesso"}
+{"id":407,"canal":"app","texto":"Olá, Veio faltando uma peça do fone bluetooth. Preciso de ajuda urgente. CPF 123.456.789-08, tel (11) 93876-5432","categoria":"Defeito"}
+{"id":408,"canal":"email","texto":" olá, veio faltando uma peça do fone bluetooth. preciso de ajuda urgente. cpf 123.456.789-08, tel (11) 93876-5432  ","categoria":"troca"}
+{"id":409,"canal":"app","texto":"Prezados, A fatura do cartão veio com um valor maior que o do tênis de corrida.","categoria":"financeiro"}
+{"id":410,"canal":"email","texto":"O rastreio do smartwatch não atualiza desde semana passada. Att.","categoria":"Logística"}
+{"id":411,"canal":"app","texto":"Prezados, Esqueci a senha e o e-mail de recuperação não chega. Aguardo retorno. Meu e-mail é cliente991@exemplo.com.br","categoria":"Acesso"}
+{"id":412,"canal":"app","texto":"<p>Bom&nbsp;dia!&nbsp;O&nbsp;entregador&nbsp;deixou&nbsp;o&nbsp;pacote&nbsp;com&nbsp;o&nbsp;vizinho&nbsp;errado.&nbsp;Obrigado.</p><br>","categoria":"entrega"}
+{"id":413,"canal":"chat","texto":"<p>Boa&nbsp;noite,&nbsp;pessoal.&nbsp;Quero&nbsp;mudar&nbsp;o&nbsp;endereço&nbsp;de&nbsp;entrega&nbsp;do&nbsp;pedido&nbsp;40665.&nbsp;Att.</p><br>","categoria":"entrega"}
+{"id":414,"canal":"chat","texto":"Boa noite, pessoal. Apareceu uma cobrança que eu não reconheço no meu cartão. Obrigado. Meu e-mail é cliente737@exemplo.com.br","categoria":"cobranca"}
+{"id":415,"canal":"email","texto":"<p>Prezados,&nbsp;Recebi&nbsp;o&nbsp;pedido&nbsp;de&nbsp;outra&nbsp;pessoa&nbsp;no&nbsp;lugar&nbsp;do&nbsp;meu.</p><br>","categoria":"ENTREGA "}
+{"id":416,"canal":"email","texto":"Boa noite, pessoal. O pedido 85371 consta como entregue mas não recebi nada.","categoria":"logistica"}
+{"id":417,"canal":"app","texto":"Boa noite, pessoal. Aparece erro 403 quando tento acessar meus pedidos.","categoria":"login"}
+{"id":418,"canal":"email","texto":"Prezados, O login com Google parou de funcionar.","categoria":"login"}
+{"id":419,"canal":"chat","texto":"<p>Prezados,&nbsp;A&nbsp;fatura&nbsp;do&nbsp;cartão&nbsp;veio&nbsp;com&nbsp;um&nbsp;valor&nbsp;maior&nbsp;que&nbsp;o&nbsp;do&nbsp;liquidificador.</p><br>","categoria":"financeiro"}
+{"id":420,"canal":"app","texto":"   OLÁ, O ENTREGADOR DEIXOU O PACOTE COM O VIZINHO ERRADO. VALEU!   ","categoria":"Entrega"}
+{"id":421,"canal":"app","texto":"Oi, boa tarde. O notebook ficou parado no centro de distribuição.","categoria":"ENTREGA "}
+{"id":422,"canal":"email","texto":" oi, boa tarde. o notebook ficou parado no centro de distribuição.  ","categoria":"Logística"}
+{"id":423,"canal":"app","texto":"Oi, O app fica pedindo login toda hora. Preciso de ajuda urgente.","categoria":"ACESSO"}
+{"id":424,"canal":"email","texto":"Olá, Minha conta foi bloqueada depois de errar a senha. Meu e-mail é cliente605@exemplo.com.br","categoria":"Acesso"}
+{"id":425,"canal":"email","texto":" olá, minha conta foi bloqueada depois de errar a senha. meu e-mail é cliente605@exemplo.com.br  ","categoria":"ACESSO"}
+{"id":426,"canal":"app","texto":"Prezados, O prazo de entrega do liquidificador passou e ninguém responde. Obrigado.","categoria":"Logística"}
+{"id":427,"canal":"chat","texto":"Oi, boa tarde. Meu pedido 60399 está atrasado há 20 dias. Grata! CPF 123.456.789-04, tel (11) 96876-5432","categoria":"logistica"}
+{"id":428,"canal":"email","texto":"Oi, boa tarde. O código de verificação por SMS não chega. Att.","categoria":"ACESSO"}
+{"id":429,"canal":"email","texto":"Bom dia! O login com Google parou de funcionar. Meu e-mail é cliente308@exemplo.com.br","categoria":"acesso"}
+{"id":430,"canal":"email","texto":"Oi, boa tarde. Quero cancelar minha assinatura do clube de frete. Aguardo retorno.","categoria":"cancelamento"}
+{"id":431,"canal":"app","texto":"Oi, boa tarde. Minha conta foi bloqueada depois de errar a senha. Preciso de ajuda urgente.","categoria":"ACESSO"}
+{"id":432,"canal":"app","texto":"Olá, O rastreio do cadeira gamer não atualiza desde semana passada. Grata!","categoria":"ENTREGA "}
+{"id":433,"canal":"app","texto":"<p>Oi,&nbsp;O&nbsp;mochila&nbsp;não&nbsp;liga&nbsp;de&nbsp;jeito&nbsp;nenhum.&nbsp;Obrigado.</p><br>","categoria":"defeito"}
+{"id":434,"canal":"app","texto":"Oi, boa tarde. O liquidificador chegou quebrado. Obrigado.","categoria":"Defeito"}
+{"id":435,"canal":"chat","texto":"Olá, A fatura do cartão veio com um valor maior que o do liquidificador.","categoria":"cobranca"}
+{"id":436,"canal":"email","texto":"Desisti da compra do tênis de corrida, como cancelo? Grata!","categoria":"CANCELAR"}
+{"id":437,"canal":"email","texto":"Socorro! Parcelei em 3x mas cobraram à vista. CPF 123.456.789-03, tel (11) 93876-5432","categoria":"COBRANCA"}
+{"id":438,"canal":"email","texto":"Prezados, Apareceu uma cobrança que eu não reconheço no meu cartão. Preciso de ajuda urgente.","categoria":"Cobrança"}
+{"id":439,"canal":"app","texto":"Prezados, Como cancelo o pedido 62102 que ainda não foi enviado? Att.","categoria":"CANCELAR"}
+{"id":440,"canal":"app","texto":"Oi, A nota fiscal do pedido 82842 está com valor errado. Att.","categoria":"Cobrança"}
+{"id":441,"canal":"email","texto":"Bom dia! Quero o reembolso do valor cobrado a mais.","categoria":"Cobrança"}
+{"id":442,"canal":"app","texto":"O tênis de corrida não liga de jeito nenhum. Att.","categoria":"Defeito"}
+{"id":443,"canal":"app","texto":"Socorro! Quero cancelar o pedido 68823. Valeu!","categoria":"Cancelamento"}
+{"id":444,"canal":"email","texto":"Bom dia! O entregador deixou o pacote com o vizinho errado. Preciso de ajuda urgente.","categoria":"Logística"}
+{"id":445,"canal":"app","texto":"Prezados, O desconto do cupom não foi aplicado na cobrança. Aguardo retorno.","categoria":" cobrança "}
+{"id":446,"canal":"app","texto":"O estorno do smartwatch ainda não caiu na minha conta.","categoria":"Cobrança"}
+{"id":447,"canal":"chat","texto":"Boa noite, pessoal. Recebi o pedido de outra pessoa no lugar do meu.","categoria":"Entrega"}
+{"id":448,"canal":"chat","texto":"Olá, O rastreio do mochila não atualiza desde semana passada. Valeu!","categoria":"Logística"}
+{"id":449,"canal":"email","texto":"Socorro! O fone bluetooth ficou parado no centro de distribuição. Preciso de ajuda urgente.","categoria":"logistica"}
+{"id":450,"canal":"chat","texto":"Prezados, Qual a previsão de chegada do pedido 38615? Meu e-mail é cliente900@exemplo.com.br","categoria":"Entrega"}
+{"id":451,"canal":"email","texto":"Boa noite, pessoal. O pedido 50955 consta como entregue mas não recebi nada. Meu e-mail é cliente176@exemplo.com.br","categoria":"logistica"}
+{"id":452,"canal":"chat","texto":"","categoria":"entrega"}
+{"id":453,"canal":"chat","texto":"ok","categoria":"acesso"}
+{"id":454,"canal":"app","texto":"teste teste","categoria":""}
+{"id":455,"canal":"email","texto":"Vocês vendem cartão-presente?","categoria":"outros"}
+{"id":456,"canal":"email","texto":"Parabéns pelo atendimento de ontem!","categoria":"elogio"}
