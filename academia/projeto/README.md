@@ -70,7 +70,7 @@ Cada marco é o incremento que **comprova** a etapa (`E<NN>-lab`). O critério d
 
 | Etapa | Marco | O projeto passa a... | Aceite (resumo) |
 |---|---|---|---|
-| 1 | Medidor | contar tokens e orçamento de contexto de uma chamada | `verificar.mjs` da lição 1 aprovado |
+| 1 | Linha de base de tokens | ter medido tokens, custo fixo, truncamento, ausência de memória e tempo por token de saída no endpoint do projeto | `verificar.mjs` da lição 1 aprovado; `medir.mjs` e `relatorio.json` guardados |
 | 2 | Cliente de LLM | chamar o modelo com timeout, retry e erros tipados, só por configuração | testes com servidor falso cobrem timeout, 429 e 500 |
 | 3 | Prompts e schemas | usar prompts versionados e saídas validadas por schema | ≥ 90% dos casos de teste válidos |
 | 4 | Ingestão | transformar o corpus em chunks com metadados rastreáveis | 100% dos chunks com fonte e posição |

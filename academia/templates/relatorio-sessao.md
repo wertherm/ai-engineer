@@ -11,8 +11,12 @@ assistente: nome do assistente de IA usado (opcional)
 # Sessão 1 · AAAA-MM-DD · Etapa 0
 
 > Salve este arquivo como `academia/alunos/<aluno>/sessoes/AAAA-MM-DD-sNN.md` (ou gere-o com
-> `node academia/ferramentas/academia.mjs sessao <aluno>`). **Um arquivo por sessão; nunca edite uma sessão
-> antiga**: correções entram na sessão seguinte. Apague os comentários `>`.
+> `node academia/ferramentas/academia.mjs sessao <aluno>`). **Um arquivo por sessão.** Sessões registradas não são
+> reescritas: um XP esquecido entra na sessão seguinte; só se corrige uma sessão antiga para consertar um erro de
+> formato ou de valor apontado pelo validador. Apague os comentários `>`.
+>
+> `sessao` e `data` precisam bater com o nome do arquivo (o número vem do `retomada.md`: "Próxima sessão").
+> `retomada: sim` só com 14 dias ou mais desde a sessão anterior.
 >
 > Front matter: `status_etapa` é `em-andamento`, `pausada` ou `concluida`; `retomada` é `sim` se esta é a primeira
 > sessão depois de uma pausa. `concluida` exige `E<NN>-quiz` e `E<NN>-lab` aprovados (nesta sessão ou nas anteriores).
@@ -26,7 +30,9 @@ assistente: nome do assistente de IA usado (opcional)
 > Uma linha por atividade **comprovada**. `tipo`: `quiz`, `laboratorio`, `explicacao`, `revisao`, `opcional`.
 > Exemplo de linha: `| E01-quiz | quiz | 1 | aprovado | `entregas/etapa-01/quiz.md` | 10 |`.
 > `resultado`: `aprovado`, `parcial` ou `reprovado`. XP só na tentativa `aprovado` e conforme a
-> [tabela de XP](../GAMIFICACAO.md#xp); nas demais, 0. A evidência é um caminho (entre crases) ou uma nota objetiva.
+> [tabela de XP](../GAMIFICACAO.md#xp); nas demais, 0. A evidência de quiz, laboratório, explicação e opcional é o
+> **caminho de um arquivo existente em `entregas/`**, entre crases, relativo à pasta do aluno; a de revisão pode ser uma
+> nota objetiva. Revisões: `R<etapa>-1`, `R<etapa>-2`... em ordem e no prazo (veja a [revisão espaçada](../GAMIFICACAO.md#revisão-espaçada)).
 
 | id | tipo | tentativa | resultado | evidência | XP |
 |---|---|---|---|---|---|

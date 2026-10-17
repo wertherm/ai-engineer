@@ -14,16 +14,27 @@ módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) segu
   níveis Aprendiz, Construtor, Investigador e Engenheiro (XP **e** checkpoints), cinco checkpoints, 20 conquistas e
   revisão espaçada contada em sessões ([GAMIFICACAO.md](GAMIFICACAO.md)).
 - Acompanhamento individual por arquivos versionados: dois alunos independentes (`alunos/responsavel` e
-  `alunos/werther`), relatório de sessão imutável, cartão de retomada e visão geral geradas
-  ([SINCRONIZACAO.md](SINCRONIZACAO.md)).
+  `alunos/werther`), um relatório por sessão (não reescrito depois), cartão de retomada e visão geral geradas, e o
+  comando `kit` que monta o texto de uma conversa nova ([SINCRONIZACAO.md](SINCRONIZACAO.md)).
 - Projeto evolutivo "Assistente Técnico" com um marco por etapa ([projeto/](projeto/)).
 - Templates: lição (14 seções), relatório de sessão, relatório de laboratório e perfil ([templates/](templates/)).
-- [Missão 0 · Diagnóstico](licoes/00-missao-0-diagnostico/) (perfil, checagem de ambiente, 15 perguntas) e
+- [Missão 0 · Diagnóstico](licoes/00-missao-0-diagnostico/) (perfil, checagem de ambiente, 16 perguntas) e
   [Lição 1 · Tokens, contexto, inferência e limites](licoes/01-tokens-contexto-inferencia/) (microlição, 9 perguntas com
   gabarito comentado, laboratório com verificador automático e rubrica).
 - `AI_CONTEXT.md` na raiz: regras para o assistente de IA.
 - `ferramentas/academia.mjs`: valida conteúdo, links, segredos e registros; gera `retomada.md` e `PROGRESS.md`; cria sessões
   e alunos. Sem dependências.
+
+**Endurecido após revisão independente (código e conteúdo)**
+
+- XP só de linhas válidas; `progresso` recusa gravar se houver erro; evidência de arquivo confinada à pasta do aluno,
+  com diferenciação de maiúsculas (como no GitHub); revisões em ordem e no prazo; opcionais limitados; etapas sem lição
+  pronta não rendem XP; `retomada: sim` exige 14 dias de pausa.
+- `validar --aluno` e `progresso <aluno>`: o estado de um aluno nunca bloqueia o outro. `PROGRESS.md` sem datas.
+- Varredura de segredos ampliada (todos os arquivos de texto da Academia, URLs com credenciais, query strings,
+  `Bearer` em qualquer caixa); saída de `checar-ambiente.mjs` e `medir.mjs` mascara credenciais.
+- Verificador da Lição 1 compara textos e parâmetros com o kit e deixa claro que checa coerência, não honestidade.
+- Gabarito Q4 corrigido (alternativa B); janela do servidor ≠ janela do modelo (Ollama) documentada.
 
 **Decisões**
 

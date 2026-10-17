@@ -10,10 +10,10 @@ alfabética: não há ranking.
 
 ## Alunos
 
-| Aluno | Nível | Etapa atual | Etapas concluídas | XP | Última sessão |
-|---|---|---|---|---|---|
-| [Responsável pelo projeto](alunos/responsavel/retomada.md) | Aprendiz | Missão 0 · Diagnóstico | `░░░░░░░░░░` 0/16 | — | — |
-| [Werther](alunos/werther/retomada.md) | Aprendiz | Missão 0 · Diagnóstico | `░░░░░░░░░░` 0/16 | — | — |
+| Aluno | Nível | Etapa atual | Etapas concluídas | XP |
+|---|---|---|---|---|
+| [Responsável pelo projeto](alunos/responsavel/) | Aprendiz | Missão 0 · Diagnóstico | `░░░░░░░░░░` 0/16 | — |
+| [Werther](alunos/werther/) | Aprendiz | Missão 0 · Diagnóstico | `░░░░░░░░░░` 0/16 | — |
 
 ## Por etapa
 

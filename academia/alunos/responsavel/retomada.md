@@ -3,6 +3,8 @@
 
 **Nível:** Aprendiz · **XP:** 0 · **Etapa atual:** Missão 0 · Diagnóstico
 
+**Próxima sessão:** s01 (dados para o relatório: `aluno: responsavel`, `sessao: 1`)
+
 Para Construtor: faltam 150 XP e checkpoint CP1.
 
 ## Onde parei

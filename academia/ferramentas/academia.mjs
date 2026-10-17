@@ -1,70 +1,122 @@
 #!/usr/bin/env node
-// Ferramenta da Academia: valida o conteúdo e os registros e gera os arquivos de progresso.
+// Ferramenta da Academia: valida o conteúdo e os registros, gera os arquivos de progresso e monta o kit de sessão.
 // Sem dependências (Node 22+). As regras (XP, níveis, conquistas, competências, etapas) são LIDAS das tabelas de
 // GAMIFICACAO.md, competencias.md e ROADMAP.md: elas são a fonte de verdade, este script só as aplica.
 //
-//   node academia/ferramentas/academia.mjs validar            confere conteúdo, links e registros dos alunos
-//   node academia/ferramentas/academia.mjs progresso          recria retomada.md de cada aluno e PROGRESS.md
-//   node academia/ferramentas/academia.mjs progresso --check  só confere se estão atualizados
-//   node academia/ferramentas/academia.mjs sessao <aluno>     cria o arquivo da próxima sessão
+//   node academia/ferramentas/academia.mjs validar [--aluno <aluno>]   confere conteúdo, links, segredos e registros
+//   node academia/ferramentas/academia.mjs progresso [<aluno>] [--check]   recria (ou só confere) retomada.md e PROGRESS.md
+//   node academia/ferramentas/academia.mjs sessao <aluno> [--etapa N] [--data AAAA-MM-DD]
+//   node academia/ferramentas/academia.mjs kit <aluno>                 texto para colar numa conversa com um assistente
 //   node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { acharSegredos, ehPrincipal } from './comum.mjs';
 
 const RAIZ_PADRAO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 // ---------------------------------------------------------------------------------------------------------------
-// Leitura de Markdown (tolerante a CRLF: no Windows o Git costuma converter as quebras de linha)
+// Constantes das regras que o código impõe (os valores numéricos de XP, níveis etc. vêm das tabelas dos documentos)
 // ---------------------------------------------------------------------------------------------------------------
-export const lerTexto = (arquivo) => fs.readFileSync(arquivo, 'utf8').replace(/\r\n?/g, '\n');
+const TITULOS_LICAO = [
+  'Identificação e pré-requisitos', 'Objetivos de aprendizagem', 'Duração estimada', 'Microlição',
+  'Material complementar', 'Exemplos práticos', 'Quiz de fixação', 'Desafio hands-on', 'Critérios de aceitação',
+  'Rubrica de avaliação', 'Dicas graduais', 'Modelo de relatório do aluno', 'Competências registradas',
+  'Referências e última revisão',
+];
+const STATUS_ETAPA = ['em-andamento', 'pausada', 'concluida'];
+const RESULTADOS = ['aprovado', 'parcial', 'reprovado'];
+const TIPO_POR_SUFIXO = { quiz: 'quiz', lab: 'laboratorio', explicacao: 'explicacao' };
+const REGRAS_CONTADOR = ['xp', 'revisoes', 'opcionais', 'explicacoes', 'retomadas'];
+const MAX_OPCIONAIS = 3; // por etapa (documentado em GAMIFICACAO.md)
+const DIAS_PAUSA = 14; // "voltar de uma pausa" (documentado em GAMIFICACAO.md)
+const MIN_BYTES_EVIDENCIA = 20;
+const SLUGS_RESERVADOS = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/;
+const NOME_SESSAO = /^(\d{4}-\d{2}-\d{2})-s(\d{2,})\.md$/;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Leitura de Markdown (tolerante a CRLF e BOM: no Windows o Git e o Bloco de Notas costumam introduzi-los)
+// ---------------------------------------------------------------------------------------------------------------
+export const lerTexto = (arquivo) => fs.readFileSync(arquivo, 'utf8').replace(/^﻿/, '').replace(/\r\n?/g, '\n');
 
 const semAcento = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
 export const chave = (s) => semAcento(String(s)).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-const limpar = (s) => String(s).replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/`/g, '').trim();
+const limpar = (s) => String(s ?? '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/`/g, '').trim();
+/** Inteiro estrito: '' , ' ', '1.5' e 'abc' viram NaN (Number('') seria 0). */
+export const inteiro = (s) => (/^\s*-?\d+\s*$/.test(String(s ?? '')) ? Number(s) : NaN);
+const dataValida = (s) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s ?? '');
+  if (!m) return false;
+  const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+};
+const celula = (s) => String(s ?? '').replace(/[|[\]]/g, ' ').replace(/\s+/g, ' ').trim();
+const semLinksRelativos = (t) => t.replace(/\[([^\]]*)\]\((?!https?:)[^)]*\)/g, '$1');
 
 export function frontMatter(texto) {
-  const m = texto.match(/^---\n([\s\S]*?)\n---\n?/);
-  if (!m) return { dados: {}, corpo: texto, tem: false };
+  const linhas = texto.split('\n');
+  if (linhas[0].trim() !== '---') return { dados: {}, corpo: texto, tem: false };
+  const fim = linhas.findIndex((l, i) => i > 0 && l.trim() === '---');
+  if (fim < 0 || fim > 60) return { dados: {}, corpo: texto, tem: false };
   const dados = {};
-  for (const linha of m[1].split('\n')) {
+  for (const linha of linhas.slice(1, fim)) {
     const k = linha.match(/^([A-Za-z_][\w-]*):\s*(.*)$/);
     if (k) dados[k[1]] = k[2].trim().replace(/^["']|["']$/g, '');
   }
-  return { dados, corpo: texto.slice(m[0].length), tem: true };
+  return { dados, corpo: linhas.slice(fim + 1).join('\n'), tem: true };
 }
 
-/** Divide o texto em seções "## Título" (ignora blocos de código). Chave = título sem acento e minúsculo. */
+/** Divide o texto em seções "## Título" (ignora blocos de código). Chave = título normalizado. */
 export function secoes(texto) {
   const mapa = new Map();
+  mapa.duplicadas = [];
   let atual = null;
   let cerca = false;
   for (const linha of texto.split('\n')) {
     if (/^\s*```/.test(linha)) cerca = !cerca;
     const h = !cerca && linha.match(/^##\s+(.*?)\s*$/);
     if (h) {
+      const k = chave(h[1]);
+      if (mapa.has(k)) mapa.duplicadas.push(h[1]);
       atual = { titulo: h[1], linhas: [] };
-      mapa.set(chave(h[1]), atual);
+      mapa.set(k, atual);
     } else if (atual) atual.linhas.push(linha);
   }
   return mapa;
 }
 
-/** Primeira tabela Markdown das linhas dadas -> lista de objetos (chaves normalizadas) ou null se não houver. */
-export function tabela(linhas) {
+const ehSeparador = (l) => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(l);
+
+/**
+ * Primeira tabela Markdown das linhas dadas -> lista de objetos (chaves normalizadas), ou null se não houver.
+ * `lista.problemas` traz defeitos que normalmente passariam em silêncio (sem separador, linhas após uma linha em branco).
+ */
+export function tabela(linhas, { unica = false } = {}) {
   const bloco = [];
   let comecou = false;
-  for (const l of linhas) {
-    if (/^\s*\|/.test(l)) { bloco.push(l); comecou = true; } else if (comecou) break;
-  }
-  if (bloco.length < 2) return null;
+  let fimDoBloco = -1;
+  linhas.forEach((l, i) => {
+    if (/^\s*\|/.test(l)) {
+      comecou = true;
+      if (fimDoBloco < 0) bloco.push(l);
+    } else if (comecou && fimDoBloco < 0) fimDoBloco = i;
+  });
+  if (!bloco.length) return null;
   const celulas = (l) => l.trim().replace(/\\\|/g, '\u0001').replace(/^\|/, '').replace(/\|$/, '')
     .split('|').map((c) => c.replace(/\u0001/g, '|').trim());
+  const problemas = [];
+  const temSeparador = bloco.length >= 2 && ehSeparador(bloco[1]);
+  if (!temSeparador) problemas.push('falta a linha separadora (|---|---|) logo abaixo do cabeçalho');
+  if (unica && fimDoBloco >= 0 && linhas.slice(fimDoBloco).some((l) => /^\s*\|/.test(l))) {
+    problemas.push('há linhas de tabela depois de uma linha em branco (seriam ignoradas); remova a linha em branco');
+  }
   const cab = celulas(bloco[0]).map(chave);
-  return bloco.slice(2).map((l) => {
+  const dados = bloco.slice(temSeparador ? 2 : 1).map((l) => {
     const c = celulas(l);
     return Object.fromEntries(cab.map((k, i) => [k, c[i] ?? '']));
   });
+  dados.problemas = problemas;
+  return dados;
 }
 
 const textoDe = (sec) => (sec ? sec.linhas.filter((l) => !l.startsWith('>')).join('\n').trim() : '');
@@ -89,66 +141,84 @@ function ancoras(texto) {
   return saida;
 }
 
+/** Existência com diferenciação de maiúsculas/minúsculas, como no GitHub (o Windows e o macOS não diferenciam). */
+function criarExiste(raiz) {
+  const cache = new Map();
+  const nomes = (dir) => {
+    if (!cache.has(dir)) {
+      try { cache.set(dir, new Set(fs.readdirSync(dir))); } catch { cache.set(dir, null); }
+    }
+    return cache.get(dir);
+  };
+  return (abs) => {
+    const rel = path.relative(raiz, abs);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return fs.existsSync(abs);
+    let dir = raiz;
+    for (const seg of rel.split(path.sep).filter(Boolean)) {
+      const ls = nomes(dir);
+      if (!ls || !ls.has(seg)) return false;
+      dir = path.join(dir, seg);
+    }
+    return true;
+  };
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Configuração: lida das tabelas dos documentos
 // ---------------------------------------------------------------------------------------------------------------
-const TITULOS_LICAO = [
-  'Identificação e pré-requisitos', 'Objetivos de aprendizagem', 'Duração estimada', 'Microlição',
-  'Material complementar', 'Exemplos práticos', 'Quiz de fixação', 'Desafio hands-on', 'Critérios de aceitação',
-  'Rubrica de avaliação', 'Dicas graduais', 'Modelo de relatório do aluno', 'Competências registradas',
-  'Referências e última revisão',
-];
-const STATUS_ETAPA = ['em-andamento', 'pausada', 'concluida'];
-const RESULTADOS = ['aprovado', 'parcial', 'reprovado'];
-const TIPO_POR_SUFIXO = { quiz: 'quiz', lab: 'laboratorio', explicacao: 'explicacao' };
-const REGRAS_CONTADOR = ['xp', 'revisoes', 'opcionais', 'explicacoes', 'retomadas'];
-
 export function carregarConfig(raiz) {
   const erros = [];
   const ac = path.join(raiz, 'academia');
+  const faltando = new Set();
+  const f = (mensagem, arquivo = 'academia/GAMIFICACAO.md') => erros.push({ arquivo, mensagem });
   const ler = (arquivo, secao, colunas) => {
     const caminho = path.join(ac, arquivo);
-    if (!fs.existsSync(caminho)) { erros.push({ arquivo: `academia/${arquivo}`, mensagem: 'arquivo não encontrado' }); return []; }
+    if (!fs.existsSync(caminho)) {
+      if (!faltando.has(arquivo)) { faltando.add(arquivo); f('arquivo não encontrado', `academia/${arquivo}`); }
+      return [];
+    }
     const sec = secoes(lerTexto(caminho)).get(chave(secao));
     const t = sec ? tabela(sec.linhas) : null;
-    if (!t) { erros.push({ arquivo: `academia/${arquivo}`, mensagem: `falta a tabela da seção "## ${secao}"` }); return []; }
-    for (const c of colunas) if (t.length && !(c in t[0])) erros.push({ arquivo: `academia/${arquivo}`, mensagem: `a tabela de "${secao}" precisa da coluna "${c}"` });
+    if (!t) { f(`falta a tabela da seção "## ${secao}"`, `academia/${arquivo}`); return []; }
+    for (const p of t.problemas) f(`tabela "${secao}": ${p}`, `academia/${arquivo}`);
+    for (const c of colunas) if (t.length && !(c in t[0])) f(`a tabela de "${secao}" precisa da coluna "${c}"`, `academia/${arquivo}`);
     return t;
   };
 
   const xp = {};
   for (const l of ler('GAMIFICACAO.md', 'XP', ['tipo', 'xp'])) {
-    const n = Number(l.xp);
-    if (!Number.isInteger(n) || n <= 0) erros.push({ arquivo: 'academia/GAMIFICACAO.md', mensagem: `XP inválido para ${l.tipo}` });
+    const n = inteiro(l.xp);
+    if (!Number.isInteger(n) || n <= 0) f(`XP inválido para ${l.tipo}`);
     xp[limpar(l.tipo)] = n;
   }
-  const niveis = ler('GAMIFICACAO.md', 'Níveis', ['nivel', 'xp_minimo', 'checkpoints_exigidos']).map((l) => ({
-    nome: limpar(l.nivel),
-    xpMin: Number(l.xp_minimo),
-    checkpoints: limpar(l.checkpoints_exigidos).split(',').map((s) => s.trim()).filter((s) => /^CP\d+$/.test(s)),
-  }));
   const checkpoints = ler('GAMIFICACAO.md', 'Checkpoints de domínio', ['id', 'fase', 'apos_a_etapa']).map((l) => ({
-    id: limpar(l.id), fase: Number(l.fase), apos: Number(l.apos_a_etapa),
+    id: limpar(l.id), fase: inteiro(l.fase), apos: inteiro(l.apos_a_etapa),
   }));
+  const niveis = ler('GAMIFICACAO.md', 'Níveis', ['nivel', 'xp_minimo', 'checkpoints_exigidos']).map((l) => {
+    const bruto = limpar(l.checkpoints_exigidos);
+    const itens = /^[—–-]?$/.test(bruto) ? [] : bruto.split(',').map((s) => s.trim());
+    const ruins = itens.filter((s) => !/^CP\d+$/.test(s));
+    if (ruins.length) f(`nível ${limpar(l.nivel)}: checkpoint(s) mal escrito(s): ${ruins.join(', ')} (use CP1, CP2...)`);
+    return { nome: limpar(l.nivel), xpMin: inteiro(l.xp_minimo), checkpoints: itens.filter((s) => /^CP\d+$/.test(s)) };
+  });
   const conquistas = ler('GAMIFICACAO.md', 'Conquistas', ['id', 'conquista', 'regra']).map((l) => ({
     id: limpar(l.id), nome: limpar(l.conquista), regra: limpar(l.regra), descricao: limpar(l.descricao ?? ''),
   }));
   const revisoes = ler('GAMIFICACAO.md', 'Revisão espaçada', ['revisao', 'sessoes_apos_a_conclusao'])
-    .map((l) => Number(l.sessoes_apos_a_conclusao));
+    .map((l) => inteiro(l.sessoes_apos_a_conclusao));
   const competencias = ler('competencias.md', 'Catálogo', ['id', 'competencia', 'etapa', 'fase']).map((l) => ({
-    id: limpar(l.id), texto: limpar(l.competencia), etapa: Number(l.etapa), fase: Number(l.fase),
+    id: limpar(l.id), texto: limpar(l.competencia), etapa: inteiro(l.etapa), fase: inteiro(l.fase),
   }));
   const etapas = ler('ROADMAP.md', 'Visão geral', ['etapa', 'fase', 'titulo', 'licao', 'status']).map((l) => ({
-    n: Number(l.etapa), fase: Number(l.fase), titulo: limpar(l.titulo), licao: (l.licao.match(/\]\(([^)]+)\)/) ?? [])[1] ?? null,
+    n: inteiro(l.etapa), fase: inteiro(l.fase), titulo: limpar(l.titulo), licao: (l.licao.match(/\]\(([^)]+)\)/) ?? [])[1] ?? null,
     status: limpar(l.status),
   }));
 
   // consistência da configuração
-  const f = (mensagem, arquivo = 'academia/GAMIFICACAO.md') => erros.push({ arquivo, mensagem });
   for (const t of ['quiz', 'laboratorio', 'explicacao', 'revisao', 'opcional']) if (!(t in xp)) f(`falta o tipo de XP "${t}"`);
   if (!niveis.length || niveis[0].xpMin !== 0) f('o primeiro nível deve ter XP mínimo 0');
   niveis.forEach((n, i) => {
-    if (!Number.isFinite(n.xpMin)) f(`XP mínimo inválido no nível ${n.nome}`);
+    if (!Number.isInteger(n.xpMin)) f(`XP mínimo inválido no nível ${n.nome}`);
     if (i && n.xpMin < niveis[i - 1].xpMin) f('os níveis devem estar em ordem crescente de XP');
     for (const c of n.checkpoints) if (!checkpoints.some((k) => k.id === c)) f(`nível ${n.nome} exige checkpoint inexistente: ${c}`);
   });
@@ -167,7 +237,7 @@ export function carregarConfig(raiz) {
   }
   for (const e of etapas) if (!competencias.some((c) => c.etapa === e.n)) f(`a etapa ${e.n} não tem competência no catálogo`, 'academia/competencias.md');
   for (const k of checkpoints) {
-    if (!etapas.some((e) => e.n === k.apos && e.fase === k.fase)) f(`checkpoint ${k.id}: etapa/fase inconsistentes com o ROADMAP`);
+    if (!/^CP\d+$/.test(k.id) || !etapas.some((e) => e.n === k.apos && e.fase === k.fase)) f(`checkpoint ${k.id}: etapa/fase inconsistentes com o ROADMAP`);
   }
   if (!checkpoints.some((k) => k.apos === 16)) f('falta o checkpoint da etapa 16');
   if (!revisoes.length || revisoes.some((n, i) => !Number.isInteger(n) || n < 1 || (i && n <= revisoes[i - 1]))) f('intervalos de revisão devem ser inteiros crescentes');
@@ -193,203 +263,6 @@ function regraInvalida(regra, { competencias, checkpoints }) {
   return `regra desconhecida "${regra}"`;
 }
 
-// ---------------------------------------------------------------------------------------------------------------
-// Alunos e sessões
-// ---------------------------------------------------------------------------------------------------------------
-export function listarAlunos(raiz) {
-  const dir = path.join(raiz, 'academia', 'alunos');
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && fs.existsSync(path.join(dir, d.name, 'perfil.md')))
-    .map((d) => d.name).sort();
-}
-
-// Evidência válida: um caminho entre crases ou uma nota objetiva (pelo menos 10 caracteres que não sejam só traços).
-const temEvidencia = (celula) => {
-  const t = limpar(celula ?? '').replace(/\s+/g, ' ');
-  return t.length >= 10 && !/^[-—–\s]+$/.test(t);
-};
-const decodificar = (t) => { try { return decodeURIComponent(t); } catch { return t; } };
-
-function lerSessao(arquivo, rel, slugAluno, config) {
-  const erros = [];
-  const e = (mensagem) => erros.push({ arquivo: rel, mensagem });
-  const texto = lerTexto(arquivo);
-  const { dados, corpo, tem } = frontMatter(texto);
-  const nome = path.basename(arquivo);
-  const nm = nome.match(/^(\d{4}-\d{2}-\d{2})-s(\d{2,})\.md$/);
-  if (!nm) e('nome inválido: use AAAA-MM-DD-sNN.md');
-  if (!tem) e('falta o front matter (--- ... ---)');
-  if (dados.aluno !== slugAluno) e(`aluno "${dados.aluno}" não confere com a pasta "${slugAluno}"`);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dados.data ?? '') || Number.isNaN(Date.parse(dados.data))) e('data inválida (AAAA-MM-DD)');
-  else if (nm && nm[1] !== dados.data) e(`a data do nome (${nm[1]}) não confere com a do front matter (${dados.data})`);
-  const sessao = Number(dados.sessao);
-  if (!Number.isInteger(sessao) || sessao < 1) e('`sessao` deve ser um inteiro >= 1');
-  else if (nm && Number(nm[2]) !== sessao) e(`o número do nome (s${nm[2]}) não confere com sessao: ${dados.sessao}`);
-  const etapa = Number(dados.etapa);
-  if (!Number.isInteger(etapa) || etapa < 0 || etapa > config.etapas.length) e('`etapa` deve ser um inteiro de 0 a 16');
-  if (!STATUS_ETAPA.includes(dados.status_etapa)) e(`status_etapa deve ser: ${STATUS_ETAPA.join(', ')}`);
-  if (!['sim', 'nao'].includes(dados.retomada)) e('retomada deve ser "sim" ou "nao"');
-
-  const sec = secoes(corpo);
-  const tab = (titulo, colunas) => {
-    const t = tabela(sec.get(chave(titulo))?.linhas ?? []);
-    if (!t) { e(`falta a tabela da seção "## ${titulo}"`); return []; }
-    const cab = Object.keys(t[0] ?? Object.fromEntries(colunas.map((c) => [c, ''])));
-    for (const c of colunas) if (!cab.includes(c)) e(`a tabela "${titulo}" precisa da coluna "${c}"`);
-    return t;
-  };
-  const atividades = tab('Atividades', ['id', 'tipo', 'tentativa', 'resultado', 'evidencia', 'xp']);
-  const competencias = tab('Competências', ['id', 'nivel', 'evidencia']);
-  const checkpoints = tab('Checkpoints', ['id', 'resultado', 'evidencia']);
-  const pendencias = textoDe(sec.get('pendencias')).split('\n').map((l) => l.match(/^-\s+(.*)/)?.[1]).filter((l) => l && !/^nenhuma\.?$/i.test(l));
-  return {
-    erros,
-    sessao: {
-      arquivo: rel, nome, data: dados.data, numero: sessao, etapa, status: dados.status_etapa, retomada: dados.retomada === 'sim',
-      atividades, competencias, checkpoints, pendencias,
-      resumo: textoDe(sec.get('resumo')), feedback: textoDe(sec.get('feedback')), proxima: textoDe(sec.get('proxima_missao')),
-    },
-  };
-}
-
-function evidenciaExiste(celula, raiz, dirAluno) {
-  const caminhos = [...celula.matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((p) => /[/\\]|\.\w{1,5}$/.test(p));
-  if (!caminhos.length) return null;
-  return caminhos.filter((p) => !fs.existsSync(path.join(dirAluno, p)) && !fs.existsSync(path.join(raiz, p)));
-}
-
-/** Aplica as sessões em ordem e devolve o estado do aluno e os erros de consistência. */
-export function analisarAluno(raiz, slugAluno, config) {
-  const dirAluno = path.join(raiz, 'academia', 'alunos', slugAluno);
-  const relAluno = `academia/alunos/${slugAluno}`;
-  const erros = [];
-  const avisos = [];
-  const perfilTexto = lerTexto(path.join(dirAluno, 'perfil.md'));
-  const perfil = frontMatter(perfilTexto).dados;
-  if (perfil.slug !== slugAluno) erros.push({ arquivo: `${relAluno}/perfil.md`, mensagem: `slug "${perfil.slug}" não confere com a pasta "${slugAluno}"` });
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(slugAluno)) erros.push({ arquivo: relAluno, mensagem: 'nome de pasta inválido (minúsculas, números e hífen)' });
-  if (!perfil.nome) erros.push({ arquivo: `${relAluno}/perfil.md`, mensagem: 'falta `nome` no front matter' });
-  if (!['sim', 'nao'].includes(perfil.compartilhar_xp)) erros.push({ arquivo: `${relAluno}/perfil.md`, mensagem: '`compartilhar_xp` deve ser "sim" ou "nao"' });
-
-  const dirSessoes = path.join(dirAluno, 'sessoes');
-  const arquivos = fs.existsSync(dirSessoes) ? fs.readdirSync(dirSessoes).filter((f) => f.endsWith('.md')).sort() : [];
-  const sessoes = [];
-  for (const f of arquivos) {
-    const r = lerSessao(path.join(dirSessoes, f), `${relAluno}/sessoes/${f}`, slugAluno, config);
-    erros.push(...r.erros);
-    sessoes.push(r.sessao);
-  }
-  sessoes.sort((a, b) => (a.numero || 0) - (b.numero || 0));
-  const vistos = new Set();
-  for (const s of sessoes) {
-    if (vistos.has(s.numero)) erros.push({ arquivo: s.arquivo, mensagem: `número de sessão repetido (${s.numero})` });
-    vistos.add(s.numero);
-  }
-
-  const est = {
-    slug: slugAluno, nome: perfil.nome ?? slugAluno, compartilharXp: perfil.compartilhar_xp === 'sim', xp: 0,
-    atividades: new Map(), competencias: new Map(), checkpoints: new Map(), concluidas: new Map(), conquistas: new Map(),
-    contagens: { revisoes: 0, opcionais: 0, explicacoes: 0, retomadas: 0 }, sessoes, xpPorSessao: new Map(), pendenciasAtividades: [],
-  };
-  const contexto = () => ({ xp: est.xp, ativ: new Set([...est.atividades].filter(([, a]) => a.aprovada).map(([id]) => id)),
-    comp: new Map([...est.competencias].map(([id, c]) => [id, c.nivel])), cps: new Set(est.checkpoints.keys()), ...est.contagens });
-  const xpTipos = config.xp;
-  const nivelDaFase = (fase) => config.competencias.filter((c) => c.fase === fase).every((c) => (est.competencias.get(c.id)?.nivel ?? 0) >= 2);
-
-  for (const s of sessoes) {
-    const e = (mensagem) => erros.push({ arquivo: s.arquivo, mensagem });
-    let ganho = 0;
-    if (s.retomada) est.contagens.retomadas += 1;
-
-    for (const a of s.atividades) {
-      const id = limpar(a.id);
-      const m = id.match(/^E(\d{2})-(quiz|lab|explicacao|opcional-\d+)$/) ?? id.match(/^R(\d{2})-(\d+)$/);
-      if (!m) { e(`id de atividade inválido: "${id}" (veja a convenção em GAMIFICACAO.md)`); continue; }
-      const etapaId = Number(m[1]);
-      if (etapaId > config.etapas.length) e(`${id}: etapa inexistente`);
-      const esperado = id.startsWith('R') ? 'revisao' : m[2].startsWith('opcional') ? 'opcional' : TIPO_POR_SUFIXO[m[2]];
-      const tipo = limpar(a.tipo);
-      if (tipo !== esperado) e(`${id}: tipo "${tipo}" não confere com o id (esperado "${esperado}")`);
-      if (!(tipo in xpTipos)) { e(`${id}: tipo de XP desconhecido ("${tipo}")`); continue; }
-      const tentativa = Number(a.tentativa);
-      if (!Number.isInteger(tentativa) || tentativa < 1) e(`${id}: tentativa deve ser um inteiro >= 1`);
-      const resultado = limpar(a.resultado);
-      if (!RESULTADOS.includes(resultado)) { e(`${id}: resultado deve ser ${RESULTADOS.join(', ')}`); continue; }
-      const xp = Number(a.xp);
-      if (!Number.isInteger(xp) || xp < 0) { e(`${id}: XP deve ser um inteiro >= 0`); continue; }
-      const evid = a.evidencia ?? '';
-      const ja = est.atividades.get(id) ?? { tentativas: 0, aprovada: false, ultimo: null };
-      ja.tentativas += 1;
-      ja.ultimo = resultado;
-
-      if (xp > 0) {
-        if (resultado !== 'aprovado') e(`${id}: XP só pode ser concedido a uma atividade aprovada`);
-        if (ja.aprovada) e(`${id}: XP já concedido antes (cada atividade rende XP uma única vez)`);
-        if (xp !== xpTipos[tipo]) e(`${id}: XP ${xp} não confere com a tabela (${tipo} = ${xpTipos[tipo]})`);
-        if (!temEvidencia(evid)) e(`${id}: XP sem evidência (aponte um arquivo entre crases ou descreva a prova, com pelo menos 10 caracteres)`);
-      } else if (resultado === 'aprovado' && !ja.aprovada) {
-        e(`${id}: aprovada pela primeira vez, mas sem XP (use o valor da tabela de XP)`);
-      }
-      if (resultado === 'aprovado') {
-        const faltando = evidenciaExiste(evid, raiz, dirAluno);
-        if (faltando?.length) e(`${id}: evidência não encontrada: ${faltando.join(', ')}`);
-      }
-      if (id.startsWith('R') && !est.concluidas.has(etapaId) && !(s.status === 'concluida' && s.etapa === etapaId)) {
-        e(`${id}: revisão de uma etapa que ainda não foi concluída`);
-      }
-      if (xp > 0 && resultado === 'aprovado' && !ja.aprovada) {
-        est.xp += xp; ganho += xp;
-        if (tipo === 'revisao') est.contagens.revisoes += 1;
-        if (tipo === 'opcional') est.contagens.opcionais += 1;
-        if (tipo === 'explicacao') est.contagens.explicacoes += 1;
-      }
-      if (resultado === 'aprovado') ja.aprovada = true;
-      est.atividades.set(id, ja);
-    }
-
-    for (const c of s.competencias) {
-      const id = limpar(c.id);
-      const nivel = Number(c.nivel);
-      if (!config.competencias.some((x) => x.id === id)) { e(`competência inexistente: ${id}`); continue; }
-      if (!Number.isInteger(nivel) || nivel < 0 || nivel > 3) { e(`${id}: nível deve ser de 0 a 3`); continue; }
-      if (nivel >= 1 && !temEvidencia(c.evidencia)) e(`${id}: nível ${nivel} sem evidência`);
-      est.competencias.set(id, { nivel, sessao: s.numero, evidencia: limpar(c.evidencia) });
-    }
-
-    if (s.status === 'concluida') {
-      const nn = String(s.etapa).padStart(2, '0');
-      for (const exigido of [`E${nn}-quiz`, `E${nn}-lab`]) {
-        if (!est.atividades.get(exigido)?.aprovada) e(`etapa ${s.etapa} marcada como concluída sem ${exigido} aprovado`);
-      }
-      if (!est.concluidas.has(s.etapa)) est.concluidas.set(s.etapa, s.numero);
-    }
-
-    for (const k of s.checkpoints) {
-      const id = limpar(k.id);
-      const cfg = config.checkpoints.find((x) => x.id === id);
-      if (!cfg) { e(`checkpoint inexistente: ${id}`); continue; }
-      const resultado = limpar(k.resultado);
-      if (!['aprovado', 'pendente'].includes(resultado)) { e(`${id}: resultado deve ser aprovado ou pendente`); continue; }
-      if (resultado !== 'aprovado') continue;
-      if (!temEvidencia(k.evidencia)) e(`${id}: aprovado sem evidência`);
-      if (!est.concluidas.has(cfg.apos)) e(`${id}: exige a etapa ${cfg.apos} concluída`);
-      if (!nivelDaFase(cfg.fase)) e(`${id}: exige todas as competências da fase ${cfg.fase} no nível 2 ou mais`);
-      if (!est.checkpoints.has(id)) est.checkpoints.set(id, s.numero);
-    }
-
-    for (const q of config.conquistas) {
-      if (!est.conquistas.has(q.id) && avaliarRegra(q.regra, contexto())) est.conquistas.set(q.id, s.numero);
-    }
-    est.xpPorSessao.set(s.numero, ganho);
-  }
-
-  est.pendenciasAtividades = [...est.atividades].filter(([, a]) => !a.aprovada)
-    .map(([id, a]) => ({ id, tentativas: a.tentativas, ultimo: a.ultimo }));
-  finalizar(est, config);
-  return { estado: est, erros, avisos };
-}
-
 export function avaliarRegra(regra, ctx) {
   let m;
   if ((m = regra.match(/^ativ:(.+)$/))) return ctx.ativ.has(m[1]);
@@ -399,7 +272,277 @@ export function avaliarRegra(regra, ctx) {
   return false;
 }
 
-/** Calcula nível, etapa atual e revisões sugeridas a partir do estado acumulado. */
+// ---------------------------------------------------------------------------------------------------------------
+// Alunos e sessões
+// ---------------------------------------------------------------------------------------------------------------
+export function listarAlunos(raiz) {
+  const dir = path.join(raiz, 'academia', 'alunos');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith('.') && fs.existsSync(path.join(dir, d.name, 'perfil.md')))
+    .map((d) => d.name).sort();
+}
+
+/** Pastas em alunos/ que não são alunos de verdade (sem perfil.md): se ignoradas em silêncio, o aluno "some". */
+export function pastasSemPerfil(raiz) {
+  const dir = path.join(raiz, 'academia', 'alunos');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && !d.name.startsWith('.') && !fs.existsSync(path.join(dir, d.name, 'perfil.md')))
+    .map((d) => ({ arquivo: `academia/alunos/${d.name}`, mensagem: 'pasta de aluno sem perfil.md (crie o perfil ou remova a pasta)' }));
+}
+
+// Evidência válida: texto objetivo com pelo menos 8 letras/números (não vale "ok", "...", "TODO", "sem evidência").
+const temEvidencia = (c) => {
+  const t = limpar(c).replace(/\s+/g, ' ');
+  return (t.match(/[\p{L}\p{N}]/gu) ?? []).length >= 8 && !/^(sem evid|todo|tbd|n\/a|nada|preencher|-+$)/i.test(t);
+};
+const parecesCaminho = (p) => /[\\/]/.test(p) || /\.(md|mjs|cjs|js|ts|tsx|json|txt|py|csv|log|png|jpe?g|svg|yml|yaml|sh)$/i.test(p);
+
+function lerSessao(arquivo, rel, slugAluno, config) {
+  const erros = [];
+  const e = (mensagem) => erros.push({ arquivo: rel, mensagem });
+  const texto = lerTexto(arquivo);
+  const { dados, corpo, tem } = frontMatter(texto);
+  const nm = path.basename(arquivo).match(NOME_SESSAO);
+  if (!tem) e('falta o front matter (--- ... --- no começo do arquivo)');
+  if (dados.aluno !== slugAluno) e(`aluno "${dados.aluno}" não confere com a pasta "${slugAluno}"`);
+  if (!dataValida(dados.data)) e('data inválida (AAAA-MM-DD)');
+  else if (nm && nm[1] !== dados.data) e(`a data do nome (${nm[1]}) não confere com a do front matter (${dados.data})`);
+  const numero = inteiro(dados.sessao);
+  if (!Number.isInteger(numero) || numero < 1) e('`sessao` deve ser um inteiro >= 1');
+  else if (nm && Number(nm[2]) !== numero) e(`o número do nome (s${nm[2]}) não confere com sessao: ${dados.sessao}`);
+  const etapa = inteiro(dados.etapa);
+  if (!Number.isInteger(etapa) || etapa < 0 || etapa > config.etapas.length) e('`etapa` deve ser um inteiro de 0 a 16');
+  if (!STATUS_ETAPA.includes(dados.status_etapa)) e(`status_etapa deve ser: ${STATUS_ETAPA.join(', ')}`);
+  if (!['sim', 'nao'].includes(dados.retomada)) e('retomada deve ser "sim" ou "nao"');
+
+  const sec = secoes(corpo);
+  for (const d of sec.duplicadas) e(`seção duplicada: "## ${d}" (a segunda esconderia a primeira)`);
+  const tab = (titulo, colunas) => {
+    const t = tabela(sec.get(chave(titulo))?.linhas ?? [], { unica: true });
+    if (!t) { e(`falta a tabela da seção "## ${titulo}"`); return []; }
+    for (const p of t.problemas) e(`tabela "${titulo}": ${p}`);
+    if (t.length) for (const c of colunas) if (!(c in t[0])) e(`a tabela "${titulo}" precisa da coluna "${c}"`);
+    return t;
+  };
+  const atividades = tab('Atividades', ['id', 'tipo', 'tentativa', 'resultado', 'evidencia', 'xp']);
+  const competencias = tab('Competências', ['id', 'nivel', 'evidencia']);
+  const checkpoints = tab('Checkpoints', ['id', 'resultado', 'evidencia']);
+  const pendencias = textoDe(sec.get('pendencias')).split('\n').map((l) => l.match(/^-\s+(.*)/)?.[1]).filter((l) => l && !/^nenhuma\.?$/i.test(l));
+  return {
+    erros,
+    sessao: {
+      arquivo: rel, nome: path.basename(arquivo), data: dados.data, numero, etapa, status: dados.status_etapa,
+      retomada: dados.retomada === 'sim', atividades, competencias, checkpoints, pendencias,
+      resumo: textoDe(sec.get('resumo')), feedback: textoDe(sec.get('feedback')), proxima: textoDe(sec.get('proxima_missao')),
+    },
+  };
+}
+
+/** Aplica as sessões em ordem e devolve o estado do aluno e os erros de consistência. */
+export function analisarAluno(raiz, slugAluno, config) {
+  const dirAluno = path.join(raiz, 'academia', 'alunos', slugAluno);
+  const relAluno = `academia/alunos/${slugAluno}`;
+  const erros = [];
+  const existe = criarExiste(raiz);
+  const { dados: perfil, corpo: perfilCorpo } = frontMatter(lerTexto(path.join(dirAluno, 'perfil.md')));
+  // A Missão 0 (CA4) exige o perfil preenchido para valer o E00-lab.
+  const secPerfil = secoes(perfilCorpo);
+  const faltaNoPerfil = [];
+  if (!perfil.ritmo) faltaNoPerfil.push('ritmo (no front matter)');
+  for (const [k, titulo] of [['objetivo_com_o_curso', 'Objetivo com o curso'], ['ponto_de_partida', 'Ponto de partida'], ['preferencias_de_estudo', 'Preferências de estudo'], ['ambiente', 'Ambiente']]) {
+    if ((textoDe(secPerfil.get(k)).match(/[\p{L}\p{N}]/gu) ?? []).length < 20) faltaNoPerfil.push(titulo);
+  }
+  const ep = (mensagem) => erros.push({ arquivo: `${relAluno}/perfil.md`, mensagem });
+  if (perfil.slug !== slugAluno) ep(`slug "${perfil.slug}" não confere com a pasta "${slugAluno}"`);
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(slugAluno) || SLUGS_RESERVADOS.test(slugAluno)) ep('nome de pasta inválido (minúsculas, números e hífen; sem nomes reservados do Windows)');
+  if (!perfil.nome) ep('falta `nome` no front matter');
+  if (!['sim', 'nao'].includes(perfil.compartilhar_xp)) ep('`compartilhar_xp` deve ser "sim" ou "nao"');
+
+  // arquivos de sessão
+  const dirSessoes = path.join(dirAluno, 'sessoes');
+  let entradas = [];
+  try { entradas = fs.readdirSync(dirSessoes, { withFileTypes: true }); } catch { /* sem sessões ainda */ }
+  const sessoes = [];
+  for (const ent of entradas.sort((a, b) => (a.name < b.name ? -1 : 1))) {
+    if (ent.name.startsWith('.')) continue;
+    const rel = `${relAluno}/sessoes/${ent.name}`;
+    if (!ent.isFile()) { erros.push({ arquivo: rel, mensagem: 'em sessoes/ só cabem arquivos AAAA-MM-DD-sNN.md' }); continue; }
+    if (!NOME_SESSAO.test(ent.name)) { erros.push({ arquivo: rel, mensagem: 'nome inválido: use AAAA-MM-DD-sNN.md (minúsculas); este arquivo seria ignorado' }); continue; }
+    const r = lerSessao(path.join(dirSessoes, ent.name), rel, slugAluno, config);
+    erros.push(...r.erros);
+    sessoes.push(r.sessao);
+  }
+  sessoes.sort((a, b) => (a.numero || 0) - (b.numero || 0));
+  sessoes.forEach((s, i) => {
+    const prev = sessoes[i - 1];
+    if (Number.isInteger(s.numero) && s.numero !== i + 1 && !(prev && s.numero === prev.numero)) {
+      erros.push({ arquivo: s.arquivo, mensagem: `numeração fora de sequência: esperado s${String(i + 1).padStart(2, '0')}` });
+    }
+    if (prev && s.numero === prev.numero) erros.push({ arquivo: s.arquivo, mensagem: `número de sessão repetido (${s.numero})` });
+    if (prev && dataValida(s.data) && dataValida(prev.data) && Date.parse(s.data) < Date.parse(prev.data)) {
+      erros.push({ arquivo: s.arquivo, mensagem: 'data anterior à da sessão anterior' });
+    }
+  });
+
+  const est = {
+    slug: slugAluno, nome: perfil.nome ?? slugAluno, compartilharXp: perfil.compartilhar_xp === 'sim', xp: 0,
+    atividades: new Map(), competencias: new Map(), checkpoints: new Map(), concluidas: new Map(), conquistas: new Map(),
+    revisoesFeitas: new Map(), contagens: { revisoes: 0, opcionais: 0, explicacoes: 0, retomadas: 0 }, sessoes,
+    xpPorSessao: new Map(), pendenciasAtividades: [],
+  };
+  const contexto = () => ({
+    xp: est.xp, ativ: new Set([...est.atividades].filter(([, a]) => a.aprovada).map(([id]) => id)),
+    comp: new Map([...est.competencias].map(([id, c]) => [id, c.nivel])), cps: new Set(est.checkpoints.keys()), ...est.contagens,
+  });
+  const nivelDaFase = (fase) => config.competencias.filter((c) => c.fase === fase).every((c) => (est.competencias.get(c.id)?.nivel ?? 0) >= 2);
+
+  /** Caminhos de evidência citados entre crases: devolve os que existem (dentro da pasta do aluno) e os problemas. */
+  const avaliarCaminhos = (celulaEvidencia) => {
+    const validos = [];
+    const problemas = [];
+    for (const m of String(celulaEvidencia ?? '').matchAll(/`([^`]+)`/g)) {
+      const p = m[1].trim();
+      if (!parecesCaminho(p)) continue;
+      if (p.includes('\\')) { problemas.push(`use "/" no caminho "${p}"`); continue; }
+      if (path.isAbsolute(p) || p.split('/').includes('..')) { problemas.push(`o caminho "${p}" sai da pasta do aluno (evidência só vale dentro de ${relAluno}/)`); continue; }
+      const abs = path.join(dirAluno, p);
+      if (!existe(abs)) { problemas.push(`evidência não encontrada: ${p}`); continue; }
+      const st = fs.statSync(abs);
+      if (!st.isFile()) { problemas.push(`aponte um arquivo, não uma pasta: ${p}`); continue; }
+      if (st.size < MIN_BYTES_EVIDENCIA) { problemas.push(`arquivo de evidência quase vazio: ${p}`); continue; }
+      validos.push(p);
+    }
+    return { validos, problemas };
+  };
+
+  sessoes.forEach((s, idx) => {
+    const e = (mensagem) => erros.push({ arquivo: s.arquivo, mensagem });
+    const prev = sessoes[idx - 1];
+    let ganho = 0;
+    const etapaOk = Number.isInteger(s.etapa) && s.etapa >= 0 && s.etapa <= config.etapas.length;
+
+    if (s.retomada) {
+      const dias = prev && dataValida(s.data) && dataValida(prev.data) ? (Date.parse(s.data) - Date.parse(prev.data)) / 86_400_000 : -1;
+      if (!prev || dias < DIAS_PAUSA) e(`retomada: sim exige uma sessão anterior e ${DIAS_PAUSA} dias ou mais de pausa`);
+      else est.contagens.retomadas += 1;
+    }
+
+    for (const a of s.atividades) {
+      const id = limpar(a.id);
+      let m;
+      let etapaId;
+      let esperado;
+      let n = 0;
+      if ((m = id.match(/^E(\d{2})-(quiz|lab|explicacao)$/))) { etapaId = Number(m[1]); esperado = TIPO_POR_SUFIXO[m[2]]; }
+      else if ((m = id.match(/^E(\d{2})-opcional-([1-9]\d*)$/))) { etapaId = Number(m[1]); esperado = 'opcional'; n = Number(m[2]); }
+      else if ((m = id.match(/^R(\d{2})-([1-9]\d*)$/))) { etapaId = Number(m[1]); esperado = 'revisao'; n = Number(m[2]); }
+      else { e(`id de atividade inválido: "${id}" (convenção em GAMIFICACAO.md; sem zeros à esquerda no número)`); continue; }
+      if (etapaId > config.etapas.length) { e(`${id}: etapa inexistente`); continue; }
+
+      let ok = true;
+      const falha = (mensagem) => { e(`${id}: ${mensagem}`); ok = false; };
+      const tipo = limpar(a.tipo);
+      if (tipo !== esperado) falha(`tipo "${tipo}" não confere com o id (esperado "${esperado}")`);
+      if (!(tipo in config.xp)) { e(`${id}: tipo de XP desconhecido ("${tipo}")`); continue; }
+      const tentativa = inteiro(a.tentativa);
+      if (!Number.isInteger(tentativa) || tentativa < 1) falha('tentativa deve ser um inteiro >= 1');
+      const resultado = limpar(a.resultado);
+      if (!RESULTADOS.includes(resultado)) { e(`${id}: resultado deve ser ${RESULTADOS.join(', ')}`); continue; }
+      const xp = inteiro(a.xp);
+      if (!Number.isInteger(xp) || xp < 0) { e(`${id}: XP deve ser um inteiro >= 0`); continue; }
+
+      const ja = est.atividades.get(id) ?? { tentativas: 0, aprovada: false, xpConcedido: false, ultimo: null };
+      ja.tentativas += 1;
+      ja.ultimo = resultado;
+      const evid = a.evidencia ?? '';
+      const caminhos = avaliarCaminhos(evid);
+      if (resultado === 'aprovado') for (const p of caminhos.problemas) falha(p);
+      if (id === 'E00-lab' && resultado === 'aprovado' && xp > 0 && faltaNoPerfil.length) {
+        falha(`perfil.md incompleto (CA4 da Missão 0): preencha ${faltaNoPerfil.join(', ')}`);
+      }
+
+      if (xp > 0) {
+        if (resultado !== 'aprovado') falha('XP só pode ser concedido a uma atividade aprovada');
+        if (ja.xpConcedido) falha('XP já concedido antes (cada atividade rende XP uma única vez)');
+        if (xp !== config.xp[tipo]) falha(`XP ${xp} não confere com a tabela (${tipo} = ${config.xp[tipo]})`);
+        if (etapaId > 0 && config.etapas[etapaId - 1].status !== 'pronta') {
+          falha(`a etapa ${etapaId} ainda não tem lição pronta no ROADMAP, então não há critério para comprovar o XP`);
+        }
+        if (tipo === 'revisao') {
+          if (!temEvidencia(evid)) falha('XP sem evidência (descreva a prova em pelo menos 8 letras ou números)');
+          const quando = est.concluidas.get(etapaId);
+          const feitas = est.revisoesFeitas.get(etapaId) ?? 0;
+          if (quando === undefined || quando >= s.numero) falha('revisão de uma etapa que não foi concluída em uma sessão anterior');
+          else {
+            if (n > config.revisoes.length) falha(`só existem ${config.revisoes.length} revisões por etapa`);
+            else if (n !== feitas + 1) falha(`a próxima revisão desta etapa é R${String(etapaId).padStart(2, '0')}-${feitas + 1}`);
+            else if (s.numero - quando < config.revisoes[n - 1]) falha(`ainda não é devida (faltam ${config.revisoes[n - 1] - (s.numero - quando)} sessão(ões))`);
+          }
+        } else if (!caminhos.validos.length) {
+          falha('XP sem evidência: cite entre crases um arquivo que exista em entregas/ (ex.: `entregas/etapa-01/quiz.md`)');
+        }
+        if (tipo === 'opcional' && n > MAX_OPCIONAIS) falha(`só existem ${MAX_OPCIONAIS} desafios opcionais por etapa`);
+      }
+
+      if (ok && resultado === 'aprovado') ja.aprovada = true;
+      if (ok && xp > 0 && resultado === 'aprovado') {
+        est.xp += config.xp[tipo];
+        ganho += config.xp[tipo];
+        ja.xpConcedido = true;
+        if (tipo === 'revisao') { est.contagens.revisoes += 1; est.revisoesFeitas.set(etapaId, (est.revisoesFeitas.get(etapaId) ?? 0) + 1); }
+        if (tipo === 'opcional') est.contagens.opcionais += 1;
+        if (tipo === 'explicacao') est.contagens.explicacoes += 1;
+      }
+      est.atividades.set(id, ja);
+    }
+
+    for (const c of s.competencias) {
+      const id = limpar(c.id);
+      const nivel = inteiro(c.nivel);
+      if (!config.competencias.some((x) => x.id === id)) { e(`competência inexistente: ${id}`); continue; }
+      if (!Number.isInteger(nivel) || nivel < 0 || nivel > 3) { e(`${id}: nível deve ser um inteiro de 0 a 3`); continue; }
+      if (nivel >= 1 && !temEvidencia(c.evidencia)) { e(`${id}: nível ${nivel} sem evidência`); continue; }
+      est.competencias.set(id, { nivel, sessao: s.numero, evidencia: celula(limpar(c.evidencia)) });
+    }
+
+    if (s.status === 'concluida' && etapaOk) {
+      const nn = String(s.etapa).padStart(2, '0');
+      let completa = true;
+      for (const exigido of [`E${nn}-quiz`, `E${nn}-lab`]) {
+        if (!est.atividades.get(exigido)?.xpConcedido) { e(`etapa ${s.etapa} marcada como concluída sem ${exigido} aprovado (com XP)`); completa = false; }
+      }
+      if (completa && !est.concluidas.has(s.etapa)) est.concluidas.set(s.etapa, s.numero);
+    }
+
+    for (const k of s.checkpoints) {
+      const id = limpar(k.id);
+      const cfg = config.checkpoints.find((x) => x.id === id);
+      if (!cfg) { e(`checkpoint inexistente: ${id}`); continue; }
+      const resultado = limpar(k.resultado);
+      if (!['aprovado', 'pendente'].includes(resultado)) { e(`${id}: resultado deve ser aprovado ou pendente`); continue; }
+      if (resultado !== 'aprovado') continue;
+      let ok = true;
+      if (!temEvidencia(k.evidencia)) { e(`${id}: aprovado sem evidência`); ok = false; }
+      if (!est.concluidas.has(cfg.apos)) { e(`${id}: exige a etapa ${cfg.apos} concluída`); ok = false; }
+      if (!nivelDaFase(cfg.fase)) { e(`${id}: exige todas as competências da fase ${cfg.fase} no nível 2 ou mais`); ok = false; }
+      if (ok && !est.checkpoints.has(id)) est.checkpoints.set(id, s.numero);
+    }
+
+    for (const q of config.conquistas) {
+      if (!est.conquistas.has(q.id) && avaliarRegra(q.regra, contexto())) est.conquistas.set(q.id, s.numero);
+    }
+    est.xpPorSessao.set(s.numero, ganho);
+  });
+
+  est.pendenciasAtividades = [...est.atividades].filter(([, a]) => !a.aprovada)
+    .map(([id, a]) => ({ id, tentativas: a.tentativas, ultimo: a.ultimo }));
+  finalizar(est, config);
+  return { estado: est, erros };
+}
+
+/** Calcula nível, etapa atual, próxima sessão e revisões sugeridas a partir do estado acumulado. */
 function finalizar(est, config) {
   let nivelIdx = 0;
   for (let i = 1; i < config.niveis.length; i++) {
@@ -414,12 +557,12 @@ function finalizar(est, config) {
   est.etapaAtual = 0;
   while (est.etapaAtual <= config.etapas.length && est.concluidas.has(est.etapaAtual)) est.etapaAtual += 1;
   est.ultima = est.sessoes.at(-1) ?? null;
-  const total = est.ultima?.numero ?? 0;
+  est.proximaSessao = (Number.isInteger(est.ultima?.numero) ? est.ultima.numero : 0) + 1;
+  const total = est.sessoes.length;
   est.revisoesSugeridas = [];
   for (const [etapa, quando] of est.concluidas) {
     if (etapa === 0) continue;
-    const nn = String(etapa).padStart(2, '0');
-    const feitas = [...est.atividades].filter(([id, a]) => id.startsWith(`R${nn}-`) && a.aprovada).length;
+    const feitas = est.revisoesFeitas.get(etapa) ?? 0;
     const intervalo = config.revisoes[feitas];
     const passadas = total - quando;
     if (intervalo !== undefined && passadas >= intervalo) est.revisoesSugeridas.push({ etapa, numero: feitas + 1, atraso: passadas - intervalo });
@@ -443,9 +586,11 @@ function linkLicaoDe(n, config, base) {
 export function renderRetomada(est, config) {
   const L = [];
   const concluidasN = [...est.concluidas.keys()].filter((n) => n >= 1).length;
+  const nn = String(est.proximaSessao).padStart(2, '0');
   L.push('<!-- Gerado por `node academia/ferramentas/academia.mjs progresso`. Não edite: a fonte são os arquivos de sessoes/. -->');
-  L.push(`# Retomada · ${est.nome}`, '');
+  L.push(`# Retomada · ${celula(est.nome)}`, '');
   L.push(`**Nível:** ${est.nivel.nome} · **XP:** ${est.xp} · **Etapa atual:** ${tituloEtapa(est.etapaAtual, config)}`, '');
+  L.push(`**Próxima sessão:** s${nn} (dados para o relatório: \`aluno: ${est.slug}\`, \`sessao: ${est.proximaSessao}\`)`, '');
   if (est.faltaParaProximo) {
     const f = est.faltaParaProximo;
     const partes = [];
@@ -461,19 +606,19 @@ export function renderRetomada(est, config) {
     const u = est.ultima;
     L.push(`- Última sessão: **${u.data}** (s${String(u.numero).padStart(2, '0')}), etapa ${u.etapa}, status \`${u.status}\`.`);
     L.push(`- Lição: [${tituloEtapa(est.etapaAtual, config)}](${linkLicaoDe(est.etapaAtual, config, '../../')})`);
-    if (u.resumo) L.push(`- Resumo: ${u.resumo.split('\n')[0]}`);
+    if (u.resumo) L.push(`- Resumo: ${semLinksRelativos(u.resumo.split('\n')[0])}`);
     L.push('');
   }
 
   L.push('## Próxima missão', '');
-  L.push(est.ultima?.proxima || (est.ultima ? 'Escolha a próxima atividade da lição atual.' : 'Fazer a Missão 0: perfil, ambiente e diagnóstico.'), '');
+  L.push(semLinksRelativos(est.ultima?.proxima || (est.ultima ? 'Escolha a próxima atividade da lição atual.' : 'Fazer a Missão 0: perfil, ambiente e diagnóstico.')), '');
 
   if (est.ultima?.feedback) {
-    L.push('## Último feedback', '', ...est.ultima.feedback.split('\n').map((l) => (l ? `> ${l}` : '>')), '');
+    L.push('## Último feedback', '', ...semLinksRelativos(est.ultima.feedback).split('\n').map((l) => (l ? `> ${l}` : '>')), '');
   }
 
   L.push('## Pendências', '');
-  const pend = [...(est.ultima?.pendencias ?? []).map((p) => `- ${p}`),
+  const pend = [...(est.ultima?.pendencias ?? []).map((p) => `- ${semLinksRelativos(p)}`),
     ...est.pendenciasAtividades.map((p) => `- Atividade \`${p.id}\` sem aprovação (${p.tentativas} tentativa${p.tentativas > 1 ? 's' : ''}, última: ${p.ultimo})`)];
   L.push(...(pend.length ? pend : ['- Nenhuma.']), '');
 
@@ -531,14 +676,14 @@ export function renderProgresso(estados, config) {
   L.push('## Alunos', '');
   if (!estados.length) L.push('Nenhum aluno cadastrado.', '');
   else {
-    L.push('| Aluno | Nível | Etapa atual | Etapas concluídas | XP | Última sessão |', '|---|---|---|---|---|---|');
+    L.push('| Aluno | Nível | Etapa atual | Etapas concluídas | XP |', '|---|---|---|---|---|');
     for (const e of estados) {
       const n = [...e.concluidas.keys()].filter((x) => x >= 1).length;
-      L.push(`| [${e.nome}](alunos/${e.slug}/retomada.md) | ${e.nivel.nome} | ${tituloEtapa(e.etapaAtual, config)} | \`${barra(n, 16, 10)}\` ${n}/16 | ${e.compartilharXp ? e.xp : '—'} | ${e.ultima?.data ?? '—'} |`);
+      L.push(`| [${celula(e.nome)}](alunos/${e.slug}/) | ${e.nivel.nome} | ${tituloEtapa(e.etapaAtual, config)} | \`${barra(n, 16, 10)}\` ${n}/16 | ${e.compartilharXp ? e.xp : '—'} |`);
     }
     L.push('');
     L.push('## Por etapa', '', '✅ concluída · ▶ etapa atual · · pendente', '');
-    L.push(`| Etapa | Título | ${estados.map((e) => e.nome).join(' | ')} |`, `|---|---|${estados.map(() => '---').join('|')}|`);
+    L.push(`| Etapa | Título | ${estados.map((e) => celula(e.nome)).join(' | ')} |`, `|---|---|${estados.map(() => '---').join('|')}|`);
     for (const e of [{ n: 0, titulo: 'Missão 0 · Diagnóstico' }, ...config.etapas]) {
       const cel = estados.map((s) => (s.concluidas.has(e.n) ? '✅' : s.etapaAtual === e.n ? '▶' : '·'));
       L.push(`| ${e.n} | ${e.titulo} | ${cel.join(' | ')} |`);
@@ -554,7 +699,7 @@ const CABECALHO_PROGRESS = `# Progresso
 Visão geral dos alunos da Academia, **gerada** a partir dos relatórios de sessão de cada um
 ([como funciona](SINCRONIZACAO.md) · [regras de XP](GAMIFICACAO.md)). Cada aluno tem registros independentes: o progresso de
 um nunca altera o do outro. O XP só aparece para quem escolheu \`compartilhar_xp: sim\` no próprio perfil, e a lista é
-alfabética: não há ranking.
+alfabética e sem datas: não há ranking.
 
 `;
 
@@ -565,16 +710,22 @@ function montarProgress(raiz, bloco) {
   return m ? `${m[1]}${bloco}${m[2]}` : `${CABECALHO_PROGRESS}${bloco}\n`;
 }
 
-export function gerarRegistros(raiz, config, { somenteChecar = false } = {}) {
-  const erros = [];
-  const estados = [];
-  const saidas = [];
-  for (const slugAluno of listarAlunos(raiz)) {
-    const r = analisarAluno(raiz, slugAluno, config);
-    estados.push(r.estado);
-    saidas.push({ arquivo: path.join(raiz, 'academia', 'alunos', slugAluno, 'retomada.md'), texto: renderRetomada(r.estado, config) + '\n' });
+/**
+ * Gera (ou só confere) retomada.md e PROGRESS.md. Com `aluno`, só o retomada.md dele entra na conferência/escrita
+ * (e o PROGRESS.md só na escrita). Na escrita, se o aluno-alvo tiver erros nos registros, nada é gravado.
+ */
+export function gerarRegistros(raiz, config, { somenteChecar = false, aluno = null } = {}) {
+  const analises = listarAlunos(raiz).map((s) => ({ slug: s, ...analisarAluno(raiz, s, config) }));
+  if (aluno && !analises.some((a) => a.slug === aluno)) return { erros: [{ arquivo: `academia/alunos/${aluno}`, mensagem: 'aluno não encontrado' }], estados: [], errosAnalise: [] };
+  const alvo = aluno ? analises.filter((a) => a.slug === aluno) : analises;
+  const errosAnalise = alvo.flatMap((a) => a.erros);
+  if (!somenteChecar && errosAnalise.length) return { erros: errosAnalise, estados: analises.map((a) => a.estado), errosAnalise };
+
+  const saidas = alvo.map((a) => ({ arquivo: path.join(raiz, 'academia', 'alunos', a.slug, 'retomada.md'), texto: renderRetomada(a.estado, config) + '\n' }));
+  if (!(somenteChecar && aluno)) {
+    saidas.push({ arquivo: path.join(raiz, 'academia', 'PROGRESS.md'), texto: montarProgress(raiz, renderProgresso(analises.map((a) => a.estado), config)) });
   }
-  saidas.push({ arquivo: path.join(raiz, 'academia', 'PROGRESS.md'), texto: montarProgress(raiz, renderProgresso(estados, config)) });
+  const erros = [];
   for (const s of saidas) {
     const rel = path.relative(raiz, s.arquivo).split(path.sep).join('/');
     const atual = fs.existsSync(s.arquivo) ? lerTexto(s.arquivo) : null;
@@ -582,28 +733,32 @@ export function gerarRegistros(raiz, config, { somenteChecar = false } = {}) {
     if (somenteChecar) erros.push({ arquivo: rel, mensagem: 'desatualizado: rode `node academia/ferramentas/academia.mjs progresso`' });
     else fs.writeFileSync(s.arquivo, s.texto);
   }
-  return { erros, estados };
+  return { erros, estados: analises.map((a) => a.estado), errosAnalise };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // Validação do conteúdo: lições, roadmap, links, segredos
 // ---------------------------------------------------------------------------------------------------------------
+function andar(dir, aceita, saida = []) {
+  for (const d of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (d.name === 'node_modules' || d.name === '.git') continue;
+    const p = path.join(dir, d.name);
+    if (d.isDirectory()) andar(p, aceita, saida); else if (aceita(d.name)) saida.push(p);
+  }
+  return saida;
+}
+
 function listarMarkdown(raiz) {
-  const saida = [];
-  const andar = (dir) => {
-    for (const d of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (d.name === 'node_modules' || d.name.startsWith('.')) continue;
-      const p = path.join(dir, d.name);
-      if (d.isDirectory()) andar(p); else if (d.name.endsWith('.md')) saida.push(p);
-    }
-  };
-  if (fs.existsSync(path.join(raiz, 'academia'))) andar(path.join(raiz, 'academia'));
+  const saida = fs.existsSync(path.join(raiz, 'academia')) ? andar(path.join(raiz, 'academia'), (n) => /\.md$/i.test(n)) : [];
   for (const f of ['AI_CONTEXT.md', 'README.md']) if (fs.existsSync(path.join(raiz, f))) saida.push(path.join(raiz, f));
   return saida;
 }
 
+const decodificar = (t) => { try { return decodeURIComponent(t); } catch { return t; } };
+
 export function validarLinks(raiz) {
   const erros = [];
+  const existe = criarExiste(raiz);
   const cacheAncoras = new Map();
   const ancorasDe = (arquivo) => {
     if (!cacheAncoras.has(arquivo)) cacheAncoras.set(arquivo, ancoras(lerTexto(arquivo)));
@@ -614,14 +769,14 @@ export function validarLinks(raiz) {
     let cerca = false;
     lerTexto(arquivo).split('\n').forEach((linha, i) => {
       if (/^\s*```/.test(linha)) { cerca = !cerca; return; }
-      if (cerca) return;
+      if (cerca || linha.length > 4000) return;
       const semCodigo = linha.replace(/`[^`]*`/g, '');
-      for (const m of semCodigo.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
+      for (const m of semCodigo.matchAll(/!?\[[^\]\n]{0,300}\]\(([^)\s]{1,500})(?:\s+"[^"]{0,200}")?\)/g)) {
         const alvo = m[1];
         if (/^(https?:|mailto:|#$)/.test(alvo) || alvo.startsWith('<')) continue;
         const [caminho, frag] = alvo.split('#');
         const destino = caminho ? path.resolve(path.dirname(arquivo), decodificar(caminho)) : arquivo;
-        if (!fs.existsSync(destino)) { erros.push({ arquivo: `${rel}:${i + 1}`, mensagem: `link quebrado: ${alvo}` }); continue; }
+        if (!existe(destino)) { erros.push({ arquivo: `${rel}:${i + 1}`, mensagem: `link quebrado: ${alvo}` }); continue; }
         if (frag && destino.endsWith('.md') && fs.statSync(destino).isFile() && !ancorasDe(destino).has(decodificar(frag))) {
           erros.push({ arquivo: `${rel}:${i + 1}`, mensagem: `âncora inexistente: ${alvo}` });
         }
@@ -631,23 +786,21 @@ export function validarLinks(raiz) {
   return erros;
 }
 
-const SEGREDOS = [/sk-[A-Za-z0-9_-]{16,}/, /Bearer\s+[A-Za-z0-9._~+/-]{16,}/, /gh[pousr]_[A-Za-z0-9]{20,}/, /AKIA[0-9A-Z]{16}/, /-----BEGIN [A-Z ]*PRIVATE KEY-----/];
+const BINARIOS = /\.(png|jpe?g|gif|webp|ico|pdf|wav|mp3|mp4|zip|gz|woff2?)$/i;
 
 export function validarSegredos(raiz) {
   const erros = [];
-  const arquivos = [];
-  const andar = (dir) => {
-    for (const d of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (d.name === 'node_modules' || d.name.startsWith('.')) continue;
-      const p = path.join(dir, d.name);
-      if (d.isDirectory()) andar(p); else if (/\.(md|mjs|js|json|ya?ml|txt)$/.test(d.name)) arquivos.push(p);
-    }
-  };
-  if (fs.existsSync(path.join(raiz, 'academia'))) andar(path.join(raiz, 'academia'));
+  const arquivos = fs.existsSync(path.join(raiz, 'academia'))
+    ? andar(path.join(raiz, 'academia'), (n) => !BINARIOS.test(n) && !/\.test\.mjs$/.test(n))
+    : [];
   for (const f of ['AI_CONTEXT.md']) if (fs.existsSync(path.join(raiz, f))) arquivos.push(path.join(raiz, f));
   for (const a of arquivos) {
-    const t = lerTexto(a);
-    for (const p of SEGREDOS) if (p.test(t)) erros.push({ arquivo: path.relative(raiz, a).split(path.sep).join('/'), mensagem: `possível segredo (padrão ${p})` });
+    let t;
+    try { t = fs.readFileSync(a, 'utf8'); } catch { continue; }
+    if (t.includes('\0') || t.length > 2_000_000) continue;
+    for (const s of acharSegredos(t.replace(/\r\n?/g, '\n'))) {
+      erros.push({ arquivo: `${path.relative(raiz, a).split(path.sep).join('/')}:${s.linha}`, mensagem: `possível segredo (${s.nome}); remova e troque a credencial` });
+    }
   }
   return erros;
 }
@@ -660,12 +813,12 @@ export function validarLicoes(raiz, config) {
     const { dados, corpo, tem } = frontMatter(lerTexto(arquivo));
     if (!tem) e('falta o front matter (etapa, titulo, competencias, duracao_min, revisado_em)');
     for (const k of ['etapa', 'titulo', 'competencias', 'duracao_min', 'revisado_em']) if (!(k in dados)) e(`front matter sem "${k}"`);
-    if (etapaEsperada !== null && Number(dados.etapa) !== etapaEsperada) e(`etapa ${dados.etapa} não confere com o nome da pasta (${etapaEsperada})`);
-    if (etapaEsperada !== null && !/^\d{4}-\d{2}-\d{2}$/.test(dados.revisado_em ?? '')) e('revisado_em deve ser AAAA-MM-DD');
-    if (etapaEsperada !== null) {
+    if (etapaEsperada !== null && inteiro(dados.etapa) !== etapaEsperada) e(`etapa ${dados.etapa} não confere com o nome da pasta (${etapaEsperada})`);
+    if (etapaEsperada !== null && !dataValida(dados.revisado_em)) e('revisado_em deve ser uma data AAAA-MM-DD');
+    if (etapaEsperada !== null && etapaEsperada > 0) {
       const declaradas = (dados.competencias ?? '').split(',').map((s) => s.trim()).filter((s) => /^C\d{2}$/.test(s)).sort();
-      const doCatalogo = config.competencias.filter((c) => c.etapa === Number(dados.etapa)).map((c) => c.id).sort();
-      if (etapaEsperada > 0 && declaradas.join() !== doCatalogo.join()) e(`competencias (${declaradas.join(', ')}) diferem do catálogo para a etapa (${doCatalogo.join(', ')})`);
+      const doCatalogo = config.competencias.filter((c) => c.etapa === etapaEsperada).map((c) => c.id).sort();
+      if (declaradas.join() !== doCatalogo.join()) e(`competencias (${declaradas.join(', ')}) diferem do catálogo para a etapa (${doCatalogo.join(', ')})`);
     }
     const titulos = [...corpo.matchAll(/^## (\d+)\.\s+(.*?)\s*$/gm)].map((m) => [Number(m[1]), m[2]]);
     TITULOS_LICAO.forEach((t, i) => {
@@ -674,7 +827,8 @@ export function validarLicoes(raiz, config) {
   };
 
   const tmpl = path.join(raiz, 'academia', 'templates', 'licao.md');
-  if (fs.existsSync(tmpl)) confere(tmpl, 'academia/templates/licao.md', null); else erros.push({ arquivo: 'academia/templates/licao.md', mensagem: 'template de lição não encontrado' });
+  if (fs.existsSync(tmpl)) confere(tmpl, 'academia/templates/licao.md', null);
+  else erros.push({ arquivo: 'academia/templates/licao.md', mensagem: 'template de lição não encontrado' });
 
   const pastas = fs.existsSync(dirLicoes) ? fs.readdirSync(dirLicoes, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort() : [];
   const existentes = new Set();
@@ -716,25 +870,34 @@ export function validarLicoes(raiz, config) {
   return erros;
 }
 
-export function validarTudo(raiz) {
+/** Validação completa. Com `aluno`, só os registros e o retomada.md desse aluno entram (o outro aluno nunca bloqueia). */
+export function validarTudo(raiz, { aluno = null } = {}) {
   const { erros: errosCfg, config } = carregarConfig(raiz);
   const erros = [...errosCfg];
   if (errosCfg.length) return { erros, avisos: [], config };
-  erros.push(...validarLicoes(raiz, config));
-  for (const a of listarAlunos(raiz)) erros.push(...analisarAluno(raiz, a, config).erros);
-  erros.push(...validarLinks(raiz), ...validarSegredos(raiz));
-  erros.push(...gerarRegistros(raiz, config, { somenteChecar: true }).erros);
+  try {
+    erros.push(...validarLicoes(raiz, config));
+    const slugs = listarAlunos(raiz);
+    if (aluno && !slugs.includes(aluno)) erros.push({ arquivo: `academia/alunos/${aluno}`, mensagem: 'aluno não encontrado (precisa de perfil.md)' });
+    if (!aluno) erros.push(...pastasSemPerfil(raiz));
+    for (const a of aluno ? slugs.filter((s) => s === aluno) : slugs) erros.push(...analisarAluno(raiz, a, config).erros);
+    erros.push(...validarLinks(raiz), ...validarSegredos(raiz));
+    if (!aluno || slugs.includes(aluno)) erros.push(...gerarRegistros(raiz, config, { somenteChecar: true, aluno }).erros);
+  } catch (err) {
+    erros.push({ arquivo: 'academia/ferramentas/academia.mjs', mensagem: `falha inesperada durante a validação: ${err.message}` });
+  }
   return { erros, avisos: [], config };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Comandos que criam arquivos
+// Comandos que criam arquivos ou textos
 // ---------------------------------------------------------------------------------------------------------------
 export function criarSessao(raiz, config, slugAluno, { etapa, data } = {}) {
   if (!listarAlunos(raiz).includes(slugAluno)) throw new Error(`aluno "${slugAluno}" não encontrado em academia/alunos/ (use novo-aluno)`);
   const { estado } = analisarAluno(raiz, slugAluno, config);
-  const numero = (estado.ultima?.numero ?? 0) + 1;
+  const numero = estado.proximaSessao;
   const dia = data ?? new Date().toLocaleDateString('sv-SE');
+  if (!dataValida(dia)) throw new Error('a data deve ser uma data real no formato AAAA-MM-DD');
   const nome = `${dia}-s${String(numero).padStart(2, '0')}.md`;
   const dir = path.join(raiz, 'academia', 'alunos', slugAluno, 'sessoes');
   fs.mkdirSync(dir, { recursive: true });
@@ -745,8 +908,9 @@ export function criarSessao(raiz, config, slugAluno, { etapa, data } = {}) {
     '---', `aluno: ${slugAluno}`, `data: ${dia}`, `sessao: ${numero}`, `etapa: ${et}`, 'status_etapa: em-andamento',
     'retomada: nao', 'assistente: ', '---', '',
     `# Sessão ${numero} · ${dia} · Etapa ${et}`, '',
-    '> Cole aqui o relatório gerado pelo assistente (modelo: academia/templates/relatorio-sessao.md). Se esta é a primeira',
-    '> sessão depois de uma pausa, troque `retomada: nao` por `retomada: sim`. Apague estes comentários.', '',
+    '> Cole aqui o relatório gerado pelo assistente (modelo: academia/templates/relatorio-sessao.md), substituindo o',
+    `> conteúdo todo. Confira se \`sessao\` e \`data\` do front matter batem com o nome do arquivo. \`retomada: sim\` só com ${DIAS_PAUSA} dias`,
+    '> ou mais desde a sessão anterior. Apague estes comentários.', '',
     '## Resumo', '', '## Atividades', '',
     '| id | tipo | tentativa | resultado | evidência | XP |', '|---|---|---|---|---|---|', '',
     '## Competências', '', '| id | nível | evidência |', '|---|---|---|', '',
@@ -757,18 +921,75 @@ export function criarSessao(raiz, config, slugAluno, { etapa, data } = {}) {
 }
 
 export function criarAluno(raiz, config, slugAluno, nome) {
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(slugAluno)) throw new Error('slug inválido: use minúsculas, números e hífen');
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(slugAluno) || SLUGS_RESERVADOS.test(slugAluno)) throw new Error('slug inválido: use minúsculas, números e hífen (e evite nomes reservados do Windows, como con, nul e aux)');
+  if (!String(nome ?? '').trim()) throw new Error('informe o nome de exibição');
   const dir = path.join(raiz, 'academia', 'alunos', slugAluno);
   if (fs.existsSync(dir)) throw new Error(`academia/alunos/${slugAluno} já existe`);
-  fs.mkdirSync(dir, { recursive: true });
+  fs.mkdirSync(path.join(dir, 'sessoes'), { recursive: true });
+  fs.mkdirSync(path.join(dir, 'entregas'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'sessoes', '.gitkeep'), '');
+  fs.writeFileSync(path.join(dir, 'entregas', '.gitkeep'), '');
   fs.writeFileSync(path.join(dir, 'perfil.md'), [
-    '---', `slug: ${slugAluno}`, `nome: ${nome}`, 'compartilhar_xp: nao', 'ritmo: ', 'assistente: ', '---', '',
-    `# Perfil · ${nome}`, '',
+    '---', `slug: ${slugAluno}`, `nome: ${celula(nome)}`, 'compartilhar_xp: nao', 'ritmo: ', 'assistente: ', '---', '',
+    `# Perfil · ${celula(nome)}`, '',
     '> Preencha na Missão 0 (modelo e orientações: academia/templates/perfil-aluno.md).', '',
     '## Objetivo com o curso', '', '## Ponto de partida', '', '## Preferências de estudo', '', '## Ambiente', '', '',
   ].join('\n'));
-  gerarRegistros(raiz, config);
+  gerarRegistros(raiz, config, { aluno: slugAluno });
   return `academia/alunos/${slugAluno}`;
+}
+
+const secao7 = (texto) => {
+  const m = texto.match(/^## 7\.[^\n]*\n[\s\S]*?(?=^## 8\.)/m);
+  return m ? m[0].trim() : null;
+};
+
+/** Texto único para colar numa conversa com um assistente que não enxerga o repositório. */
+export function montarKit(raiz, config, slugAluno, { hoje = new Date().toLocaleDateString('sv-SE') } = {}) {
+  if (!listarAlunos(raiz).includes(slugAluno)) throw new Error(`aluno "${slugAluno}" não encontrado em academia/alunos/`);
+  const { estado } = analisarAluno(raiz, slugAluno, config);
+  const lerRel = (rel) => lerTexto(path.join(raiz, rel)).trimEnd();
+  const etapa = Math.min(estado.etapaAtual, config.etapas.length);
+  const partes = [];
+  const bloco = (titulo, corpo) => partes.push(`===== ${titulo} =====\n${corpo}\n`);
+
+  bloco('INSTRUÇÕES AO TUTOR', [
+    'Você é o tutor da Academia de Engenharia de IA do repositório ai-engineer. Siga as regras do AI_CONTEXT.md abaixo.',
+    `Eu sou o aluno ${slugAluno}. Esta conversa não tem acesso ao repositório: tudo o que você precisa está neste texto.`,
+    'Comece pelas revisões sugeridas (do retomada.md), depois conduza a lição uma atividade por vez, sem entregar solução',
+    'antes das dicas. Não revele gabaritos: eu os colo depois de responder. No fim eu vou pedir o relatório da sessão.',
+    '',
+    'DADOS DA SESSÃO A REGISTRAR (use exatamente estes valores no front matter do relatório):',
+    `  aluno: ${slugAluno}`,
+    `  sessao: ${estado.proximaSessao}`,
+    `  data: ${hoje}`,
+    `  etapa: ${etapa}`,
+    `  arquivo: academia/alunos/${slugAluno}/sessoes/${hoje}-s${String(estado.proximaSessao).padStart(2, '0')}.md`,
+  ].join('\n'));
+  bloco('AI_CONTEXT.md', lerRel('AI_CONTEXT.md'));
+  bloco('academia/GAMIFICACAO.md', lerRel('academia/GAMIFICACAO.md'));
+  bloco('academia/competencias.md', lerRel('academia/competencias.md'));
+  bloco('academia/templates/relatorio-sessao.md', lerRel('academia/templates/relatorio-sessao.md'));
+  bloco(`academia/alunos/${slugAluno}/retomada.md`, lerRel(`academia/alunos/${slugAluno}/retomada.md`));
+
+  const e = config.etapas[etapa - 1];
+  if (estado.etapaAtual === 0) bloco('LIÇÃO: Missão 0 (sem o gabarito)', lerRel('academia/licoes/00-missao-0-diagnostico/README.md'));
+  else if (e?.status === 'pronta' && e.licao) bloco(`LIÇÃO: etapa ${etapa} (sem o gabarito)`, lerRel(`academia/${e.licao}`));
+  else if (e) {
+    const rm = lerRel('academia/ROADMAP.md');
+    const m = rm.match(new RegExp(`^### Etapa ${etapa} [\\s\\S]*?(?=^(?:### |---|## ))`, 'm'));
+    bloco(`ETAPA ${etapa} AINDA SEM LIÇÃO: plano do ROADMAP e template`, [
+      'Esta etapa ainda não tem lição pronta (status "roteiro"). Escreva a lição com o template abaixo ANTES de registrar XP;',
+      'ela vira um arquivo novo em academia/licoes/ (peça ao aluno para salvá-la) e a etapa passa a "pronta" no ROADMAP.', '',
+      m ? m[0].trim() : '(plano da etapa não encontrado)', '', '--- template ---', lerRel('academia/templates/licao.md')].join('\n'));
+  }
+  for (const r of estado.revisoesSugeridas.slice(0, 3)) {
+    const lic = config.etapas[r.etapa - 1];
+    if (lic?.status !== 'pronta' || !lic.licao) continue;
+    const q = secao7(lerRel(`academia/${lic.licao}`));
+    if (q) bloco(`REVISÃO SUGERIDA: etapa ${r.etapa}, revisão ${r.numero} (id R${String(r.etapa).padStart(2, '0')}-${r.numero}); use estas perguntas`, q);
+  }
+  return partes.join('\n');
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -776,67 +997,95 @@ export function criarAluno(raiz, config, slugAluno, nome) {
 // ---------------------------------------------------------------------------------------------------------------
 const AJUDA = `Uso: node academia/ferramentas/academia.mjs <comando>
 
-  validar                       confere conteúdo, links, segredos e registros dos alunos
-  progresso [--check]           recria (ou só confere) retomada.md e PROGRESS.md
+  validar [--aluno <aluno>]     confere conteúdo, links, segredos e registros (com --aluno, só os desse aluno)
+  progresso [<aluno>] [--check] recria (ou só confere) retomada.md e PROGRESS.md; recusa se houver erros nas sessões
   sessao <aluno> [--etapa N] [--data AAAA-MM-DD]
                                 cria o arquivo da próxima sessão do aluno
+  kit <aluno>                   imprime o texto para colar numa conversa com um assistente de IA
   novo-aluno <slug> "Nome"      cria a pasta e o perfil de um aluno`;
 
+const MAX_LINHAS = 60;
 function imprimir(lista, rotulo) {
-  for (const i of lista) console.log(`${rotulo} ${i.arquivo}: ${i.mensagem}`);
+  for (const i of lista.slice(0, MAX_LINHAS)) console.log(`${rotulo} ${i.arquivo}: ${i.mensagem}`);
+  if (lista.length > MAX_LINHAS) console.log(`... e mais ${lista.length - MAX_LINHAS}`);
+}
+
+/** Separa posicionais e opções; opção desconhecida ou sem valor é erro (um `--chek` não pode virar escrita silenciosa). */
+function lerArgs(args, comOpcao, booleanas = []) {
+  const pos = [];
+  const opcoes = {};
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (!a.startsWith('--')) { pos.push(a); continue; }
+    if (booleanas.includes(a)) { opcoes[a] = true; continue; }
+    if (!comOpcao.includes(a)) throw new Error(`opção desconhecida: ${a}`);
+    if (args[i + 1] === undefined || args[i + 1].startsWith('--')) throw new Error(`a opção ${a} precisa de um valor`);
+    opcoes[a] = args[++i];
+  }
+  return { pos, opcoes };
 }
 
 export function main(argv, raiz = RAIZ_PADRAO) {
   const [cmd, ...args] = argv;
-  const opcao = (nome) => { const i = args.indexOf(nome); return i >= 0 ? args[i + 1] : undefined; };
   if (!cmd || cmd === 'ajuda' || cmd === '--help') { console.log(AJUDA); return 0; }
-
-  if (cmd === 'validar') {
-    const { erros, config } = validarTudo(raiz);
-    if (erros.length) {
-      imprimir(erros, 'erro');
-      console.log(`\n${erros.length} problema(s) encontrado(s).`);
-      return 1;
-    }
-    console.log(`Tudo certo: ${config.etapas.length} etapas, ${config.competencias.length} competências, ${listarAlunos(raiz).length} aluno(s).`);
-    return 0;
-  }
-
-  const { erros: errosCfg, config } = carregarConfig(raiz);
-  if (errosCfg.length) { imprimir(errosCfg, 'erro'); return 1; }
-
-  if (cmd === 'progresso') {
-    const checar = args.includes('--check');
-    const { erros } = gerarRegistros(raiz, config, { somenteChecar: checar });
-    if (erros.length) { imprimir(erros, 'erro'); return 1; }
-    console.log(checar ? 'Registros atualizados.' : 'Registros gerados.');
-    return 0;
-  }
   try {
-    if (cmd === 'sessao') {
-      if (!args[0]) throw new Error('uso: sessao <aluno>');
-      const etapa = opcao('--etapa');
-      if (etapa !== undefined && !(Number.isInteger(Number(etapa)) && Number(etapa) >= 0 && Number(etapa) <= config.etapas.length)) {
-        throw new Error('--etapa deve ser um inteiro de 0 a 16');
+    if (cmd === 'validar') {
+      const { opcoes, pos } = lerArgs(args, ['--aluno']);
+      if (pos.length) throw new Error('validar não recebe argumentos posicionais; use --aluno <aluno>');
+      const { erros, config } = validarTudo(raiz, { aluno: opcoes['--aluno'] ?? null });
+      if (erros.length) {
+        imprimir(erros, 'erro');
+        console.log(`\n${erros.length} problema(s) encontrado(s).`);
+        return 1;
       }
-      const data = opcao('--data');
-      if (data !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(data)) throw new Error('--data deve ser AAAA-MM-DD');
-      console.log(`Criado ${criarSessao(raiz, config, args[0], { etapa: etapa === undefined ? undefined : Number(etapa), data })}`);
+      console.log(`Tudo certo: ${config.etapas.length} etapas, ${config.competencias.length} competências, ${listarAlunos(raiz).length} aluno(s).`);
+      return 0;
+    }
+
+    const { erros: errosCfg, config } = carregarConfig(raiz);
+    if (errosCfg.length) { imprimir(errosCfg, 'erro'); return 1; }
+
+    if (cmd === 'progresso') {
+      const { pos, opcoes } = lerArgs(args, [], ['--check']);
+      if (pos.length > 1) throw new Error('uso: progresso [<aluno>] [--check]');
+      const checar = Boolean(opcoes['--check']);
+      const r = gerarRegistros(raiz, config, { somenteChecar: checar, aluno: pos[0] ?? null });
+      if (r.erros.length) {
+        imprimir(r.erros, 'erro');
+        if (!checar) console.log('\nCorrija os erros acima nos relatórios de sessão e rode de novo: nada foi gravado.');
+        return 1;
+      }
+      console.log(checar ? 'Registros atualizados.' : 'Registros gerados.');
+      return 0;
+    }
+    if (cmd === 'sessao') {
+      const { pos, opcoes } = lerArgs(args, ['--etapa', '--data']);
+      if (pos.length !== 1) throw new Error('uso: sessao <aluno> [--etapa N] [--data AAAA-MM-DD]');
+      const etapa = opcoes['--etapa'];
+      if (etapa !== undefined && !(Number.isInteger(inteiro(etapa)) && inteiro(etapa) >= 0 && inteiro(etapa) <= config.etapas.length)) throw new Error('--etapa deve ser um inteiro de 0 a 16');
+      console.log(`Criado ${criarSessao(raiz, config, pos[0], { etapa: etapa === undefined ? undefined : inteiro(etapa), data: opcoes['--data'] })}`);
+      return 0;
+    }
+    if (cmd === 'kit') {
+      const { pos } = lerArgs(args, []);
+      if (pos.length !== 1) throw new Error('uso: kit <aluno>');
+      process.stdout.write(montarKit(raiz, config, pos[0]));
       return 0;
     }
     if (cmd === 'novo-aluno') {
-      if (!args[0] || !args[1]) throw new Error('uso: novo-aluno <slug> "Nome"');
-      console.log(`Criado ${criarAluno(raiz, config, args[0], args[1])}`);
+      const { pos } = lerArgs(args, []);
+      if (pos.length !== 2) throw new Error('uso: novo-aluno <slug> "Nome"');
+      console.log(`Criado ${criarAluno(raiz, config, pos[0], pos[1])}`);
       return 0;
     }
-  } catch (e) {
-    console.error(`erro: ${e.message}`);
+  } catch (err) {
+    console.error(`erro: ${err.message}`);
     return 1;
   }
   console.error(`comando desconhecido: ${cmd}\n\n${AJUDA}`);
   return 2;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+if (ehPrincipal(import.meta.url)) {
   process.exitCode = main(process.argv.slice(2));
 }

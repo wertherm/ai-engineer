@@ -1,7 +1,8 @@
 # Roadmap · 16 etapas
 
 A trilha da Academia de Engenharia de IA. A referência é de **16 semanas × 3 horas = 48 horas**, mas as etapas
-**não têm prazo**: cada aluno avança no próprio ritmo ([GAMIFICACAO.md](GAMIFICACAO.md#retomada-após-pausas)).
+**não têm prazo**: cada aluno avança no próprio ritmo ([GAMIFICACAO.md](GAMIFICACAO.md#retomada-após-pausas)). As 48 horas
+são das 16 etapas; a Missão 0 (cerca de 1h30) e os cinco checkpoints (30 a 45 minutos cada) ficam à parte.
 
 O roadmap **não duplica** o conteúdo dos [módulos](../modulos/) do repositório. Ele define a ordem, os objetivos,
 a entrega de cada etapa no [projeto evolutivo](projeto/README.md) e o critério de conclusão, e aponta para os
@@ -59,8 +60,10 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   reescreva.
 - **A criar**: lacunas que as lições da Academia preenchem.
 - **Entrega no projeto**: o incremento do [projeto evolutivo](projeto/README.md) que comprova a etapa.
-- **Conclusão**: o mínimo para marcar a etapa como `concluida` no relatório de sessão (`E<NN>-quiz` e `E<NN>-lab`
-  aprovados, mais as competências no nível 2 ou o plano de reforço registrado).
+- **Conclusão**: o mínimo para marcar a etapa como `concluida` no relatório de sessão: `E<NN>-quiz` e `E<NN>-lab`
+  aprovados (o validador exige). A explicação independente (`E<NN>-explicacao`) é recomendada, e as competências da
+  etapa devem ser registradas; as que ficarem abaixo do nível 2 viram **pendência de reforço** no relatório. O nível 2
+  de todas as competências da fase é exigido no checkpoint, não na etapa.
 
 ---
 
@@ -77,7 +80,8 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [M02 · doc 02 (custo)](../modulos/02-apis-ia-generativa/docs/02-consistencia-e-custo.md).
 - **A criar:** a [Lição 1](licoes/01-tokens-contexto-inferencia/README.md), com laboratório de medição que roda em
   qualquer endpoint compatível com a API de chat (Ollama local ou provedor).
-- **Entrega no projeto:** `medidor` de tokens e orçamento de contexto, reaproveitado no custo por execução (etapa 14).
+- **Entrega no projeto:** a linha de base de tokens (`medir.mjs` + `relatorio.json`), reaproveitada no cliente da etapa 2
+  (janela e reserva de saída) e no custo por execução da etapa 14.
 - **Conclusão:** quiz + laboratório verificado (`verificar.mjs`) + explicação independente.
 
 ### Etapa 2 · APIs, TypeScript, erros e integração com modelos
@@ -138,7 +142,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
 - **Pergunta-guia:** como obrigar a resposta a se apoiar nas fontes e mostrar quais foram?
 - **Competências:** C11.
 - **Material no repositório:** [M01 · exemplo 05](../modulos/01-fundamentos-ia-llms/exemplos/05-primeiro-rag/) ·
-  [M02 · exemplo 03 (RAG com LangChain.js)](../modulos/02-apis-ia-generativa/exemplos/03-rag-langchain-observabilidade/) ·
+  [M02 · exemplo 03 (RAG com LangChain.js: use para **comparar** com a sua versão sem framework)](../modulos/02-apis-ia-generativa/exemplos/03-rag-langchain-observabilidade/) ·
   [M11 · entrega 1 (RAG em CLI)](../modulos/11-capstone-micro-saas/exemplos/01-entrega-1-rag-cli/).
 - **A criar:** prompt de resposta fundamentada com formato de citação verificável (a citação aponta um chunk que
   realmente foi recuperado); verificador de citações.
@@ -191,7 +195,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
 - **Pergunta-guia:** como impedir que um agente rode para sempre, gaste demais ou esqueça o que importa?
 - **Competências:** C16.
 - **Material no repositório:** [M04 · doc 01](../modulos/04-agentes-autonomos/docs/01-arquitetura-e-padroes-de-raciocinio.md) ·
-  [M04 · doc 03 (runaway loops)](../modulos/04-agentes-autonomos/docs/03-langgraph-observabilidade-e-limites.md) ·
+  [M04 · doc 03 (leia só runaway loops e limites; o resto é LangGraph, extensão)](../modulos/04-agentes-autonomos/docs/03-langgraph-observabilidade-e-limites.md) ·
   [M04 · exemplos 02, 04 e 05](../modulos/04-agentes-autonomos/exemplos/) ·
   [M08 · exemplo 02](../modulos/08-arquitetura-de-sistemas-com-ia/exemplos/02-single-agent-simulado/).
 - **A criar:** loop de agente com estado explícito e orçamentos (passos, tokens, tempo); condição de parada e
@@ -203,8 +207,8 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
 
 - **Pergunta-guia:** o que o agente pode fazer sozinho e o que exige um humano?
 - **Competências:** C17, C18.
-- **Material no repositório:** [M04 · exemplo 06 (LangGraph, HITL e guardrails)](../modulos/04-agentes-autonomos/exemplos/06-langgraph-hitl-guardrails/) ·
-  [M08 · exemplo 06 (approval gate)](../modulos/08-arquitetura-de-sistemas-com-ia/exemplos/06-hitl-approval-gate/) ·
+- **Material no repositório:** [M08 · exemplo 06 (approval gate)](../modulos/08-arquitetura-de-sistemas-com-ia/exemplos/06-hitl-approval-gate/) ·
+  [M04 · exemplo 06 (HITL e guardrails com LangGraph: extensão, depois do conceito)](../modulos/04-agentes-autonomos/exemplos/06-langgraph-hitl-guardrails/) ·
   [M10 · exemplos 03 e 04 (prompt injection, PII)](../modulos/10-seguranca-e-governanca/exemplos/) ·
   [M10 · exercício 02](../modulos/10-seguranca-e-governanca/exercicios/02-endurecer-o-prompt/) ·
   [M03 · doc 04 (segurança)](../modulos/03-mcp/docs/04-seguranca-e-governanca.md).
@@ -244,7 +248,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
 - **Pergunta-guia:** como saber o que o sistema fez, quanto custou e por que foi desenhado assim?
 - **Competências:** C21, C22.
 - **Material no repositório:** [módulo 08](../modulos/08-arquitetura-de-sistemas-com-ia/) ·
-  [M04 · doc 03 (observabilidade)](../modulos/04-agentes-autonomos/docs/03-langgraph-observabilidade-e-limites.md) ·
+  [M04 · doc 03 (leia só observabilidade e auditoria)](../modulos/04-agentes-autonomos/docs/03-langgraph-observabilidade-e-limites.md) ·
   [M02 · `observabilidade.js`](../modulos/02-apis-ia-generativa/exemplos/03-rag-langchain-observabilidade/observabilidade.js) ·
   [LLMOps · doc 04 (métricas)](../trilhas-extras/llmops-vllm-openshift/docs/04-metricas-e-observabilidade.md) ·
   [M11 · doc 04 (ADRs)](../modulos/11-capstone-micro-saas/docs/04-apresentacao-e-defesa.md).

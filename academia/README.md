@@ -13,7 +13,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 2. Faça a [Missão 0 · Diagnóstico](licoes/00-missao-0-diagnostico/README.md): perfil, ambiente e diagnóstico.
 3. Siga para a [Lição 1 · Tokens, contexto, inferência e limites](licoes/01-tokens-contexto-inferencia/README.md).
 4. Ao fim de cada sessão, registre-a ([SINCRONIZACAO.md](SINCRONIZACAO.md)). Para retomar depois de qualquer pausa,
-   abra `alunos/<aluno>/retomada.md`.
+   abra `alunos/<aluno>/retomada.md` ou gere o kit de colagem (`kit <aluno>`) para uma conversa nova.
 
 ## O que tem aqui
 
@@ -50,11 +50,13 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 ## Comandos
 
 ```bash
-node academia/ferramentas/academia.mjs validar            # conteúdo, links, segredos e registros dos alunos
-node academia/ferramentas/academia.mjs progresso          # recria retomada.md de cada aluno e PROGRESS.md
-node academia/ferramentas/academia.mjs sessao <aluno>     # cria o arquivo da próxima sessão
+node academia/ferramentas/academia.mjs kit <aluno>            # texto para colar numa conversa com um assistente de IA
+node academia/ferramentas/academia.mjs sessao <aluno>         # cria o arquivo da próxima sessão
+node academia/ferramentas/academia.mjs validar --aluno <aluno> # conteúdo, links, segredos e os registros desse aluno
+node academia/ferramentas/academia.mjs progresso <aluno>      # recria o retomada.md dele e o PROGRESS.md
 node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"
-node --test "academia/**/*.test.mjs"                      # testes da ferramenta e das lições
+node academia/ferramentas/academia.mjs validar                # tudo, de todos os alunos (mantenedores)
+node --test "academia/**/*.test.mjs"                          # testes da ferramenta e das lições
 ```
 
 Precisa de **Node 22 ou superior** (o repositório usa o Node 24). Não há dependências para instalar. Os laboratórios

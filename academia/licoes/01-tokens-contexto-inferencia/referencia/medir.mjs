@@ -7,6 +7,7 @@
 // A chave nunca é gravada no relatório.
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { enderecoSeguro, limparSaida } from '../../../ferramentas/comum.mjs';
 import {
   FATO, MAX_TOKENS_CURTO, MAX_TOKENS_LONGO, MAX_TOKENS_MEDICAO, MAX_TOKENS_TRUNCAMENTO, MSG_FATO,
   MSG_PERGUNTA, PEDIDO_LONGO, PEDIDO_TRUNCAMENTO, REPETICOES, TEXTO_EN, TEXTO_PT,
@@ -16,6 +17,9 @@ const baseURL = process.env.OPENAI_BASE_URL ?? 'http://localhost:11434/v1';
 const apiKey = process.env.OPENAI_API_KEY ?? 'ollama';
 const modelo = process.env.MODELO_CHAT ?? 'qwen3.5:4b';
 const paramLimite = process.env.PARAM_MAX_TOKENS ?? 'max_tokens';
+// Alguns modelos de raciocínio rejeitam `temperature` diferente do padrão: TEMPERATURA=omitir não envia o campo.
+const temperatura = process.env.TEMPERATURA === 'omitir' ? undefined : Number(process.env.TEMPERATURA ?? 0) || 0;
+const timeoutMs = Number(process.env.TIMEOUT_MS) || 300_000;
 const saida = path.resolve(process.argv[2] ?? '.');
 
 const chamadas = [];
@@ -25,19 +29,25 @@ async function chamar(id, experimento, messages, maxTokens) {
   const corpo = {
     model: modelo,
     messages,
-    temperature: 0,
+    ...(temperatura === undefined ? {} : { temperature: temperatura }),
     [paramLimite]: maxTokens,
     ...(baseURL.includes(':11434') ? { reasoning_effort: 'none' } : {}),
   };
   const t0 = performance.now();
-  const r = await fetch(`${baseURL}/chat/completions`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify(corpo),
-    signal: AbortSignal.timeout(Number(process.env.TIMEOUT_MS ?? 300_000)),
-  });
-  const latenciaMs = Math.round(performance.now() - t0);
-  if (!r.ok) throw new Error(`${id}: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`);
+  let r;
+  try {
+    r = await fetch(`${baseURL}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify(corpo),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e) {
+    // mensagens de erro do fetch podem repetir a URL inteira, com usuário, senha ou ?chave=
+    throw new Error(`${id}: ${limparSaida(e.cause?.code ?? e.message, { chave: apiKey })}`);
+  }
+  const latenciaMs = Math.max(1, Math.round(performance.now() - t0));
+  if (!r.ok) throw new Error(`${id}: HTTP ${r.status} ${limparSaida((await r.text()).slice(0, 200), { chave: apiKey })}`);
   const j = await r.json();
   const u = j.usage;
   const registro = {
@@ -95,7 +105,8 @@ const longa = await chamar('dec-longa', 'decodificacao', [user(PEDIDO_LONGO)], M
 const relatorio = {
   versao: 1,
   gerado_em: new Date().toISOString(),
-  ambiente: { base_url: baseURL, modelo, node: process.version },
+  // Só protocolo, host e caminho: URLs podem trazer usuário, senha ou ?chave=... e o relatório vai para o repositório.
+  ambiente: { base_url: enderecoSeguro(baseURL) ?? '(URL inválida)', modelo, node: process.version },
   chamadas,
   experimentos: {
     idioma: {

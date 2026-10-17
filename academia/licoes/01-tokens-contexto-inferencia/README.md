@@ -34,10 +34,10 @@ Ao terminar, você consegue:
 3. **Descrever** a inferência em duas fases (prefill e decode) e prever como `max_tokens` e o tamanho do prompt
    afetam a latência.
 4. **Fazer** uma chamada HTTP a um LLM e **interpretar** `usage` e `finish_reason`.
-5. **Medir** tokens, truncamento, ausência de memória e custo por token de saída em um endpoint real, e
+5. **Medir** tokens, truncamento, ausência de memória e tempo por token de saída em um endpoint real, e
    **reconhecer os limites** dessas medições.
 
-Mapa: objetivo 1 → Q1, Q2, CA2, CA3 · 2 → Q3, Q4, CA4, CA5 · 3 → Q5, Q6, Q7, CA6 · 4 → Q5, CA1 · 5 → CA1–CA8 e rubrica.
+Mapa: objetivo 1 → Q1, Q2, Q9, CA2, CA3 · 2 → Q3, Q4, Q8, CA4, CA5 · 3 → Q6, Q7, CA6 · 4 → Q5, CA1 · 5 → CA1–CA8 e rubrica.
 
 ## 3. Duração estimada
 
@@ -103,6 +103,12 @@ Três ideias que valem para qualquer provedor:
 3. **Mais contexto não é melhor contexto.** Modelos usam pior a informação no meio de entradas muito longas
    (*Lost in the Middle*, na seção 5) e a documentação de fornecedores fala em degradação de precisão e
    *recall* quando o contexto cresce. Escolher **o que** entra na janela é engenharia: é o assunto das etapas 4 a 8 (RAG) e 10.
+4. **A janela do modelo não é, necessariamente, a janela que você tem.** O servidor pode configurar um contexto
+   menor que o máximo do modelo: no Ollama, o padrão é 4k de contexto quando a VRAM é menor que 24 GiB (muda-se
+   com `OLLAMA_CONTEXT_LENGTH`) e a documentação avisa que a API compatível com a da OpenAI não tem como definir
+   o tamanho do contexto. Além disso, a janela e o **teto de saída** por chamada são limites diferentes. A
+   documentação do Ollama não diz o que acontece ao exceder o contexto: meça com `prompt_tokens` e
+   `finish_reason` em vez de supor.
 
 ### 4.3 Uma chamada de LLM por dentro
 
@@ -146,7 +152,8 @@ latência total ≈ rede + fila + TTFT (prefill) + (tokens_de_saída − 1) × I
 ```
 
 Por isso um prompt curto que pede 800 tokens é lento (decode), e um prompt enorme que pede 5 tokens também é lento
-(prefill). Streaming não acelera o total; só mostra os tokens à medida que saem (melhora a latência percebida).
+(prefill). Streaming não acelera o total; só mostra os tokens à medida que saem (melhora a latência percebida). Em streaming,
+o `usage` só vem se você pedir (`stream_options.include_usage`, aceito pelo Ollama); o laboratório não usa streaming.
 
 A cada passo do decode, o modelo produz uma distribuição de probabilidade sobre o vocabulário e uma regra de
 **sampling** escolhe o próximo token: `temperature` reescala a distribuição (0 equivale a escolher sempre o mais
@@ -169,11 +176,12 @@ saída idêntica entre execuções (lotes de requisições, hardware e versões 
 | Durável (vale para qualquer LLM) | Específico de fornecedor ou ferramenta (verificado em 2026-10-17) |
 |---|---|
 | Tokens, tokenizer e custo fixo de template | contagem exata por modelo; a Anthropic oferece uma [API de contagem de tokens](https://platform.claude.com/docs/en/build-with-claude/token-counting) para estimar antes de enviar |
-| Entrada + saída dividem a janela; API sem estado | o que acontece quando passa do limite varia: erro de validação ou geração interrompida com um motivo próprio (a documentação da Anthropic descreve os dois casos) |
+| Entrada + saída dividem a janela; API sem estado | o que acontece quando passa do limite varia: erro de validação ou geração interrompida com um motivo próprio (a documentação da Anthropic descreve os dois casos); a janela **configurada no servidor** pode ser menor que a do modelo (Ollama) |
+| O custo da entrada acumulada cresce com o quadrado dos turnos (sem cache, turnos de tamanho parecido) | *prompt caching* muda o que você paga pelo prefixo repetido, **não** o que ocupa a janela (documentado pela Anthropic); nomes de campos nativos diferem (`stop_reason`, `input_tokens` e `output_tokens` na API da Anthropic) |
 | Prefill × decode, TTFT e ITL, KV cache | tamanho da janela de cada modelo e preço por token |
 | `temperature`/`top_p`: reduzem, não eliminam, a variação | existência e garantias de `seed` |
-| `finish_reason` indica por que parou | nome do teto de saída: `max_tokens` (Ollama, vLLM, OpenRouter, modelos antigos) × `max_completion_tokens` (OpenAI atual) |
-| Modelos de raciocínio gastam tokens "pensando" | `reasoning_effort` e como esses tokens são contados e cobrados |
+| `finish_reason` indica por que parou | nome do teto de saída: `max_tokens` (Ollama aceita só este; vLLM aceita os dois, com `max_tokens` marcado como obsoleto; modelos antigos da OpenAI) × `max_completion_tokens` (OpenAI atual) |
+| Modelos de raciocínio gastam tokens "pensando" | `reasoning_effort` e como esses tokens são contados e cobrados; alguns modelos de raciocínio rejeitam `temperature` diferente do padrão (confira no seu provedor: use `TEMPERATURA=omitir` nos exemplos) |
 
 ## 5. Material complementar
 
@@ -203,18 +211,21 @@ o `finish_reason`, o `usage` e a latência. Subir o Ollama do repositório: `bas
 node academia/licoes/01-tokens-contexto-inferencia/exemplos/chamada-minima.mjs
 ```
 
-Formato esperado (os valores mudam com o modelo; este bloco mostra a forma, não é uma saída medida):
+Formato esperado (os valores mudam com o modelo e com a máquina; este bloco mostra a forma, não é uma saída
+medida. Em CPU, o Ollama do repositório leva da ordem de 10 s ou mais):
 
 ```text
 texto          : "Olá"
 finish_reason  : stop
 usage          : { prompt_tokens: 14, completion_tokens: 2, total_tokens: 16 }
-latência       : 850 ms
+latência       : 14000 ms
 ```
 
 O que observar: o `prompt_tokens` é bem maior que o número de palavras do pedido. Troque o `content` por um
-texto maior e veja quanto muda. Troque `OPENAI_BASE_URL`, `OPENAI_API_KEY` e `MODELO_CHAT` para usar outro
-provedor sem tocar no código (veja [`infra/.env.example`](../../../infra/.env.example)).
+texto maior e veja quanto muda. Para usar outro provedor, troque `OPENAI_BASE_URL`, `OPENAI_API_KEY` e `MODELO_CHAT`
+(veja [`infra/.env.example`](../../../infra/.env.example)); se o provedor usar outro nome para o teto de saída ou
+rejeitar `temperature`, use `PARAM_MAX_TOKENS` e `TEMPERATURA=omitir`. Provedores diferentes ainda podem exigir
+ajustes: leia o erro HTTP que voltar.
 
 ### Exemplo 2 · O custo escondido da conversa
 
@@ -288,13 +299,23 @@ alguns minutos; rode **um processo por vez**, porque vários clientes no mesmo O
 | # | Experimento | O que fazer | O que calcular |
 |---|---|---|---|
 | 1 | `idioma` | 2 chamadas com `TEXTO_PT` e `TEXTO_EN` (`max_tokens = MAX_TOKENS_MEDICAO`) | `razao_tokens_pt_en = prompt_tokens_pt / prompt_tokens_en` |
-| 2 | `crescimento` | 4 chamadas com `TEXTO_PT` repetido 1, 2, 4 e 8 vezes, separado por `\n\n` | inclinação **marginal** (tokens por caractere) e custo fixo estimado |
+| 2 | `crescimento` | 4 chamadas (`max_tokens = MAX_TOKENS_MEDICAO`) com `TEXTO_PT` repetido 1, 2, 4 e 8 vezes (`REPETICOES`), separado por `\n\n` | inclinação **marginal** = (tokens da última − tokens da primeira) ÷ (caracteres da última − caracteres da primeira), e custo fixo = tokens da primeira − inclinação × caracteres da primeira |
 | 3 | `truncamento` | 1 chamada com `PEDIDO_TRUNCAMENTO` e `max_tokens = MAX_TOKENS_TRUNCAMENTO` | nada: observe o `finish_reason` |
-| 4 | `sem_memoria` | 3 chamadas: informar o fato, perguntar **sem** histórico, perguntar **com** o histórico reenviado | se o modelo lembrou em cada caso e quantos tokens o histórico custou |
+| 4 | `sem_memoria` | 3 chamadas (`max_tokens = MAX_TOKENS_CURTO`): informar o fato, perguntar **sem** histórico, perguntar **com** o histórico reenviado | se o modelo lembrou em cada caso e quantos tokens o histórico custou |
 | 5 | `decodificacao` | 2 chamadas com `PEDIDO_LONGO`: `MAX_TOKENS_CURTO` e `MAX_TOKENS_LONGO` | `ms_por_token_saida = Δ latência / Δ tokens de saída` |
 
 Regras: `temperature = 0`; registre `usage` e `finish_reason` **reportados pelo servidor** (não estime); meça a
-latência de cada chamada; nunca grave a chave de API.
+latência de cada chamada; nunca grave a chave de API. As constantes (`TEXTO_PT`, `TEXTO_EN`, `REPETICOES`, os
+`MAX_TOKENS_*` e as mensagens do experimento 4) vêm de [`kit/textos.mjs`](kit/textos.mjs). A partir da pasta da
+entrega, o import é
+`import { TEXTO_PT /* ... */ } from '../../../../licoes/01-tokens-contexto-inferencia/kit/textos.mjs'`.
+Entregue também o seu `medir.mjs` na pasta: o verificador exige o arquivo.
+
+**O que o verificador é (e o que não é).** `verificar.mjs` confere se o relatório é **coerente**: formato, números
+derivados recalculados a partir das suas próprias chamadas, parâmetros das chamadas iguais aos do kit e valores
+plausíveis. Ele **não** consegue provar que você chamou um modelo de verdade: o sistema de XP é, em última instância, um
+acordo de honestidade entre alunos e avaliadores. O que defende o aprendizado de verdade são a explicação sem
+consulta, a rubrica e a conversa de checkpoint.
 
 **Onde guardar.** Tudo em `academia/alunos/<aluno>/entregas/etapa-01/` (crie a pasta):
 
@@ -316,8 +337,8 @@ node academia/licoes/01-tokens-contexto-inferencia/verificar.mjs academia/alunos
       "total_tokens": 138, "finish_reason": "length", "latencia_ms": 900, "max_tokens": 8 }
   ],
   "experimentos": {
-    "idioma": { "chamada_pt": "idioma-pt", "chamada_en": "idioma-en", "chars_pt": 420, "chars_en": 400, "razao_tokens_pt_en": 1.3 },
-    "crescimento": { "chamadas": ["cresc-1", "cresc-2", "cresc-4", "cresc-8"], "chars": [420, 842, 1686, 3374],
+    "idioma": { "chamada_pt": "idioma-pt", "chamada_en": "idioma-en", "chars_pt": 388, "chars_en": 355, "razao_tokens_pt_en": 1.3 },
+    "crescimento": { "chamadas": ["cresc-1", "cresc-2", "cresc-4", "cresc-8"], "chars": [388, 778, 1558, 3118],
                      "tokens_por_char_marginal": 0.3, "overhead_fixo_tokens": 8.5 },
     "truncamento": { "chamada": "trunc", "max_tokens": 5 },
     "sem_memoria": { "fato": "Zephyrus-42", "sem_historico": "mem-sem", "com_historico": "mem-com",
@@ -331,14 +352,17 @@ Detalhes do contrato: cada chamada tem `id` único; as chamadas dos experimentos
 `resposta` (texto, até 500 caracteres); `chars` de `crescimento` é o tamanho em caracteres do texto enviado em
 cada chamada. Os nomes de `id` ficam a seu critério, desde que os experimentos apontem para eles.
 
-**Nota sobre fornecedores.** Se o seu provedor usa `max_completion_tokens` no lugar de `max_tokens`, ou se o
-Ollama devolver o texto vazio (modelo "pensando"), veja o [exemplo 1](exemplos/chamada-minima.mjs): ele mostra
-como tratar os dois casos com variáveis de ambiente.
+**Nota sobre fornecedores.** Se o seu provedor usa `max_completion_tokens` no lugar de `max_tokens`, rejeita
+`temperature`, ou se o Ollama devolver o texto vazio (modelo "pensando"), veja o [exemplo 1](exemplos/chamada-minima.mjs):
+`PARAM_MAX_TOKENS`, `TEMPERATURA=omitir` e `reasoning_effort` (enviado quando a URL contém `:11434`). Servidores com
+*cache de prefixo* podem tratar de forma diferente chamadas que repetem o mesmo prompt (os experimentos 1/2 e 5 repetem
+prompts): se `prompt_tokens` ou a latência saírem estranhos, repita a medição e comente em "Surpresas e limites".
 
-**Extensões opcionais** (`opcional`, 20 XP cada, não bloqueiam a etapa): (a) repetir os experimentos 1 e 2 com um
-**segundo modelo** e explicar a diferença; (b) medir o efeito de `temperature = 0` repetindo a mesma chamada 10
-vezes e contando respostas distintas; (c) estimar em qual turno uma conversa de perguntas de 150 e respostas de
-300 tokens estoura uma janela de 32.000 tokens e confirmar com o exemplo 2.
+**Extensões opcionais** (`opcional`, 20 XP cada, não bloqueiam a etapa; ids `E01-opcional-1` a `E01-opcional-3`):
+(a) repetir os experimentos 1 e 2 com um **segundo modelo** e explicar a diferença; (b) medir o efeito de
+`temperature = 0` repetindo a mesma chamada 10 vezes e contando respostas distintas; (c) estimar em qual turno uma
+conversa de perguntas de 150 e respostas de 300 tokens estoura uma janela de 32.000 tokens e confirmar com o
+exemplo 2. Ideia extra (sem XP): corrigir a razão PT/EN descontando o custo fixo estimado no experimento 2.
 
 ## 9. Critérios de aceitação
 
@@ -346,27 +370,31 @@ O comando `verificar.mjs` confere os critérios abaixo. Todos precisam passar pa
 
 | ID | Critério (objetivo) |
 |---|---|
-| CA1 | `relatorio.json` válido: `versao` 1, ambiente (URL sem credenciais e modelo), ≥ 12 chamadas com `usage` coerente (`total = prompt + completion`) |
-| CA2 | `razao_tokens_pt_en` confere com o `prompt_tokens` das duas chamadas registradas |
-| CA3 | ≥ 4 pontos de crescimento, `prompt_tokens` não decrescente; inclinação marginal e custo fixo conferem com os dados |
-| CA4 | Uma chamada com `finish_reason = "length"`, `completion_tokens ≤ max_tokens` e `max_tokens ≤ 20` |
-| CA5 | Sem histórico o modelo não lembra o fato (e o campo confere com a resposta); o histórico reenviado aumenta o `prompt_tokens` e a diferença confere |
-| CA6 | A chamada longa gera mais tokens de saída que a curta; `ms_por_token_saida` confere |
-| CA7 | Nenhuma chave, token ou segredo em `relatorio.json` e `relatorio.md` |
-| CA8 | `relatorio.md` com as seções Resultados, Explicação e Surpresas e limites preenchidas |
+| CA1 | `relatorio.json` válido: `versao` 1, ambiente (URL sem credenciais e modelo), ≥ 12 chamadas, cada uma com `id`, `prompt_tokens` > 0, `completion_tokens`, `total_tokens = prompt + completion`, `finish_reason`, `latencia_ms` e `max_tokens`; e o arquivo `medir.mjs` na pasta da entrega |
+| CA2 | `chars_pt`/`chars_en` iguais aos do kit; `razao_tokens_pt_en` confere com o `prompt_tokens` das duas chamadas registradas; as duas chamadas usam `MAX_TOKENS_MEDICAO` |
+| CA3 | 4 pontos de crescimento com os `chars` do kit (`REPETICOES`), `prompt_tokens` não decrescente; inclinação marginal (primeiro e último ponto) e custo fixo conferem com os dados; inclinação plausível (entre 0,05 e 1,5 token por caractere) |
+| CA4 | Uma chamada com `finish_reason = "length"`, `completion_tokens` entre 1 e `max_tokens`, `max_tokens = MAX_TOKENS_TRUNCAMENTO` |
+| CA5 | Chamadas de memória com `MAX_TOKENS_CURTO` e `resposta` registrada; sem histórico o modelo não lembra o fato (o campo confere com a resposta); o histórico reenviado aumenta o `prompt_tokens` e a diferença confere |
+| CA6 | As chamadas curta e longa usam `MAX_TOKENS_CURTO` e `MAX_TOKENS_LONGO`; a longa gera mais tokens de saída; `ms_por_token_saida` confere |
+| CA7 | Nenhuma chave, token ou segredo em `relatorio.json`, `relatorio.md` ou `medir.mjs` |
+| CA8 | `relatorio.md` com as seções Resultados (≥ 120 letras ou números), Explicação (≥ 320) e Surpresas e limites (≥ 120), escritas por você (os comentários do modelo não contam) |
 
-Para `E01-quiz` valer XP: respostas registradas **antes** do gabarito, e correção comentada revisada (anote, para
-cada erro, o que você pensou e por que estava errado). Para `E01-explicacao`: a seção Explicação do relatório,
-escrita sem consulta, aprovada pela rubrica (nível ≥ 2 em R1).
+**XP desta lição.**
+- `E01-quiz` mede **participação comprovada**, não nota: respostas registradas **antes** do gabarito, com a confiança de
+  cada uma, e a correção comentada revisada (anote, para cada erro, o que você pensou e por que estava errado). O
+  acerto aparece na **competência**, não no XP.
+- `E01-lab`: CA1 a CA8 passando.
+- `E01-explicacao`: a seção Explicação do relatório, escrita sem consulta e aprovada pela rubrica (R1 ≥ 2).
 
 ## 10. Rubrica de avaliação
 
 A rubrica é aplicada pelo assistente (ou pelo outro aluno, como revisor) sobre `relatorio.md` e o quiz. Escala 0 a 3
-(veja [níveis](../../competencias.md#níveis-de-domínio)). **XP não depende da rubrica; competência sim.**
+(veja [níveis](../../competencias.md#níveis-de-domínio)). **O XP de quiz e de laboratório não depende da rubrica; o de
+explicação exige R1 ≥ 2; a competência depende sempre dela.**
 
 | Critério | 0 | 1 | 2 | 3 |
 |---|---|---|---|---|
-| **R1 · Precisão conceitual** (C01, C03) | explicação incorreta ou ausente | confunde token com palavra ou prefill com decode | corretos, com palavras próprias | corretos e antecipa um caso novo (outro idioma, JSON, código) |
+| **R1 · Precisão conceitual** (C01, C03) | ausente, ou sem relação com token, contexto ou inferência | tenta explicar, mas com um erro central (token = palavra; prefill = decode; API "lembra" sozinha) | corretos, com palavras próprias (ex.: "o tokenizer quebra em pedaços do vocabulário; o histórico é reenviado a cada turno") | corretos e antecipa um caso novo (outro idioma, JSON, código) |
 | **R2 · Interpretação dos números** (C01, C02) | só copia números | descreve os números sem explicá-los | explica razão PT/EN, custo fixo e custo do histórico **com os próprios dados** | usa os dados para estimar um caso que não mediu |
 | **R3 · Honestidade sobre limites** (C03) | afirma conclusões gerais a partir de 1 execução | cita "pode variar" sem especificar | aponta limites concretos (modelo pequeno, latência ruidosa, tokenizer específico) | propõe como reduzir a incerteza e o que repetiria |
 | **R4 · Reprodutibilidade** (C02) | não dá para repetir | falta ambiente ou comando | comando, versão e ambiente suficientes | outra pessoa reproduz sem perguntar e a entrega não contém segredos |
@@ -395,9 +423,10 @@ vêm depois, a partir do array.
 <details>
 <summary>Dica 3 · Por que "marginal"</summary>
 
-Se `prompt_tokens / chars` fosse constante, o custo fixo do template não existiria. Compare duas chamadas: a
-diferença de tokens dividida pela diferença de caracteres elimina o custo fixo. Depois, o custo fixo é o que sobra:
-`tokens_da_primeira − inclinação × chars_da_primeira`.
+Se `prompt_tokens / chars` fosse constante, o custo fixo do template não existiria. Compare duas chamadas: o que
+acontece com a diferença de tokens e a diferença de caracteres entre elas? Pense em qual das duas contas elimina um
+custo que existe em toda chamada. Depois, o custo fixo é o que sobra de uma das chamadas depois de descontar a parte
+proporcional ao tamanho. (A mensagem do verificador, no próximo passo, mostra a fórmula esperada.)
 </details>
 
 <details>
@@ -422,15 +451,19 @@ registrar a `resposta` nas chamadas da memória; modelo que "pensa" e gasta todo
 Use [`templates/entrega-laboratorio.md`](../../templates/entrega-laboratorio.md) como base. O `relatorio.md` desta
 lição precisa conter, nesta ordem:
 
-- **Resultados**: ambiente, comando, a tabela dos 5 experimentos com os seus números e o resultado do
-  `verificar.mjs` (cole a saída).
+- **Resultados**: ambiente, comando, a tabela dos 5 experimentos com os seus números, o resultado do
+  `verificar.mjs` (cole a saída) e uma conta de custo: some os tokens de entrada e de saída do laboratório inteiro e
+  estime o custo com o preço por milhão de tokens do seu provedor (se o modelo é local, use um preço **hipotético** e
+  diga que é hipotético).
+- **Critérios de aceitação**: a tabela `CA1`–`CA8` do [modelo](../../templates/entrega-laboratorio.md).
 - **Explicação**, escrita **sem consultar o material**, respondendo: (1) por que o português gastou mais (ou menos)
   tokens que o inglês e quanto foi a razão que você mediu? (2) por que o custo de uma conversa cresce com o
-  quadrado dos turnos? (3) o que os seus dados mostram sobre prefill e decode? Depois de escrever, confira e
-  anote o que errou.
+  quadrado dos turnos? (3) o que os seus dados mostram sobre prefill e decode? Use as latências das quatro chamadas de
+  `crescimento` para dizer se o prompt maior demorou mais, e o `ms_por_token_saida` para a fase de decode. Depois de
+  escrever, confira e anote o que errou.
 - **Surpresas e limites**: o que o resultado depende do modelo, do provedor e da sua máquina; o que você
   repetiria para ter mais confiança.
-- **Tentativas** e **Dúvidas e pendências**.
+- **Dúvidas e pendências** e **Tentativas**.
 
 ## 13. Competências registradas
 
@@ -439,8 +472,8 @@ Registre os níveis na tabela Competências do [relatório de sessão](../../tem
 | Competência | Nível 1 | Nível 2 | Nível 3 |
 |---|---|---|---|
 | **C01** · tokens e tokenização | acertou Q1 ou Q2; relatou a razão PT/EN | acertou Q1 e Q2, CA2 e CA3 aprovados, explica razão e custo fixo com seus dados (R1 e R2 ≥ 2) | prevê a contagem relativa de um texto novo e confirma medindo (revisão ou checkpoint) |
-| **C02** · janela e orçamento de contexto | acertou Q3 ou Q4 | acertou Q3 e Q4, CA4 e CA5 aprovados, calcula o orçamento de uma conversa (R2 ≥ 2) | dimensiona o orçamento de contexto do projeto (reserva de saída, histórico, documentos) em contexto novo |
-| **C03** · inferência e latência | acertou Q6 ou Q7 | acertou Q5 a Q7, CA6 aprovado, explica a medição de ms/token e suas limitações (R1 e R3 ≥ 2) | prevê o efeito de mudar `max_tokens` e prompt sobre TTFT e latência total e confirma |
+| **C02** · janela e orçamento de contexto | acertou Q3 ou Q4 | acertou Q3, Q4 e Q5, CA4 e CA5 aprovados, calcula o orçamento de uma conversa (R2 e R4 ≥ 2) | dimensiona o orçamento de contexto do projeto (reserva de saída, histórico, documentos) em contexto novo |
+| **C03** · inferência e latência | acertou Q6 ou Q7 | acertou Q6 e Q7, CA6 aprovado, explica a medição de ms/token e suas limitações (R1 e R3 ≥ 2) | prevê o efeito de mudar `max_tokens` e prompt sobre TTFT e latência total e confirma (em revisão ou checkpoint: esta lição não mede TTFT) |
 
 IDs de atividade desta lição: `E01-quiz` (10 XP), `E01-lab` (30 XP), `E01-explicacao` (15 XP),
 `E01-opcional-1..3` (20 XP). Revisões espaçadas: `R01-1`, `R01-2`...

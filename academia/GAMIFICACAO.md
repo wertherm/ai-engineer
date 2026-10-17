@@ -37,7 +37,20 @@ Regras:
 2. Atividade sem evidência, com resultado diferente de `aprovado` ou de tipo desconhecido vale 0.
 3. Checkpoint não rende XP: rende nível e conquistas.
 4. Convenção de IDs das atividades: `E<etapa>-quiz`, `E<etapa>-lab`, `E<etapa>-explicacao`,
-   `E<etapa>-opcional-<n>` e `R<etapa>-<n>` para a n-ésima revisão da etapa. A Missão 0 usa a etapa `00`.
+   `E<etapa>-opcional-<n>` (de 1 a 3 por etapa) e `R<etapa>-<n>` para a n-ésima revisão da etapa. A Missão 0 usa a
+   etapa `00`.
+5. Só rendem XP as etapas com lição `pronta` no [ROADMAP](ROADMAP.md#visão-geral) (e a Missão 0): sem lição não há
+   critério de aceitação para comprovar. Quer estudar uma etapa em `roteiro`? Escreva a lição antes, com o
+   [template](templates/licao.md).
+6. **Evidência de arquivo:** quiz, laboratório, explicação e opcional só rendem XP se a evidência citar entre crases
+   um arquivo que existe (em `alunos/<aluno>/entregas/`, por exemplo). A revisão aceita uma nota objetiva, porque é de
+   memória.
+7. **Revisões em ordem e no prazo:** `R<etapa>-1`, depois `R<etapa>-2`..., só de etapa já concluída e só quando o
+   intervalo da [revisão espaçada](#revisão-espaçada) já passou (no máximo 4 por etapa).
+8. **O que o sistema garante e o que não garante.** O validador confere formato, regras, ordem e a existência dos
+   arquivos de evidência. Ele **não** consegue provar que o aluno fez o trabalho sozinho nem que o conteúdo do arquivo
+   é bom: o XP é um acordo de honestidade, defendido pela rubrica, pela explicação sem consulta e pela conversa de
+   checkpoint. Por isso o XP nunca é usado como nota, e o nível exige checkpoints.
 
 ## Níveis
 
@@ -123,7 +136,8 @@ n-ésima revisão fica **sugerida** quando já passaram o número de sessões da
 
 Uma revisão são de 3 a 5 perguntas de recuperação ativa (as perguntas ficam no quiz e na seção 7 de cada lição),
 respondidas de memória. Comece cada sessão com até três revisões sugeridas: o cartão de retomada
-(`alunos/<aluno>/retomada.md`) lista quais são.
+(`alunos/<aluno>/retomada.md`) lista quais são. A conta é: a revisão `n` da etapa fica sugerida quando já passou o número de
+sessões da tabela desde a conclusão, e só vale XP a partir daí e depois da revisão `n − 1`.
 
 ## Desafios opcionais
 
@@ -133,7 +147,8 @@ implementações). Eles não bloqueiam nenhuma etapa. Extensões avançadas do [
 
 ## Retomada após pausas
 
-Não há prazo. Quem volta depois de dias ou meses:
+Não há prazo. Voltar de uma pausa significa **14 dias ou mais** sem sessão (o relatório marca `retomada: sim` e rende a
+conquista `A19`). Quem volta depois de dias ou meses:
 
 1. Lê o próprio `retomada.md`: ele mostra onde parou, o que está pendente e as revisões sugeridas.
 2. Faz a revisão sugerida mais antiga como aquecimento.
@@ -143,5 +158,10 @@ Não há prazo. Quem volta depois de dias ou meses:
 ## Ranking opcional
 
 Não há ranking calculado. O [PROGRESS.md](PROGRESS.md) lista os alunos em ordem alfabética e **só mostra o XP de
-quem tem `compartilhar_xp: sim` no próprio `perfil.md`**. Comparar XP é uma conversa entre os dois alunos, nunca
-uma obrigação. Alunos em ritmos diferentes não são comparados por velocidade.
+quem tem `compartilhar_xp: sim` no próprio `perfil.md`**; nível e etapa atual aparecem para todos, porque são o
+retrato visual do curso (não há coluna de datas nem de velocidade). Comparar XP é uma conversa entre os dois alunos,
+nunca uma obrigação, e alunos em ritmos diferentes não são comparados por velocidade.
+
+O repositório é compartilhado: as pastas de `alunos/` ficam visíveis a quem tem acesso. O combinado é que cada aluno e
+cada assistente só mexe na pasta do aluno da conversa; ler o trabalho do outro só acontece numa revisão por pares
+combinada pelos dois (por exemplo, no checkpoint ou na etapa 15, em que o outro aluno executa o roteiro).

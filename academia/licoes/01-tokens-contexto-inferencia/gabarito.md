@@ -37,7 +37,10 @@ Se errou, revise a seção 4.1 e o [exemplo 02 da trilha LLMOps](../../../trilha
 - **B**: certa. 7.500 + 1.000 = 8.500 > 8.000. Cabem cerca de 500 tokens de resposta. O tratamento do excesso é
   decisão do provedor: alguns rejeitam o pedido com erro de validação; outros aceitam e interrompem a geração com
   um motivo de parada próprio. Por isso o seu código checa o `finish_reason` e reserva espaço para a saída.
-- **C (janela aumenta)**: errada. A janela é uma propriedade do modelo.
+- **C (janela aumenta)**: errada. A janela é uma propriedade do modelo. Atenção ao ambiente do curso: a janela que o
+  **servidor** configura pode ser menor que a do modelo (no Ollama, o padrão é 4k abaixo de 24 GiB de VRAM, e a
+  API compatível com a da OpenAI não permite mudá-la). O que acontece ao exceder não está descrito na documentação
+  do Ollama: meça com `prompt_tokens` e `finish_reason`.
 - **D (ignora parte do prompt)**: errada. Sem uma estratégia explícita da aplicação (ou do provedor), o modelo não
   descarta partes do prompt silenciosamente; o que muda é o erro ou o corte. Decidir o que sai do prompt é
   responsabilidade de quem constrói a aplicação (etapas 4–8 e 10).
@@ -55,8 +58,12 @@ Cada turno reenvia o histórico (300 tokens por turno anterior) mais a pergunta 
 | 5 | 1.200 + 100 = 1.300 |
 | **Total** | **3.500** |
 
-- **A (1.500)**: é o conteúdo novo (5 × 300). Esquece que o histórico é reenviado.
-- **B (2.500)**: não corresponde a nenhum modelo de contagem coerente (erro de soma).
+- **A (1.500)**: é o resultado de quem esquece as respostas do assistente ao montar o histórico (reenvia só as
+  perguntas anteriores: 100 × (1 + 2 + 3 + 4 + 5) = 1.500). Por coincidência, também é igual ao conteúdo novo total
+  (5 × 300), o que faz o erro parecer certo.
+- **B (2.500)**: é o resultado de quem reenvia só as **respostas** anteriores e esquece as perguntas (100 + 300 +
+  500 + 700 + 900 = 2.500). É um modelo coerente, porém incompleto: o histórico de uma conversa guarda os dois
+  lados.
 - **D (7.500)**: supõe que cada turno enviaria o contexto final (1.500) inteiro, o que superestima.
 
 Confira rodando `node academia/licoes/01-tokens-contexto-inferencia/exemplos/orcamento-conversa.mjs 5 100 200`.
@@ -91,7 +98,7 @@ Pontos esperados na justificativa:
 - Consequência prática: testes de prompts usam `temperature = 0` **e** critérios tolerantes (schema, palavras-chave),
   não comparação exata de texto.
 
-Nível 1: "falso" sem justificativa. Nível 2: falso + reduz mas não garante, com uma causa. Nível 3: acrescenta a
+Resposta básica: "falso" sem justificativa. Boa: falso + reduz mas não garante, com uma causa. Excelente: acrescenta a
 consequência para testes.
 
 ## Q8 · Por que a API "não lembra" — resposta aberta
@@ -102,10 +109,12 @@ Pontos esperados:
   usuário percebe em um chat é a aplicação reenviando as mensagens anteriores.
 - A aplicação precisa **montar `messages`** com `system` + histórico (`user` e `assistant`) + a pergunta nova a cada
   turno, e decidir o que fazer quando o histórico se aproxima da janela (resumir, cortar, recuperar só o relevante).
-- Consequência: o custo e a latência crescem com o histórico (veja o exemplo 2).
+- Consequência: o custo e a latência crescem com o histórico (veja o exemplo 2). O "quadrado dos turnos" vale para
+  a entrada acumulada **sem cache** e com turnos de tamanho parecido; o *prompt caching* de alguns provedores reduz o
+  que você paga pelo prefixo repetido, mas esse prefixo continua ocupando a janela.
 
-Nível 1 só diz que a API não guarda estado. Nível 2 inclui o reenvio e o papel da aplicação. Nível 3 inclui o limite
-da janela e uma estratégia.
+Resposta básica: só diz que a API não guarda estado. Boa: inclui o reenvio e o papel da aplicação. Excelente: inclui o
+limite da janela e uma estratégia.
 
 ## Q9 · Mais texto, resultado pior — resposta aberta
 
@@ -121,12 +130,16 @@ Qualquer um destes é aceitável, desde que justificado:
 
 ## Pontuação e competências
 
+Mesma regra da seção 13 da lição:
+
 | Acertos | Leitura |
 |---|---|
-| Q1 + Q2 | evidência de **C01** nível 1 (nível 2 exige também CA2 e CA3 do laboratório) |
-| Q3 + Q4 | evidência de **C02** nível 1 (nível 2 exige também CA4 e CA5) |
-| Q5, Q6 + Q7 | evidência de **C03** nível 1 (nível 2 exige também CA6) |
+| Q1 **ou** Q2 | **C01** nível 1 (nível 2: Q1 **e** Q2, mais CA2 e CA3 do laboratório) |
+| Q3 **ou** Q4 | **C02** nível 1 (nível 2: Q3, Q4 **e** Q5, mais CA4 e CA5) |
+| Q6 **ou** Q7 | **C03** nível 1 (nível 2: Q6 **e** Q7, mais CA6) |
 | Q8 + Q9 | alimentam a rubrica R1 (precisão conceitual) e a revisão espaçada |
+
+O XP do quiz mede participação comprovada (responder antes, comentar os erros). O acerto só conta na competência.
 
 Errou três ou mais? Sem problema: refaça as questões erradas **depois de reler a seção correspondente**, em outra
 sessão, e registre uma nova tentativa. O XP do quiz é concedido uma vez, quando aprovado e comentado; a competência

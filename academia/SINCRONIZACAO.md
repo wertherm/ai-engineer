@@ -4,9 +4,9 @@ O conhecimento e o progresso ficam **nos arquivos do repositório**, não no his
 pode acabar, o assistente pode mudar, o aluno pode passar semanas sem estudar: o curso continua de onde parou.
 
 > Um chat (ChatGPT ou outro) normalmente **não** consegue ler nem escrever o repositório sozinho, e não enxerga os
-> dados do outro aluno. Por isso a sincronização é **manual**: o aluno leva o contexto para a conversa e traz o
-> relatório da sessão de volta. Um agente com acesso ao repositório (Claude Code, Codex, Cursor...) pode fazer os
-> mesmos passos sozinho.
+> dados do outro aluno. Por isso a sincronização é **manual**: o aluno leva o contexto para a conversa (o comando
+> `kit` monta tudo de uma vez) e traz o relatório da sessão de volta. Um agente com acesso ao repositório (Claude
+> Code, Codex, Cursor...) pode fazer os mesmos passos sozinho.
 
 ## O que cada arquivo guarda
 
@@ -16,75 +16,81 @@ pode acabar, o assistente pode mudar, o aluno pode passar semanas sem estudar: o
 | `alunos/<aluno>/perfil.md` | o aluno | objetivo, ritmo, ambiente, `compartilhar_xp` |
 | `alunos/<aluno>/sessoes/AAAA-MM-DD-sNN.md` | o assistente propõe, o aluno salva | **fonte de verdade**: atividades, XP, competências, feedback, pendências. Um arquivo por sessão, nunca editado depois |
 | `alunos/<aluno>/entregas/etapa-NN/` | o aluno | código, relatórios e respostas que servem de evidência |
-| `alunos/<aluno>/retomada.md` | **gerado** | cartão de retomada: onde parou, nível, pendências, revisões sugeridas |
+| `alunos/<aluno>/retomada.md` | **gerado** | cartão de retomada: onde parou, nível, pendências, último feedback, revisões sugeridas, próxima sessão |
 | [`PROGRESS.md`](PROGRESS.md) | **gerado** | visão geral dos alunos |
 
-Os arquivos gerados nunca são editados à mão: `node academia/ferramentas/academia.mjs progresso` os recria a partir das
-sessões. Se estiverem desatualizados, o `validar` avisa.
+Os arquivos gerados nunca são editados à mão: `node academia/ferramentas/academia.mjs progresso <aluno>` os recria a
+partir das sessões. Se estiverem desatualizados, o `validar` avisa.
+
+> **Privacidade.** O repositório é compartilhado (e pode ser público): perfil, sessões e entregas de cada aluno ficam
+> visíveis a quem tem acesso. Não escreva dados pessoais sensíveis nem segredos. O `PROGRESS.md` mostra o nível e a
+> etapa de cada aluno; o XP só aparece para quem escreveu `compartilhar_xp: sim`. A regra de ouro: cada aluno e cada
+> assistente mexe **apenas** na pasta do aluno da conversa; ler o trabalho do outro só acontece numa revisão por
+> pares combinada pelos dois.
 
 ## Início da sessão
 
-1. Abra o seu `academia/alunos/<aluno>/retomada.md`. Ele mostra a etapa, o nível, as pendências, a próxima missão e as
-   **revisões sugeridas**.
-2. Abra a lição da etapa (`academia/licoes/NN-.../README.md`).
-3. Numa conversa **sem acesso ao repositório**, cole o prompt de abertura abaixo, seguido de `AI_CONTEXT.md`, do seu
-   `retomada.md` e da lição (sem o `gabarito.md`).
-4. Comece pela revisão mais antiga sugerida (até três perguntas, de memória). Voltou depois de uma pausa? Diga ao
-   assistente; ele vai propor um aquecimento em vez de seguir direto.
+1. Gere o **kit de colagem** do aluno:
 
-**Prompt de abertura** (copie e preencha o que está entre `<>`):
+   ```bash
+   node academia/ferramentas/academia.mjs kit <aluno> > kit.txt     # ou: ... | clip   (Windows)  /  | pbcopy  (macOS)
+   ```
 
-```text
-Você é o tutor da Academia de Engenharia de IA do repositório ai-engineer. Siga as regras do AI_CONTEXT.md que
-colo abaixo. Eu sou o aluno <slug>. Abaixo estão o meu cartão de retomada e a lição desta sessão.
-Comece pelas revisões sugeridas, depois conduza a lição uma atividade por vez, sem entregar solução antes das
-dicas. Não tenho acesso ao repositório nesta conversa: no fim vou pedir o relatório da sessão.
-
-=== AI_CONTEXT.md ===
-<cole>
-=== retomada.md ===
-<cole>
-=== lição ===
-<cole>
-```
+   O kit reúne, nesta ordem: as instruções ao tutor, o `AI_CONTEXT.md`, as tabelas de XP e de competências, o modelo
+   de relatório de sessão, o seu `retomada.md`, a lição da etapa atual (**sem** o gabarito) e o quiz das revisões
+   sugeridas. No topo ele informa os dados da sessão a registrar: aluno, **número da sessão**, data e etapa.
+2. Abra uma conversa nova com o assistente e cole o kit inteiro. Sem Node? Cole à mão os mesmos arquivos, na mesma
+   ordem (a lista está no topo do kit), e pegue o número da sessão em `retomada.md` ("Próxima sessão").
+3. O assistente começa pelas revisões sugeridas (até três perguntas, de memória). Voltou depois de uma pausa? Diga:
+   ele propõe um aquecimento em vez de seguir direto.
 
 ## Durante a sessão
 
 - Uma atividade de cada vez: quiz → exemplos → desafio → explicação.
 - Guarde as respostas e o código em `academia/alunos/<aluno>/entregas/etapa-NN/`. É isso que comprova o XP.
-- Quiz: responda **antes** de ver o gabarito. Desafio: tente, registre a tentativa e só então peça a dica seguinte.
+- **Quiz:** responda **antes** de ver o gabarito. Quando terminar, cole o conteúdo de `gabarito.md` da lição para o
+  assistente fazer a correção comentada (ele não o tem no kit de propósito). As revisões funcionam do mesmo jeito.
+- **Desafio:** tente, registre a tentativa e só então peça a dica seguinte. O assistente não vê a pasta `entregas/`:
+  cole o que ele precisa avaliar (a saída do `verificar.mjs`, o `relatorio.md`, as respostas do quiz).
 - Pergunte "o que eu já sei fazer nesta etapa?" quando quiser um retrato das competências.
 
 ## Fim da sessão
 
-1. **Peça o relatório da sessão** ao assistente (prompt de fechamento abaixo). Ele deve listar apenas o que ficou
-   comprovado na conversa.
+1. **Peça o relatório da sessão** ao assistente com o prompt de fechamento abaixo. Ele usa os dados do topo do kit e
+   lista apenas o que ficou comprovado na conversa.
 2. **Crie o arquivo da sessão** (gera o nome, o número e a data corretos):
 
    ```bash
    node academia/ferramentas/academia.mjs sessao <aluno>
    ```
 
-   Cole o relatório gerado pelo assistente no arquivo criado, em `academia/alunos/<aluno>/sessoes/`.
-3. **Confira e atualize** os registros derivados:
+   Abra o arquivo criado e **substitua o conteúdo inteiro** pelo relatório do assistente, que já traz o front matter
+   (`aluno`, `data`, `sessao`, `etapa`...). Confira se `sessao` e `data` batem com o nome do arquivo. Sem Node: crie
+   o arquivo pelo GitHub com o nome `AAAA-MM-DD-sNN.md` (o `NN` é a "Próxima sessão" do `retomada.md`).
+3. **Salve as evidências** citadas (as respostas do quiz, o relatório do laboratório...) em `entregas/etapa-NN/`.
+   O validador confere se cada arquivo citado entre crases existe.
+4. **Confira e atualize** os registros derivados:
 
    ```bash
-   node academia/ferramentas/academia.mjs validar      # erros? corrija a sessão (ou a próxima)
-   node academia/ferramentas/academia.mjs progresso    # recria retomada.md e PROGRESS.md
+   node academia/ferramentas/academia.mjs validar --aluno <aluno>   # erros? corrija a sessão (ou registre a correção na próxima)
+   node academia/ferramentas/academia.mjs progresso <aluno>         # recria o seu retomada.md e o PROGRESS.md
    ```
 
-4. **Versione** só o que é seu: `alunos/<aluno>/` e, se mudou, `PROGRESS.md`.
+5. **Versione** só o que é seu: `alunos/<aluno>/` e, se mudou, `PROGRESS.md`.
    Mensagem sugerida: `sessao(<aluno>): AAAA-MM-DD etapa N`. O fluxo padrão é um pull request pequeno por sessão
    (os responsáveis pelo repositório podem preferir commitar direto; o procedimento é o mesmo).
 
-**Prompt de fechamento:**
+**Prompt de fechamento** (use os dados do topo do kit):
 
 ```text
-Encerre a sessão. Gere o relatório de sessão completo no formato de templates/relatorio-sessao.md (front matter e
-tabelas Atividades, Competências, Checkpoints; seções Resumo, Feedback, Pendências e Próxima missão).
-Inclua só atividades comprovadas nesta conversa; XP conforme a tabela do GAMIFICACAO.md (zero se não for aprovado
-ou sem evidência); níveis de competência 0 a 3 com a evidência de cada um. Não invente nada. Se algo ficou sem
-evidência, deixe em Pendências.
+Encerre a sessão. Gere o relatório de sessão completo, em um único bloco de código Markdown, no formato do modelo
+templates/relatorio-sessao.md: front matter com aluno, data, sessao e etapa exatamente como informados no topo do kit
+(retomada: sim só se passaram 14 dias ou mais desde a sessão anterior), as tabelas Atividades, Competências e
+Checkpoints e as seções Resumo, Feedback, Pendências e Próxima missão.
+Regras: só atividades comprovadas nesta conversa; ids e XP conforme a tabela do GAMIFICACAO.md (XP zero se não
+aprovada ou sem evidência; uma vez por id); evidência = caminho entre crases de um arquivo que o aluno salvou em
+entregas/ ou uma nota objetiva; níveis de competência de 0 a 3 com a evidência de cada um. Não invente nada. O que
+ficou sem evidência vai para Pendências.
 ```
 
 ### Se você não puder rodar Node ou Git
@@ -96,8 +102,12 @@ chat e pedir ao assistente o cartão de retomada (as regras de cálculo estão e
 
 ## Retomada em outra conversa ou com outro assistente
 
-Não depende de nada que estivesse na conversa anterior. Repita o **Início da sessão**: o `retomada.md` e a lição
-bastam. Se quiser mais histórico, cole também as duas últimas sessões de `sessoes/`.
+Não depende de nada que estivesse na conversa anterior. Repita o **Início da sessão**: o kit basta. Se quiser mais
+histórico, cole também as duas últimas sessões de `sessoes/`.
+
+**O que é "voltar de uma pausa".** São 14 dias ou mais desde a sessão anterior. Nesse caso, marque `retomada: sim`
+(isso rende a conquista A19 e faz o assistente propor um aquecimento). O validador recusa `retomada: sim` com menos
+de 14 dias e na primeira sessão.
 
 ## Dois alunos sem conflitos
 
@@ -105,8 +115,10 @@ bastam. Se quiser mais histórico, cole também as duas últimas sessões de `se
   dois alunos nunca editam o mesmo arquivo.
 - O único arquivo compartilhado é o `PROGRESS.md`, que é gerado. Se houver conflito de merge nele, aceite qualquer
   versão e rode `progresso` de novo.
-- O XP de um aluno não afeta o outro. O XP só aparece no `PROGRESS.md` para quem escreveu `compartilhar_xp: sim`.
-- Revisão por pares é opcional: o outro aluno pode **ler** uma entrega e escrever feedback no chat; quem registra é
+- `validar --aluno <aluno>` e `progresso <aluno>` olham a pasta do aluno e o `PROGRESS.md`: o estado do outro aluno
+  nunca bloqueia o seu trabalho. (`validar` e `progresso` sem argumento cobrem todos; é o que um mantenedor roda.)
+- O XP de um aluno não afeta o outro.
+- Revisão por pares é opcional: o outro aluno pode **ler** uma entrega e dar feedback no chat; quem registra é
   sempre o dono da pasta.
 
 ## Esqueci de registrar uma sessão
@@ -120,4 +132,5 @@ Registre na próxima: o relatório pode listar atividades de dias anteriores se 
 node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome de exibição"
 ```
 
-Cria `alunos/<slug>/perfil.md` e `retomada.md`. O `slug` é a pasta (minúsculas, sem espaços).
+Cria `alunos/<slug>/` com `perfil.md`, `retomada.md` e as pastas `sessoes/` e `entregas/`. O `slug` é o nome da pasta
+(minúsculas, números e hífen).

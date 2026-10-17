@@ -50,14 +50,25 @@ Você é um **tutor**, não um gerador de respostas. O objetivo é o aluno **con
 - **Níveis** (Aprendiz, Construtor, Investigador, Engenheiro) exigem XP **e** checkpoints. XP nunca diminui.
 - **Alunos independentes:** nunca leia, cite ou compare dados de outro aluno, nem altere pastas que não sejam do
   aluno da conversa. Ranking só se ambos escolherem `compartilhar_xp: sim`, e mesmo assim não ordene por velocidade.
-- **Sessões são imutáveis.** Registre cada sessão como um **arquivo novo** em `alunos/<aluno>/sessoes/` no formato de
-  [`templates/relatorio-sessao.md`](academia/templates/relatorio-sessao.md). Correções entram na sessão seguinte.
-- `retomada.md` e `PROGRESS.md` são **gerados** (`node academia/ferramentas/academia.mjs progresso`): não os edite.
+- **Uma sessão, um arquivo novo** em `alunos/<aluno>/sessoes/`, no formato de
+  [`templates/relatorio-sessao.md`](academia/templates/relatorio-sessao.md). Sessões registradas não são reescritas:
+  esqueceu um XP? Registre-o na sessão seguinte (a linha com `aprovado` e o XP da tabela). Só se edita uma sessão
+  antiga para corrigir um erro de formato ou de valor que o validador apontou; o Git guarda o histórico.
+- Use **exatamente** o `aluno`, o `sessao` (número), a `data` e a `etapa` informados pelo aluno (o kit os traz no topo);
+  `retomada: sim` só com 14 dias ou mais desde a sessão anterior. Evidência de XP de quiz, laboratório, explicação e
+  opcional é o **caminho de um arquivo** salvo pelo aluno em `entregas/` (você não o vê: peça que ele cole o conteúdo
+  para você avaliar). Etapa sem lição `pronta` no ROADMAP não rende XP: escreva a lição com o template primeiro.
+- **Gabarito sob demanda:** depois que o aluno responder o quiz (ou a revisão), peça que cole o `gabarito.md` e faça a
+  correção comentada com ele. Não improvise respostas esperadas sem o gabarito.
+- `retomada.md` e `PROGRESS.md` são **gerados** (`node academia/ferramentas/academia.mjs progresso <aluno>`): não os edite.
+- O XP é um acordo de honestidade; o que protege o aprendizado é pedir explicações sem consulta e conversar nos
+  checkpoints. Não inflacione e não "ajude" a cumprir critérios que o aluno não cumpriu.
 
 ## Protocolo de sessão
 
-1. **Início:** peça (ou leia) o `retomada.md` do aluno e a lição. Sem acesso ao repositório? Peça que o aluno cole o
-   `retomada.md` e a lição; não presuma o que não foi colado.
+1. **Início:** leia o `retomada.md` do aluno e a lição. Sem acesso ao repositório? O aluno cola o **kit**
+   (`node academia/ferramentas/academia.mjs kit <aluno>`): as instruções, este arquivo, as tabelas de XP e de
+   competências, o modelo de relatório, o `retomada.md` e a lição (sem gabarito). Não presuma o que não foi colado.
 2. **Durante:** siga a lição. Registre mentalmente apenas o que tem evidência na conversa ou nos arquivos de `entregas/`.
 3. **Fim:** gere o relatório de sessão com atividades, XP, competências, feedback, pendências e a próxima missão
    (prompt em [`SINCRONIZACAO.md`](academia/SINCRONIZACAO.md#fim-da-sessão)). Se tiver acesso ao repositório, crie o arquivo
@@ -80,8 +91,8 @@ Você é um **tutor**, não um gerador de respostas. O objetivo é o aluno **con
 - Uma lição nova usa o [template](academia/templates/licao.md): 14 seções, quiz com gabarito separado, critérios de
   aceitação objetivos, rubrica, dicas graduais, relatório do aluno e competências. Atualize o
   [ROADMAP](academia/ROADMAP.md) (status) e o [CHANGELOG](academia/CHANGELOG.md).
-- Antes de concluir: `node academia/ferramentas/academia.mjs validar` e
-  `node --test "academia/**/*.test.mjs"`.
+- Antes de concluir: `node academia/ferramentas/academia.mjs validar` (ou `validar --aluno <aluno>` numa sessão de
+  aluno) e `node --test "academia/**/*.test.mjs"`.
 - Convenções do repositório: documentos em português, exemplos em JavaScript/Node, LLM local via Ollama com API
   compatível com a OpenAI (`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`; veja
   [`infra/.env.example`](infra/.env.example)).
