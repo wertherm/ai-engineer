@@ -105,3 +105,52 @@ flowchart LR
 1. Mude `latenciaS` para 12 e veja a concorrência dobrar: o que isso exige do pool de conexões?
 2. Troque `PRECOS_ILUSTRATIVOS` pelos preços atuais de um provedor real (anote a data) e recalcule.
 3. Adicione um cenário "re-ranking com 20 candidatos" (mais uma chamada pequena) e compare o custo.
+
+## Versão Python
+
+`python/capacidade.py` (as mesmas fórmulas, com as premissas num `dataclass`), `python/main.py` e
+`python/test_capacidade.py` (pytest).
+
+### Como rodar
+
+```bash
+cd modulos/12-carreira
+uv run python exemplos/05-system-design-rag/python/main.py
+uv run pytest exemplos/05-system-design-rag/
+```
+
+### Saída esperada (Python)
+
+Saída real (2026-10-17), idêntica à do JS (`diff` vazio). Os floats brutos (custo, RPS, concorrência
+em 6 cenários) também são iguais bit a bit:
+
+```text
+== Volume e capacidade ==
+requisições/dia: 24.000 · RPS médio 0,67 · RPS pico 2,00
+concorrência no pico (Little): 12,0 requisições simultâneas
+geração no pico: 500 tokens/s de saída
+tokens/mês: 1.188 M de entrada · 132 M de saída
+
+== Custo via API (preços ILUSTRATIVOS, US$/1M tokens: {"entrada":0.4,"entradaEmCache":0.1,"saida":1.6,"embedding":0.02}) ==
+LLM: US$ 633 /mês · US$ 0,0012 por pergunta
+indexação completa (400.000 trechos): US$ 2,40
+
+== Armazenamento vetorial ==
+400.000 vetores de 1024 dims: 1,64 GB (float32) + 0,60 GB de texto, antes do índice HNSW
+
+== Sensibilidade (o que mais mexe no custo?) ==
+base                             US$    633 /mês · pico   500 tok/s
+cache de prompt 50%              US$    508 /mês · pico   500 tok/s
+3 trechos em vez de 5            US$    520 /mês · pico   500 tok/s
+agente com 4 chamadas/pergunta   US$  2.532 /mês · pico 2.000 tok/s
+adoção dobra (60% ativos)        US$  1.266 /mês · pico 1.000 tok/s
+
+== Self-host: quantas réplicas do servidor medido neste repo? ==
+no pico: 500 tok/s ÷ 29.5 tok/s (vLLM CPU, modelo 0,5B) = 17 réplicas
+-> CPU não fecha a conta e um modelo de 0,5B não tem a qualidade necessária: API ou GPU (meça o tok/s da sua GPU).
+```
+
+Para os números baterem: (1) `toLocaleString('pt-BR')` virou `comum_py.formato.fmt` (milhar com ponto,
+vírgula decimal, arredondamento meio para longe do zero sobre o `repr` do float, como o ICU); um
+`f"{x:,.0f}"` usaria vírgula de milhar e arredondaria empates para o par; (2) a soma do custo mantém a
+mesma ordem de operações do JS.

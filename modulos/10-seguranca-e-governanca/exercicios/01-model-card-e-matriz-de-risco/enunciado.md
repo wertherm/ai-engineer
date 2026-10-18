@@ -60,3 +60,15 @@ Model card gravado em model-card.md (54 linhas)
 
 O card gerado está em [solucao/model-card.md](solucao/model-card.md). Note que a meta de 0,99 **não é
 atingível** nem com limiar 0,05 na validação cruzada (máximo 0,981): o card precisa dizer isso ao comitê.
+
+## Versão Python
+
+A solução já é em Python (`solucao/model_card.py`). Também roda com o `pyproject.toml` próprio do módulo:
+
+```bash
+cd modulos/10-seguranca-e-governanca
+uv sync
+uv run python exercicios/01-model-card-e-matriz-de-risco/solucao/model_card.py
+```
+
+Saída esperada (Python): a mesma de cima (conferida em 2026-10-17: `ROC AUC=0.9977`).

@@ -59,3 +59,45 @@ mostrou o 1º token na metade do tempo total (TTFT 33 s × 64 s); "CDB" teve sim
 1. `LIMIAR=0.75 npm run ex05` e veja o falso hit do CDB.
 2. Mude `versaoPrompt` em `cache.js` para `v2`: todo o cache antigo deixa de valer (invalidação por versão de prompt).
 3. Acrescente a palavra "explique" aos sinais de complexidade em `roteador.js` e veja quantas perguntas sobem de tier.
+
+## Versão Python
+
+[`python/roteador.py`](python/roteador.py), [`python/cache.py`](python/cache.py) (tabela `m08.cache_semantico_py`) e
+[`python/main.py`](python/main.py). O streaming usa `stream=True` com `stream_options={"include_usage": True}`: o
+último chunk vem com `choices` vazio e o `usage` preenchido (por isso o `if chunk.choices` no laço).
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exemplos/05-roteador-e-cache-semantico/python/main.py              # 3 chamadas ao LLM + 6 embeddings
+LIMIAR=0.75 uv run python exemplos/05-roteador-e-cache-semantico/python/main.py  # falso hit do CDB
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+[barato] CDI é o Certificado de Depósito Interbancário, a taxa de juros mais importante do Brasil e referência para diversos produtos financeiros.
+
+[stream caro] *   **Antecipação de Recebíveis**: É uma venda à vista do crédito que o cliente deve pagar, oferecendo liquidez imediata sem juros sobre o valor antecipado (apenas desconto por antecipação), mas exige um fluxo de caixa prévio de vendas confirmadas.
+*   **Empréstimo com CCB**: Oferece dinheiro pronto para qualquer finalidade com taxas de juros competitivas e prazos flexíveis, ideal para investimentos ou expansão, mas exige garantia real e compromete o fluxo de caixa futuro via parcelamento.
+*   **Vantagem da
+
+[barato] CDB é um Certificado de Depósito Bancário, uma aplicação financeira que permite investir no banco com rentabilidade variável e isenção de imposto de renda para rendimentos até 201%.
+
+pergunta                               | rota                            | sim   | ms    | ttft  | tokens | US$
+---------------------------------------|---------------------------------|-------|-------|-------|--------|---------
+O que é CDI?                           | barato (pergunta factual curta) | 0.000 | 6404  | 6244  | 40+29  | 0.000023
+Compare antecipação de recebíveis e em | caro (intenção analítica)       | 0.508 | 32636 | 4483  | 70+120 | 0.002010
+o que significa CDI?                   | cache (barato)                  | 0.961 | 451   | 451   | 0      | 0
+Me explique rapidinho o que é o CDI    | cache (barato)                  | 0.918 | 446   | 446   | 0      | 0
+O que é CDB?                           | barato (pergunta factual curta) | 0.791 | 10695 | 10405 | 41+40  | 0.000030
+Compare a antecipação de recebíveis co | cache (caro)                    | 0.975 | 766   | 766   | 0      | 0
+
+Preços de tabela (US$/1M tokens in/out): {"barato":{"in":0.15,"out":0.6},"caro":{"in":3,"out":15}}
+Custo real (roteador + cache):        US$ 0.002064
+Custo sem otimização (tudo no caro):  US$ 0.006408
+Economia: 68%
+```
+
+Mesmas rotas, mesmas similaridades (0,961 · 0,918 · 0,791 · 0,975), mesmos tokens e a mesma economia de 68% do JS.
+Aqui o TTFT do tier caro foi 4,5 s contra 32,6 s do total: o streaming mostra o 1º token muito antes do fim.

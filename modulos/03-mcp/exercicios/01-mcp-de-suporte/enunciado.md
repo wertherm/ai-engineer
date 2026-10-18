@@ -50,3 +50,34 @@ $ npx -y @modelcontextprotocol/inspector@2.11.0 --cli node exercicios/01-mcp-de-
 ```
 
 Solução em [`solucao/`](./solucao/).
+
+## Versão Python
+
+Solução em [`solucao/python/`](./solucao/python/): `suporte.py` (fábrica `criar_servidor_suporte(repo)` com
+`MCPServer`, modelos pydantic, `Literal` para os enums, `Annotated[..., Field(...)]` para os limites e `ToolError`
+para erro de negócio), `server.py` (stdio) e `test_suporte.py` (**pytest**).
+
+O equivalente Python do `InMemoryTransport` é passar o próprio servidor ao client: `Client(criar_servidor_suporte())`
+conecta em processo, passando pelo protocolo MCP de verdade. Os testes `async` rodam com o plugin pytest do `anyio`
+(que já vem com o `mcp`): `pytestmark = pytest.mark.anyio` + fixture `anyio_backend` devolvendo `"asyncio"`.
+
+```bash
+cd modulos/03-mcp
+uv run pytest exercicios/01-mcp-de-suporte -vv
+npx -y @modelcontextprotocol/inspector@2.11.0 --cli .venv/bin/python exercicios/01-mcp-de-suporte/solucao/python/server.py \
+  -q --format json --method tools/call --tool-name abrir_ticket --tool-arg cliente=Oficina --tool-arg "assunto=Boleto não chegou" \
+  | jq -c .result.structuredContent
+```
+
+Saída real (Python):
+
+```text
+test_expoe_as_3_tools_com_schema_e_annotations PASSED [ 20%]
+test_abre_ticket_com_prioridade_padrao_e_lista_por_status PASSED [ 40%]
+test_fecha_ticket_e_nao_deixa_fechar_de_novo PASSED [ 60%]
+test_ticket_inexistente_e_argumentos_invalidos_viram_is_error PASSED [ 80%]
+test_resource_suporte_tickets_id_devolve_o_ticket PASSED [100%]
+============================== 5 passed in 0.64s ===============================
+
+{"ticket":{"id":1,"cliente":"Oficina","assunto":"Boleto não chegou","prioridade":"media","status":"aberto","resolucao":null}}
+```

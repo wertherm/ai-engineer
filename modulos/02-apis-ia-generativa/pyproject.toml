@@ -1,0 +1,33 @@
+[project]
+name = "modulo-02-apis-ia-generativa"
+version = "0.1.0"
+description = "Módulo 02 (versão Python): prompt chaining, saídas estruturadas, custo/cache, RAG com LangChain, API FastAPI, OCR, visão e Whisper"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "openai==3.34.0",
+    "pydantic==2.14.1",
+    "tiktoken==0.14.0",
+    "psycopg[binary]==3.3.6",
+    "pgvector==0.5.1",
+    "langchain-core==1.6.12",
+    "langchain-openai==1.7.2",
+    "fastapi==0.143.3",
+    "uvicorn==0.54.0",
+    "httpx==0.28.1",
+    "rapidocr==3.10.0",
+    "onnxruntime==1.31.0",
+    "faster-whisper==1.2.1",
+    # av 19 removeu o argumento metadata_errors que o faster-whisper 1.2.1 usa em decode_audio (TypeError).
+    "av==18.1.0",
+    "pytest==9.1.1",
+]
+
+# Projeto próprio do módulo (não é workspace da raiz): rodar tudo a partir desta pasta com `uv run`.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["exemplos", "exercicios"]
+pythonpath = ["."]
+addopts = "-q"
+markers = ["integracao: chama o LLM real (Ollama); só roda com INTEGRACAO=1"]

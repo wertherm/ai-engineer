@@ -63,3 +63,42 @@ O que observar:
 2. Troque `OPENAI_BASE_URL`/`OPENAI_API_KEY`/`MODELO_CHAT` para a OpenAI ou o OpenRouter: o front não muda.
 3. Leia o [`anti-padrao-chave-no-browser.html`](anti-padrao-chave-no-browser.html) e liste tudo o que um visitante
    consegue fazer com a chave; compare com o [doc 04](../../docs/04-ia-no-cliente-e-no-servidor.md) (Firebase AI Logic + App Check).
+
+## Versão Python
+
+| Arquivo | Papel |
+|---|---|
+| [`python/faq.py`](python/faq.py) | Mesma FAQ |
+| [`python/busca.py`](python/busca.py) | `psycopg` 3 (`autocommit=True`) + `pgvector.Vector` (sem numpy) na tabela **`m05.faq_py`**; score com `toFixed(3)` reproduzido por `Decimal.quantize(ROUND_HALF_UP)` |
+| [`python/servidor.py`](python/servidor.py) | Proxy de IA em **FastAPI**: estáticos do mesmo `public/` + `/api/busca` + `/api/chat`; corpo até 4 KB, rate limit por IP **antes** da validação, chave só no ambiente do servidor |
+| [`python/verificar.py`](python/verificar.py) | Playwright async espionando requests/responses do Chrome + `httpx2` para a rajada |
+
+O `public/index.html` (o front) não se porta: é código de navegador, e é exatamente o mesmo arquivo.
+No FastAPI, validar com um modelo pydantic no parâmetro do endpoint faria a validação (422) acontecer **antes** do
+rate limit; por isso as rotas leem o corpo à mão, na ordem do Express: rate limit → corpo → validação → IA.
+
+**Como rodar** (da pasta do módulo):
+
+```bash
+uv run python exemplos/04-ia-cliente-vs-servidor/python/verificar.py   # porta 30561; 1 chamada ao chat + embeddings
+uv run python exemplos/04-ia-cliente-vs-servidor/python/servidor.py    # manual: http://127.0.0.1:30560
+```
+
+**Saída esperada (Python)** (saída real):
+
+```
+Busca "em quantos dias meu café chega?" -> ["Qual o prazo de entrega?", "Como funciona a assinatura de café?", "O moedor chegou com defeito"]
+Personalização "quero cancelar": antes ["entrega · score 0.484", "assinatura · score 0.46", "trocas · score 0.361"]
+                                depois ["assinatura · score 0.509", "assinatura · score 0.418", "pagamento · score 0.361"] (interesses=["assinatura"])
+Chatbot: Sim, aceitamos Pix com 5% de desconto. Caso precise de mais ajuda, posso encaminhar você a um atendente.
+Requisições do browser: 5, todas para http://127.0.0.1:30561? True
+Browser chamou http://localhost:11434? False | chave apareceu em alguma resposta? False
+Pergunta com 301 caracteres -> HTTP 400
+Rajada de 7 buscas inválidas (limite 6/min) -> 400, 400, 400, 400, 400, 400, 429
+Verificação OK
+```
+
+Scores e respostas idênticos aos do JS (mesmos embeddings, mesma consulta). A rajada difere e está certa: entre a
+1ª busca do browser e a rajada passaram mais de 60 s (o chat espera na fila do Ollama compartilhado), então a janela
+fixa do rate limit **reiniciou** e as 3 buscas do browser deixaram de contar: 6 passaram pela validação (400) e a 7ª
+levou 429. Na execução registrada do JS tudo coube na mesma janela (3 × 400, depois 429).

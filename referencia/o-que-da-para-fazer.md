@@ -5,8 +5,8 @@ os dos módulos, da pasta de cada módulo. Tudo foi executado de verdade (2026-1
 
 ## 🎓 Módulos da pós (LLM local via Ollama)
 
-Antes: `bash infra/subir-ia.sh` (Ollama + Postgres/pgvector). Em cada módulo: `cd modulos/<pasta> && npm install`,
-depois os scripts listados no README do módulo.
+Antes: `bash infra/subir-ia.sh` (Ollama + Postgres/pgvector). Em cada módulo: `cd modulos/<pasta> && npm install`
+(JavaScript) ou `uv sync` (Python, subpastas `python/`), depois os comandos listados no README do módulo.
 
 | Módulo | O que dá para fazer |
 |---|---|

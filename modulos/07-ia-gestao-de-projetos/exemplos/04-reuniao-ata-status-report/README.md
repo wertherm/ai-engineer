@@ -98,3 +98,71 @@ O que observar (erros reais do modelo que continuam lá):
 2. Mude `sprint.json` para `pontosEntregues: 12` e confira o semáforo virar vermelho (regra em
    `status.js`), e o texto de cada público mudar de tom.
 3. Importe `acoes.ics` no seu calendário (Thunderbird/Outlook/Google Calendar → importar arquivo).
+
+## Versão Python
+
+Pasta [`python/`](python/): `ata.py` (schema dinâmico com `pydantic.create_model` + `Literal[tuple(nomes)]`,
+que vira `enum` no JSON Schema, como o `z.enum` do JS), `status.py` (métricas, públicos, checagem numérica),
+`main.py` e `test_ata.py`. Mesmos `transcricao.txt` e `sprint.json`. O `.ics` é gravado em
+`python/acoes.ics` com `newline=""` para preservar o CRLF da RFC 5545. Whisper: ⚠️ não executado localmente
+(mesmo motivo do JS).
+
+### Como rodar
+
+```bash
+cd modulos/07-ia-gestao-de-projetos
+uv run python exemplos/04-reuniao-ata-status-report/python/main.py   # ~5 min em CPU (4 chamadas ao LLM)
+uv run pytest exemplos/04-reuniao-ata-status-report/python
+```
+
+### Saída esperada (Python)
+
+Saída real (ata, métricas e os três textos saíram iguais aos do JS, com os mesmos erros do modelo):
+
+```text
+Decisões:
+  • Liberar a segunda via no portal apenas para boletos não vencidos.
+  • O e-mail de aviso será enviado sem link de pagamento nesta versão.
+Pendências:
+  • Ajuste da regra dos 60 dias na tela de busca por CPF, dependente da correção da API de juros.
+  • Definição do texto do e-mail de aviso para aprovação jurídica.
+  • Rodar testes e2e no ambiente de homologação.
+Ações:
+  • [Ana] Corrigir o cálculo de multa pro rata na API de juros (já realizado ontem). — 2026-11-04
+  • [Bruno] Subir o ambiente de homologação. — 2026-11-04
+  • [Marina] Falar com o jurídico para definir o texto do e-mail de aviso. — 2026-11-06
+
+Validação (participantes: Marina, Ana, Bruno, Carla): ok
+Calendário: exemplos/04-reuniao-ata-status-report/python/acoes.ics
+
+Métricas (código): entrega 70% com 70% do tempo · CPI 0.88 · semáforo AMARELO
+
+--- TECNICO ---
+Estamos com 70% do escopo concluído, mas o sprint está amarelo devido a um bug crítico e bloqueios técnicos como a regra dos 60 dias. O CPI de 0,88 indica que estamos atrasados em relação ao plano original de entrega.
+
+--- GESTOR ---
+O projeto Portal de Boletos está em Sprint 14 com 3 dias restantes, ...
+
+--- DIRETORIA ---
+O projeto está no semáforo amarelo, com 70% do escopo entregue em apenas 3 dos 10 dias planejados e um bug crítico aberto. ...
+```
+
+Trecho do `python/acoes.ics`:
+
+```text
+BEGIN:VTODO
+UID:acao-1-20261017T230014Z@modulo07
+DTSTAMP:20261017T230014Z
+DUE;VALUE=DATE:20261104
+SUMMARY:Corrigir o cálculo de multa pro rata na API de juros (já realizado ontem).
+DESCRIPTION:Responsável: Ana
+```
+
+```text
+.......                                                                  [100%]
+7 passed
+```
+
+Repare no CPI: `0.875` é um empate exato em double. O `toFixed(2)` do JS escolhe o maior (`0.88`); o
+`round(x, 2)` do Python arredonda empate para o par: aqui também dá `0.88`, mas `0.125` daria `0.12` (JS: `0.13`).
+Por isso `status.py` usa o `to_fixed` de `comum_py/js.py` (`Decimal(x)` exato + `ROUND_HALF_UP`).

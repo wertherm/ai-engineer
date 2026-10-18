@@ -81,3 +81,50 @@ curto no fim", o aviso `[CORTADA por max_tokens]` e a contagem de `elementos` (n
    [módulo 02](../../../02-apis-ia-generativa/exemplos/05-documentos-ocr-e-visao/)) pedindo uma avaliação pelas
    heurísticas de Nielsen, e compare com o que o axe encontrou.
 3. Adicione uma checagem própria em `comum/acessibilidade.js` (ex.: `outline: none` sem estilo de `:focus-visible`).
+
+## Versão Python
+
+| Arquivo | Papel |
+|---|---|
+| [`python/gerar.py`](python/gerar.py) | Mesmo fluxo do `gerar.js` (mesmos prompts e `max_tokens`), com Playwright async + SDK `openai` Python |
+| [`../../comum_py/acessibilidade.py`](../../comum_py/acessibilidade.py) | `auditar()`: injeta o **mesmo** `node_modules/axe-core/axe.min.js` (4.14.0) com `page.add_script_tag` + `page.evaluate("axe.run(...)")`, mais as checagens `rotulo-visivel` e `clicavel-sem-semantica`, nota 0 se nada renderizou |
+| [`python/test_acessibilidade.py`](python/test_acessibilidade.py) | O juiz em pytest (5 testes, sem LLM) |
+
+Por que injetar o `axe.min.js` em vez do pacote `axe-playwright-python` 0.1.8: ele embute o axe **4.12.1** (o JS usa
+4.14.0, regras e mensagens diferentes) e é só um wrapper das mesmas duas chamadas. Com o mesmo arquivo, o juiz Python
+e o JS dão a mesma nota. As checagens próprias rodam dentro da página, então continuam em JavaScript
+(`page.eval_on_selector_all`). O `finish_reason == "length"` aparece como `[CORTADA por max_tokens]`.
+
+**Como rodar** (da pasta do módulo, depois de `npm install` e `uv sync`):
+
+```bash
+uv run pytest exemplos/01-text-to-ui-acessivel/python -vv        # o juiz, sem LLM (~5 s)
+uv run python exemplos/01-text-to-ui-acessivel/python/gerar.py   # 2 chamadas ao LLM
+```
+
+**Saída esperada (Python)** (saída real; teste encurtado):
+
+```
+test_html_com_problemas_classicos_perde_pontos PASSED [ 20%]
+test_html_acessivel_tira_100 PASSED [ 40%]
+test_nota_desconta_por_no_afetado_e_por_impacto PASSED [ 60%]
+test_div_clicavel_e_acusada_pela_checagem_propria PASSED [ 80%]
+test_documento_sem_conteudo_tira_0_nao_100 PASSED [100%]
+============================== 5 passed in 7.14s ===============================
+```
+
+```
+Modelo: qwen3.5:4b
+Descrição: Card de inscrição na newsletter: logo da empresa (imagem logo.png), título, campos nome e e-mail, checkbox "aceito receber e-mails" e botão Enviar. Textos auxiliares em cinza #9e9e9e sobre fundo branco, estilo minimalista.
+
+[v1] 245s, 788 tokens, 16 elementos -> nota 85/100, 1 regra(s) violada(s)
+- [serious] color-contrast: Elements must meet minimum color contrast ratio thresholds (em: p)
+
+[v2] 287s, 788 tokens, 16 elementos -> nota 100/100, 0 regra(s) violada(s)
+  (nenhuma violação)
+
+Nota: 85 -> 100 | arquivos em .../exemplos/01-text-to-ui-acessivel/python/saida (v1/v2 .html e .png)
+```
+
+Com `temperature=0` e `seed=42`, o SDK Python recebeu do modelo as **mesmas** respostas que o JS (788 tokens nas
+duas iterações e a mesma nota 85 → 100): o prompt é que manda, não a linguagem do cliente.

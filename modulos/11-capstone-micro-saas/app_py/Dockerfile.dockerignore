@@ -1,0 +1,8 @@
+# Contexto da imagem Python: só o necessário (o resto do módulo fica de fora).
+*
+!pyproject.toml
+!uv.lock
+!app_py/
+!app/dados/
+app_py/tests/
+**/__pycache__

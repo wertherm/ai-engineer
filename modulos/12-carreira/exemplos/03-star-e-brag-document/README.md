@@ -58,3 +58,41 @@ Lacunas para resolver ANTES da conversa: execucao
    mentoria) em `historias.json` e passe todas no validador.
 2. Reescreva `migracao-fraca` até passar: quanto tempo você gastou com o contexto e quanto com a ação?
 3. Adicione uma entrada de `execucao` no `brag.json` e veja a lacuna sumir.
+
+## Versão Python
+
+`python/validar_star.py`, `python/caso_de_promocao.py` e `python/test_star_e_brag.py` (pytest). Lê os mesmos
+`historias.json` e `brag.json`.
+
+### Como rodar
+
+```bash
+cd modulos/12-carreira
+uv run python exemplos/03-star-e-brag-document/python/validar_star.py
+uv run python exemplos/03-star-e-brag-document/python/caso_de_promocao.py
+uv run pytest exemplos/03-star-e-brag-document/
+```
+
+### Saída esperada (Python)
+
+Saída real (2026-10-17), encurtada; idêntica à do `npm run ex03` (`diff` vazio):
+
+```text
+✓ custo-do-rag · 165 palavras (~1.1 min falando)
+   [x] quatro partes preenchidas
+   ...
+✗ migracao-fraca · 57 palavras (~0.4 min falando)
+   [x] quatro partes preenchidas
+   [ ] contexto (S+T) <= 30% do texto
+   ...
+# Caso de promoção · Ana (fictícia) → Sênior
+
+## impacto — resultados mensuráveis para o negócio, não só tarefas entregues
+- 2026-03-14 · Reduzi o custo por pergunta do assistente de RH: 0.011 → 0.004 (-64%) US$/pergunta · evidência: dashboard de custo + PR de cache
+...
+Lacunas para resolver ANTES da conversa: execucao
+```
+
+Duas diferenças de linguagem tratadas no código: (1) as regex de 1ª pessoa usam `re.ASCII`, porque no
+JS (sem a flag `u`) `\w`/`\b` são ASCII. Sem isso, o Python contaria "faríamos" como plural e o JS não
+(há um teste para isso); (2) `toFixed` virou `comum_py.formato.to_fixed` (meio para cima, como no JS).

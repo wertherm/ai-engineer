@@ -105,3 +105,66 @@ Saída real de `npm run ex02:langchain`:
    o ReAct se adapta; o plano fixo precisa de replanejamento.
 3. Rode `npm run ex02:langchain` com `maxTokens: 80` em `react-langchain.js`: a resposta final é cortada no
    meio (foi o que aconteceu com 150 tokens numa execução em que o modelo resolveu explicar a conta).
+
+## Versão Python
+
+Pasta [`python/`](python/): `ferramentas.py`, `react.py`, `plan_execute.py` (nome com `_`: módulo Python não
+aceita hífen), `main.py` e `react_langchain.py`. A variante com framework usa **`langchain.agents.create_agent`**
+(LangChain 1.4.6 Python, o equivalente do `createAgent` do JS) com `ChatOpenAI` do `langchain-openai` 1.7.2
+apontando para o Ollama. As tools são funções com `@tool`: o schema sai dos type hints
+(`Literal["teclado", "mouse", "monitor"]` vira `enum`) e a descrição, da docstring. O `reasoning_effort: "none"`
+vai em `extra_body`.
+
+### Como rodar
+
+```bash
+cd modulos/04-agentes-autonomos
+uv run python exemplos/02-react-vs-plan-execute/python/main.py             # ReAct manual x Plan-and-Execute
+uv run python exemplos/02-react-vs-plan-execute/python/react_langchain.py  # ReAct com create_agent
+```
+
+### Saída esperada (Python)
+
+Saída real de `main.py` (tokens iguais aos do JS: 5195 × 377):
+
+```
+Tarefa: Quanto custa (R$) comprar só o que falta para mouse e monitor chegarem a 10 unidades em estoque cada?
+Resposta certa: 6450
+
+=== ReAct (manual) ===
+  [1] Pensamento: Para resolver essa tarefa, preciso primeiro descobrir quantas unidades de cada produto (mouse e monitor) já estão no estoque. ... | Primeiro passo: Consultar o estoque atual do mouse. (46s)
+  [1] Ação: consultar_estoque({"produto":"mouse"}) -> Observação: {"valor":7}
+  [2] Pensamento: O estoque atual de mouse é 7 unidades. Para chegar a 10 unidades, faltam 3 unidades (10 - 7 = 3). Agora preciso consultar o estoque do monitor. (21s)
+  [2] Ação: consultar_estoque({"produto":"monitor"}) -> Observação: {"valor":3}
+  ...
+  [5] Ação: calcular({"expressao":"(3*50)+(7*900)"}) -> Observação: {"valor":6450}
+  [6] Resposta: 6450 (14s)
+  resposta: Resposta: 6450
+
+=== Plan-and-Execute ===
+  planner (33s, tentativa 1): 5 passos
+  executor E1: consultar_estoque({"produto":"mouse"}) = 7
+  executor E2: consultar_estoque({"produto":"monitor"}) = 3
+  executor E3: consultar_preco({"produto":"mouse"}) = 50
+  executor E4: consultar_preco({"produto":"monitor"}) = 900
+  executor E5: calcular({"expressao":"((10-7)*50)+(10-3)*900"}) = 6450
+  resposta: Resposta: R$ 6450
+
+Comparativo:
+estrategia         llm_calls chamadas_tool  tokens  segundos  acertou
+ReAct (manual)             6             5    5195     140.7     True
+Plan-and-Execute           1             5     377      32.8     True
+```
+
+Saída real de `react_langchain.py` (de novo 3 chamadas: as 4 consultas saíram em paralelo num passo):
+
+```
+=== ReAct (LangChain create_agent) ===
+  tool consultar_estoque -> {"valor":7}
+  tool consultar_estoque -> {"valor":3}
+  tool consultar_preco -> {"valor":50}
+  tool consultar_preco -> {"valor":900}
+  tool calcular -> {"valor":6450}
+  resposta: Resposta: 6450
+  estrategia=ReAct (LangChain) llm_calls=3 chamadas_tool=5 segundos=60.8 acertou=True
+```

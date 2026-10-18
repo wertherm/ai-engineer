@@ -1,0 +1,664 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Políticas com Fonte · API",
+    "description": "Micro-SaaS que responde dúvidas sobre as políticas internas de pequenas empresas, com citações verificadas. Multi-tenant por API key.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "operacao"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "tags": [
+          "politicas"
+        ],
+        "summary": "Tenant autenticado",
+        "operationId": "me_v1_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tenant"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/documentos": {
+      "get": {
+        "tags": [
+          "politicas"
+        ],
+        "summary": "Lista os documentos indexados",
+        "operationId": "listar_v1_documentos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Documento"
+                  },
+                  "type": "array",
+                  "title": "Response Listar V1 Documentos Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "politicas"
+        ],
+        "summary": "Envia (ou substitui) um documento de política em Markdown",
+        "operationId": "enviar_v1_documentos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Indexado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/documentos/{fonte}": {
+      "delete": {
+        "tags": [
+          "politicas"
+        ],
+        "summary": "Remove um documento (e invalida o cache do tenant)",
+        "operationId": "remover_v1_documentos__fonte__delete",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fonte",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,60}\\.md$",
+              "title": "Fonte"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Removido"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/busca": {
+      "post": {
+        "tags": [
+          "politicas"
+        ],
+        "summary": "Busca híbrida de trechos (sem LLM)",
+        "operationId": "buscar_v1_busca_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuscaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Trecho"
+                  },
+                  "type": "array",
+                  "title": "Response Buscar V1 Busca Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/perguntas": {
+      "post": {
+        "tags": [
+          "politicas"
+        ],
+        "summary": "Responde uma pergunta com citações verificadas",
+        "operationId": "perguntar_v1_perguntas_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerguntaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resposta"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BuscaIn": {
+        "properties": {
+          "consulta": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Consulta"
+          },
+          "k": {
+            "type": "integer",
+            "maximum": 8.0,
+            "minimum": 1.0,
+            "title": "K",
+            "default": 4
+          }
+        },
+        "type": "object",
+        "required": [
+          "consulta"
+        ],
+        "title": "BuscaIn"
+      },
+      "Citacao": {
+        "properties": {
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          },
+          "fonte": {
+            "type": "string",
+            "title": "Fonte"
+          },
+          "trecho": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trecho"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fonte"
+        ],
+        "title": "Citacao"
+      },
+      "Documento": {
+        "properties": {
+          "fonte": {
+            "type": "string",
+            "title": "Fonte"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "chunks": {
+            "type": "integer",
+            "title": "Chunks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fonte",
+          "titulo",
+          "chunks"
+        ],
+        "title": "Documento"
+      },
+      "DocumentoIn": {
+        "properties": {
+          "fonte": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]{1,60}\\.md$",
+            "title": "Fonte",
+            "description": "nome do arquivo, ex.: ferias.md"
+          },
+          "texto": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 20,
+            "title": "Texto",
+            "description": "Markdown: 1ª linha \"# Título\", parágrafos separados por linha em branco"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fonte",
+          "texto"
+        ],
+        "title": "DocumentoIn"
+      },
+      "Erro": {
+        "properties": {
+          "erro": {
+            "type": "string",
+            "title": "Erro"
+          }
+        },
+        "type": "object",
+        "required": [
+          "erro"
+        ],
+        "title": "Erro"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Indexado": {
+        "properties": {
+          "fonte": {
+            "type": "string",
+            "title": "Fonte"
+          },
+          "chunks": {
+            "type": "integer",
+            "title": "Chunks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fonte",
+          "chunks"
+        ],
+        "title": "Indexado"
+      },
+      "PerguntaIn": {
+        "properties": {
+          "pergunta": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Pergunta"
+          },
+          "modo": {
+            "type": "string",
+            "enum": [
+              "rag",
+              "agente"
+            ],
+            "title": "Modo",
+            "description": "agente = várias buscas (perguntas complexas)",
+            "default": "rag"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pergunta"
+        ],
+        "title": "PerguntaIn"
+      },
+      "Removido": {
+        "properties": {
+          "fonte": {
+            "type": "string",
+            "title": "Fonte"
+          },
+          "removidos": {
+            "type": "integer",
+            "title": "Removidos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fonte",
+          "removidos"
+        ],
+        "title": "Removido"
+      },
+      "Resposta": {
+        "properties": {
+          "resposta": {
+            "type": "string",
+            "title": "Resposta"
+          },
+          "modo": {
+            "type": "string",
+            "enum": [
+              "rag",
+              "agente"
+            ],
+            "title": "Modo"
+          },
+          "citacoes": {
+            "items": {
+              "$ref": "#/components/schemas/Citacao"
+            },
+            "type": "array",
+            "title": "Citacoes"
+          },
+          "verificado": {
+            "type": "boolean",
+            "title": "Verificado",
+            "description": "true = toda citação aponta para um trecho recuperado"
+          },
+          "cache": {
+            "type": "boolean",
+            "title": "Cache"
+          },
+          "tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tokens"
+          },
+          "ms": {
+            "type": "integer",
+            "title": "Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resposta",
+          "modo",
+          "citacoes",
+          "verificado",
+          "cache",
+          "ms"
+        ],
+        "title": "Resposta"
+      },
+      "Tenant": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nome": {
+            "type": "string",
+            "title": "Nome"
+          },
+          "plano": {
+            "type": "string",
+            "title": "Plano"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "plano"
+        ],
+        "title": "Tenant"
+      },
+      "Trecho": {
+        "properties": {
+          "fonte": {
+            "type": "string",
+            "title": "Fonte"
+          },
+          "titulo": {
+            "type": "string",
+            "title": "Titulo"
+          },
+          "conteudo": {
+            "type": "string",
+            "title": "Conteudo"
+          },
+          "sim": {
+            "type": "number",
+            "title": "Sim"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fonte",
+          "titulo",
+          "conteudo",
+          "sim"
+        ],
+        "title": "Trecho"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "description": "API key do cliente (tenant)",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "politicas"
+    },
+    {
+      "name": "operacao"
+    }
+  ]
+}

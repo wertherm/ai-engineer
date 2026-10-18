@@ -78,3 +78,51 @@ O HPA aparece com `cpu: <unknown>/70%`: o kind deste repo não tem metrics-serve
 1. Peça a imagem com `:latest` ou porta 80: a validação do formulário reprova antes de chegar ao cluster.
 2. Mude `progressDeadlineSeconds` para 600 em `manifests.js` e veja o rollout da release 2 esperar muito mais.
 3. Troque `maxUnavailable: 0` por `1` e observe que, durante a release quebrada, o serviço perde capacidade.
+
+## Versão Python
+
+Arquivos em [`python/`](python/): `manifests.py` (mesmo formulário e mesmo template; YAML com `yaml.safe_dump_all`),
+`main.py` (mesmo fluxo: LLM em JSON mode → validação → `kubectl apply --dry-run=server` → apply → `rollout status` →
+`rollout undo`) e `test_manifests.py` (pytest, sem cluster). Cliente: `kubectl` por `subprocess` com argv em lista
+(`comum_py/shell.py`), o mesmo que o JS faz com `execFile` — mais simples que a lib `kubernetes` para `apply`,
+`rollout status` e `rollout undo`. Namespace próprio: `m06py-deploy`.
+
+### Como rodar
+
+```bash
+cd modulos/06-ia-devops
+uv sync
+uv run python exemplos/02-agente-de-deploy-kind/python/main.py            # 1 chamada ao LLM
+uv run pytest exemplos/02-agente-de-deploy-kind                            # validação + template, sem cluster
+```
+
+### Saída esperada (Python)
+
+```
+Pedido: Publique o serviço vitrine com a imagem nginxinc/nginx-unprivileged:1.31.6-alpine, 2 réplicas, porta 8080, escalando até 4 réplicas quando a CPU passar de 70%.
+
+[llm      ] tentativa 1, 143.4s: {"nome":"vitrine","imagem":"nginxinc/nginx-unprivileged:1.31.6-alpine","replicas":2,"porta":8080,"maxReplicas":4,"cpuAlvo":70}
+
+== Release 1: versão pedida ==
+[validação] ✓ spec ok (release 1)
+[dry-run  ] ✓ deployment.apps/vitrine created (server dry run) · service/vitrine created (server dry run) · horizontalpodautoscaler.autoscaling/vitrine created (server dry run)
+[apply    ] deployment.apps/vitrine created · service/vitrine created · horizontalpodautoscaler.autoscaling/vitrine created
+[readiness] ✓ pronto em 3s
+[hpa      ] vitrine   Deployment/vitrine   cpu: <unknown>/70%   2     4     2     3s
+
+== Release 2: tag inexistente (falha proposital) ==
+[validação] ✓ spec ok (release 2)
+[dry-run  ] ✓ deployment.apps/vitrine configured (server dry run) · service/vitrine unchanged (server dry run) · horizontalpodautoscaler.autoscaling/vitrine unchanged (server dry run)
+[apply    ] deployment.apps/vitrine configured · service/vitrine unchanged · horizontalpodautoscaler.autoscaling/vitrine unchanged
+[readiness] ✗ não ficou pronto em 60s: error: deployment "vitrine" exceeded its progress deadline
+[evidência] vitrine-79d49f668c-gctvs   <none> | vitrine-79d49f668c-nz5hh   <none> | vitrine-ff7df4745-b8z4w    ErrImagePull
+[rollback ] deployment.apps/vitrine rolled back
+[rollback ] ✓ versão anterior servindo de novo
+[estado   ] release 2 revertida; imagem em produção: nginxinc/nginx-unprivileged:1.31.6-alpine
+[limpeza  ] namespace m06py-deploy removido (use --manter para inspecionar)
+
+1 chamadas ao LLM · 171 tokens de prompt · 49 de resposta · 143.4s no modelo
+```
+
+Mesmo comportamento do JS: o `maxUnavailable: 0` manteve as 2 réplicas antigas servindo (`<none>` = sem espera)
+enquanto o pod novo ficava em `ErrImagePull`, e o rollback devolveu a imagem boa.

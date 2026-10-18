@@ -1,0 +1,18 @@
+[project]
+name = "modulo-12-carreira"
+version = "0.1.0"
+description = "Módulo 12 · Carreira e Entrevistas (versão Python): checklist de README, LinkedIn, STAR/brag, simulador e system design"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "openai==3.33.0",
+    "pytest==9.1.1",
+]
+
+# Projeto próprio do módulo (não é workspace da raiz): rodar tudo a partir desta pasta com `uv run`.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["exemplos", "exercicios"]
+pythonpath = ["."]
+addopts = "-q"

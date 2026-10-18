@@ -72,3 +72,54 @@ O que observar:
 2. Troque o orçamento para reserva atômica: `UPDATE ... SET gasto = gasto + $1 WHERE gasto + $1 <= limite`
    numa tabela de saldos, e rode 2 processos ao mesmo tempo.
 3. Adicione um alerta por **taxa** de gasto (US$/min acima do normal), que pega o loop antes dos 80%.
+
+## Versão Python
+
+Arquivos em `python/`: `custos.py` (lê o MESMO `premissas.json` desta pasta) e `orcamento.py` (psycopg 3,
+tabela `m10.uso_llm_py` para não colidir com a `m10.uso_llm` do JS).
+
+### Como rodar
+
+```bash
+cd modulos/10-seguranca-e-governanca
+uv sync
+uv run python exemplos/05-custos-e-orcamento/python/custos.py               # mesmos números do JS
+uv run python exemplos/05-custos-e-orcamento/python/custos.py minhas.json   # com as suas premissas
+uv run python exemplos/05-custos-e-orcamento/python/orcamento.py
+uv run python exemplos/05-custos-e-orcamento/python/orcamento.py --com-cota
+```
+
+### Saída esperada (Python)
+
+`custos.py` (real, 2026-10-17): **idêntica byte a byte** à do JS acima (`diff` vazio), incluindo
+`630.000 chamadas/mês`, `TOTAL US$ 1506.96 (R$ 8288)` e `Ponto de equilíbrio: ~88.257 chamadas/dia (4.4x o volume atual)`.
+Para isso: `toFixed` → `to_fixed` (Decimal + ROUND_HALF_UP), `Math.round` → `floor(x + 0.5)` e
+`toLocaleString('pt-BR')` → `fmt` (helpers em `comum_py/formato.py`).
+
+`orcamento.py` (real, 2026-10-17):
+
+```
+Cenário: orçamento por feature (sem cota por usuário)
+chamada 1330: ALERTA    gasto US$ 4.0019 (80% do orçamento)
+chamada 1458: BLOQUEADO gasto US$ 5.0013 (100% do orçamento)
+
+Chamadas bloqueadas pelo orçamento da feature: 543 (181 de clientes legítimos) · barradas pela cota do usuário: 0
+Quem mais gastou hoje (por feature e usuário):
+  suporte  u-loop    172 chamadas  US$ 1.7888
+  suporte  u-31       26 chamadas  US$ 0.0650
+  suporte  u-49       26 chamadas  US$ 0.0650
+Orçamento suporte : US$ 5.0013 de 5.00 -> BLOQUEADO
+Orçamento resumo  : US$ 0.0046 de 2.00 -> ok
+----
+Cenário: orçamento por feature + cota por usuário
+
+Chamadas bloqueadas pelo orçamento da feature: 0 (0 de clientes legítimos) · barradas pela cota do usuário: 509
+Quem mais gastou hoje (por feature e usuário):
+  suporte  u-loop     25 chamadas  US$ 0.2600
+  ...
+Orçamento suporte : US$ 3.9250 de 5.00 -> ok
+Orçamento resumo  : US$ 0.0046 de 2.00 -> ok
+```
+
+Mesmos números do JS. A conexão usa `autocommit=True`: sem isso o psycopg abre uma transação implícita e o
+script inteiro (2.000 INSERTs) só seria gravado no fim, ao sair do `with`.

@@ -81,3 +81,63 @@ Como ler:
 1. Adicione um 4º pod `Pending` (peça `requests.memory: 64Gi`) e uma categoria `Unschedulable`; veja se o agente acerta.
 2. Tire o filtro de `descrever_pod` e devolva o `kubectl describe` inteiro: compare tokens de prompt e tempo.
 3. Troque a ordem do prompt ("chame logs_pod primeiro") e observe o agente tentando ler log de um container que nunca rodou.
+
+## Versão Python
+
+Arquivos em [`python/`](python/): `ferramentas.py` (mesma toolbox read-only `descrever_pod`/`logs_pod`, mesmo schema de
+function calling e mesmo baseline por regras) e `main.py` (mesmo loop ReAct com guarda anti-loop e orçamento de
+3 passos). Os pods quebrados vêm do **mesmo** [`pods-quebrados.yaml`](pods-quebrados.yaml), aplicado no namespace
+`m06py-troubleshoot`. A mensagem do assistente com `tool_calls` volta ao histórico com `msg.model_dump(exclude_none=True)`.
+
+### Como rodar
+
+```bash
+cd modulos/06-ia-devops
+uv run python exemplos/03-troubleshooting-react/python/main.py      # ~10 chamadas ao LLM
+uv run python exemplos/03-troubleshooting-react/python/main.py --manter
+```
+
+### Saída esperada (Python)
+
+```
+Aguardando os pods falharem (60 s)...
+NAME         READY   STATUS         RESTARTS      AGE
+catalogo     0/1     ErrImagePull   0             60s
+checkout     0/1     Error          3 (47s ago)   60s
+relatorios   0/1     OOMKilled      3 (42s ago)   60s
+
+── checkout (gabarito: CrashLoopBackOff)
+   [ação 1] descrever_pod({"nome": "checkout"}) 41s → 534 chars
+   [ação 2] logs_pod({"nome": "checkout"}) 125s → 81 chars
+   [ação 3] descrever_pod repetida → lembrete para concluir
+   regra    : CrashLoopBackOff ✓
+   agente   : Outro ✗
+   causa    : O container falha ao iniciar devido à variável de ambiente DATABASE_URL não estar definida.
+   correção : Adicione a variável de ambiente DATABASE_URL no deployment do pod checkout.
+
+── catalogo (gabarito: ImagePullBackOff)
+   [ação 1] descrever_pod({"nome": "catalogo"}) 81s → 707 chars
+   [ação 2] logs_pod({"nome": "catalogo"}) 52s → 74 chars
+   [resposta] 56s
+   regra    : ImagePullBackOff ✓
+   agente   : ImagePullBackOff ✓
+   causa    : O pod está tentando puxar uma imagem que não existe no registro Docker.
+   correção : Verifique o nome da imagem e a tag no deployment ou service para garantir que eles estão corretos.
+
+── relatorios (gabarito: OOMKilled)
+   [ação 1] descrever_pod({"nome": "relatorios"}) 39s → 558 chars
+   [ação 2] logs_pod({"nome": "relatorios"}) 29s → 29 chars
+   [ação 3] descrever_pod repetida → lembrete para concluir
+   regra    : OOMKilled ✓
+   agente   : OOMKilled ✓
+   causa    : O container foi matado por excesso de memória devido ao limite de 32Mi ser insuficiente para a execução do script de geração de relatórios.
+   correção : Aumente o limite de memória no Deployment para pelo menos 128Mi ou verifique se o script pode ser otimizado.
+
+Acerto da categoria: agente 2/3 · regras 3/3
+Namespace m06py-troubleshoot removido (use --manter para inspecionar).
+11 chamadas ao LLM · 6844 tokens de prompt · 432 de resposta · 699.2s no modelo
+```
+
+Mesmo acerto medido do JS (**agente 2/3 · regras 3/3**) e o mesmo erro: no `checkout` o agente acertou causa e
+correção (`DATABASE_URL`), mas classificou como `Outro`. A guarda anti-loop disparou em 2 dos 3 pods. Desta vez a
+fila do Ollama estava mais livre: 699 s no modelo contra 9.456 s da execução JS.

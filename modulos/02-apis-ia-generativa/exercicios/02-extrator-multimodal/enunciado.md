@@ -62,3 +62,42 @@ O campo que "errou" no caminho de visão é o `recebedor`: o documento diz `Imob
 modelo **corrigiu** para `Imobiliária`. Modelos de visão tendem a normalizar o que leem; se você precisa da
 cópia literal (auditoria, conciliação), compare sem acentos (`normalize("NFD")`) ou valide contra um cadastro.
 Note também que o OCR do recibo ruim "lia" `R$ 2:856,00` — se a confiança baixa virasse dado, o valor sairia errado.
+
+## Versão Python
+
+[`solucao/python/extrator.py`](solucao/python/extrator.py) reaproveita o OCR e o `imagem_data_uri` do
+[exemplo 05 em Python](../../exemplos/05-documentos-ocr-e-visao/python/) e os **mesmos PNGs** do JS
+(`gerar-recibos.js` não foi portado: as imagens são as mesmas).
+
+**O limiar mudou, e esse é o ponto do exercício.** O OCR Python (RapidOCR, sem binário de sistema) lê o
+recibo ruim **muito melhor** que o tesseract.js: confiança média 94, contra 29. Com o limiar 70 do JS, o
+recibo ruim iria pelo caminho barato — com `Carlos Angrade` lido na linha do pagador. Por isso a versão
+Python decide pela **pior linha** (não pela média) com limiar **95**, calibrado medindo os dois recibos
+(nítido: pior linha 98; ruim: 92). Confiança de OCR não é uma escala universal: trocou o motor, recalibre.
+
+### Como rodar
+
+```bash
+cd modulos/02-apis-ia-generativa
+uv run python exercicios/02-extrator-multimodal/solucao/python/extrator.py     # ~2 min em CPU
+```
+
+### Saída esperada (Python)
+
+```
+[recibo-nitido.png]
+  · {"passo": "ocr", "confianca": 99, "pior_linha": 98}
+  · {"etapa": "recibo_ocr", "tentativa": 1, "ms": 64859, "tokens": 193}
+  via=ocr · 71.4 s · 4/4 campos certos
+   {"pagador": "Carlos Andrade", "recebedor": "Imobiliaria Modelo", "valor": 1850.0, "referencia": "2026-09"}
+
+[recibo-ruim.png]
+  · {"passo": "ocr", "confianca": 94, "pior_linha": 92}
+  · {"passo": "fallback", "motivo": "pior linha do OCR 92 < 95"}
+  · {"etapa": "recibo_visao", "tentativa": 1, "ms": 45934, "tokens": 231}
+  via=visao · 49.2 s · 3/4 campos certos
+   {"pagador": "Carlos Andrade", "recebedor": "Imobiliária Modelo", "valor": 1850.0, "referencia": "2026-09"}
+```
+
+Critério de pronto atendido: nítido → `ocr` com 4/4; ruim → `fallback` com motivo logado → `visao` (com o
+mesmo "erro" de acento do JS no `recebedor`).

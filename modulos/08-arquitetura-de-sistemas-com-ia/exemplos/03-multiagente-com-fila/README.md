@@ -59,3 +59,51 @@ foi para a DLQ e ficou **consultável** na tabela, sem travar a fila.
 1. No cenário 1, troque `instavel(agentes.fraude, 2)` por `instavel(agentes.fraude, 5)` e veja a mensagem ir para `fila.dlq`.
 2. Rode dois processos consumindo a `FilaPostgres` ao mesmo tempo: o `SKIP LOCKED` garante que nenhum pedido é processado duas vezes.
 3. Implemente **Handoff**: o redator, em vez de devolver parecer, publica no tópico `analista-humano` quando o risco é alto.
+
+## Versão Python
+
+[`python/agentes.py`](python/agentes.py) (agentes + `com_resiliencia` com `asyncio.wait_for`),
+[`python/fila.py`](python/fila.py) (`FilaMemoria` com `asyncio` e `FilaPostgres` com psycopg 3 assíncrono:
+`conn.notifies()` + `FOR UPDATE SKIP LOCKED`), [`python/main.py`](python/main.py) e
+[`python/test_resiliencia.py`](python/test_resiliencia.py). A fila durável usa a tabela `m08.mensagens_py` e canais
+`py_<tópico>`, para não colidir com o JS. Diferença de semântica: o `asyncio.wait_for` **cancela** a tentativa que
+estourou o timeout; no JS o `Promise.race` só a abandona (ela continua rodando em segundo plano).
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exemplos/03-multiagente-com-fila/python/main.py   # ~7 s, sem LLM (3 s de espera no cenário 4)
+uv run pytest -vv exemplos/03-multiagente-com-fila              # 3 testes
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+== 1. Sequential (fila em memória): extrator -> risco -> fraude -> redator ==
+  Padaria Sol: APROVADO
+  ACME: ENCAMINHAR PARA ANALISTA
+  tempo total: 183 ms · DLQ: 0 mensagens
+
+== 2. Parallel (fan-out/fan-in): risco e fraude ao mesmo tempo ==
+  fraude: tentativa 1/2 falhou (timeout 100 ms)
+  fraude: tentativa 2/2 falhou (timeout 100 ms)
+  risco=alto fraude=indisponivel (resultado parcial, degradação graciosa)
+  ACME: ENCAMINHAR PARA ANALISTA · 277 ms
+
+== 3. Supervisor: decide o próximo agente a partir do estado ==
+  extrator -> risco -> redator => Padaria Sol: APROVADO
+  fraude: tentativa 1/3 falhou (falha simulada #1)
+  extrator -> risco -> fraude -> redator => ACME: ENCAMINHAR PARA ANALISTA
+
+== 4. Sequential sobre fila DURÁVEL no Postgres (LISTEN/NOTIFY, m08.mensagens_py) ==
+  extrator  feito     tentativas=1
+  risco     feito     tentativas=1
+  redator   dlq       tentativas=2 redator fora do ar
+```
+
+```text
+exemplos/03-multiagente-com-fila/python/test_resiliencia.py::test_retry_recupera_agente_que_falha_2_vezes PASSED
+exemplos/03-multiagente-com-fila/python/test_resiliencia.py::test_timeout_interrompe_agente_travado_e_esgota_tentativas PASSED
+exemplos/03-multiagente-com-fila/python/test_resiliencia.py::test_fila_em_memoria_manda_para_dlq_depois_de_max_tentativas PASSED
+3 passed in 0.73s
+```

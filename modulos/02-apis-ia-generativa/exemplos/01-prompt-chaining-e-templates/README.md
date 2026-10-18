@@ -56,3 +56,47 @@ Ao incluir `{{prazo}}` no template, o teste `monta system + user` quebrou com
 2. Remova `prazo` do template `classificar` e veja a urgência mudar.
 3. Troque `max_tokens` do elo 1 para `20`: o JSON sai cortado, a validação falha e o `chamarEstruturado`
    faz a 2ª tentativa (e também falha). É o erro "JSON inválido" das [armadilhas do doc 02](../../docs/02-consistencia-e-custo.md#armadilhas).
+
+## Versão Python
+
+Mesma corrente em [`python/`](python/): [`templates.py`](python/templates.py) (mesmos textos e versões),
+[`main.py`](python/main.py) com modelos **pydantic** no lugar dos schemas zod e
+[`test_templates.py`](python/test_templates.py) (pytest). A chamada estruturada com retry e feedback está em
+[`comum_py/estruturado.py`](../../comum_py/estruturado.py): o schema vai no `response_format` (gerado por
+`Modelo.model_json_schema()`) e a validação é `Modelo.model_validate_json(texto)`.
+
+Por que não `client.chat.completions.parse(response_format=Modelo)`? Ele também existe no SDK Python e faz o
+mesmo envio + validação, mas quando a validação falha ele **levanta a exceção** e você não tem o texto bruto
+para devolver ao modelo como feedback. Para o retry com feedback, `create` + pydantic é mais simples.
+
+### Como rodar
+
+```bash
+cd modulos/02-apis-ia-generativa
+uv sync
+uv run python exemplos/01-prompt-chaining-e-templates/python/main.py      # ou: ... main.py "seu texto"
+uv run pytest exemplos/01-prompt-chaining-e-templates
+```
+
+### Saída esperada (Python)
+
+Saída real (`qwen3.5:4b` em CPU, 3 min 25 s com o Ollama compartilhado) — o JSON de cada elo saiu
+idêntico ao da versão JS (mesmo `seed`, `temperature: 0` e prompts):
+
+```
+Entrada: Comprei um fone Bluetooth (pedido 48213) e ele chegou sem o cabo de carga. Preciso dele para uma viagem na sexta!
+
+[1] extrair-reclamacao v3
+  · {"etapa": "extracao", "tentativa": 1, "ms": 163130, "tokens": 149}
+  → {"produto":"fone Bluetooth","problema":"chegou sem o cabo de carga","pedido":"48213","prazo":"viagem na sexta"}
+[2] classificar-urgencia v3
+  · {"etapa": "classificacao", "tentativa": 1, "ms": 16999, "tokens": 112}
+  → {"urgencia":"media","justificativa":"Cliente tem prazo curto (viagem sexta), mas não há risco financeiro imediato."}
+[3] responder-cliente v1
+  → Lamentamos que seu pedido 48213 tenha chegado sem o cabo de carga e já estamos verificando a situação com prioridade. Entraremos em contato em breve para informar os próximos passos sobre a reposição do item faltante.
+```
+
+```
+$ uv run pytest exemplos/01-prompt-chaining-e-templates
+3 passed in 0.02s
+```

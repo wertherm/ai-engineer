@@ -48,3 +48,37 @@ esquecimento (está nos projetos): é só adicionar às skills. A checagem "núm
 1. Cole a sua headline e o seu "Sobre" em `perfil.json` e uma vaga real em `vaga.txt`.
 2. Adicione termos ao dicionário `TERMOS` (ex.: `Bedrock`, `Vertex AI`) conforme as vagas que você mira.
 3. Rode `node --test exemplos/02-perfil-linkedin/` e escreva um teste para a checagem de clichês.
+
+## Versão Python
+
+`python/analisar.py` + `python/test_analisar.py` (pytest). Lê os mesmos `perfil.json` e `vaga.txt`.
+
+### Como rodar
+
+```bash
+cd modulos/12-carreira
+uv run python exemplos/02-perfil-linkedin/python/analisar.py
+uv run pytest exemplos/02-perfil-linkedin/
+```
+
+### Saída esperada (Python)
+
+Saída real (2026-10-17), encurtada; idêntica à do JS (`diff` vazio):
+
+```text
+== ANTES ==
+headline: 87/220 car. · cargo nos 60 visíveis: NÃO · clichês: 3
+sobre: 189/2600 car. · número no gancho: sim · projetos listados: 0 · chamada para ação: NÃO
+palavras-chave da vaga: 20% (3/15)
+...
+== DEPOIS ==
+headline: 101/220 car. · cargo nos 60 visíveis: sim · clichês: 0
+sobre: 883/2600 car. · número no gancho: sim · projetos listados: 4 · chamada para ação: sim
+palavras-chave da vaga: 87% (13/15)
+  faltando: Docker, Fine-tuning
+...
+  semana 4 · demo: GIF de 20 s + link do repo · "Portão de promoção: CI/CD para prompt e modelo com exit 0/1"
+```
+
+Atenção: `len()` do Python conta code points; o `.length` do JS conta unidades UTF-16. Com emoji na
+headline (fora do BMP), o JS conta 2 por emoji e o Python 1. Os textos daqui não têm emoji, então batem.

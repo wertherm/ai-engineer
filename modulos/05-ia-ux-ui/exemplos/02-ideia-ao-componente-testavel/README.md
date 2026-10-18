@@ -103,3 +103,69 @@ aceitação escrito a partir da spec é o que decide.
 3. Use o [`gemini/GEMINI.md`](gemini/GEMINI.md) num projeto seu e rode
    `gemini -p "implemente @spec.md e os testes; rode node --test até passar" --approval-mode auto_edit`
    (exige login no Gemini CLI).
+
+## Versão Python
+
+O componente continua **JavaScript** (é código de navegador; portar para Python não faria sentido). O que vira
+Python é a orquestração e o portão de testes:
+
+| Arquivo | Papel |
+|---|---|
+| [`python/main.py`](python/main.py) | Mesmo prompt do componente (gera `python/gerado/paginacao.js`); o 2º prompt pede **testes pytest** que usam a fixture `renderizar`; roda os dois conjuntos num subprocesso `pytest` |
+| [`python/conftest.py`](python/conftest.py) | Fixture `renderizar(args)`: carrega o `.js` como ES module no Chrome headless (Playwright **sync**) e chama `renderPaginacao` por `page.evaluate`; `COMPONENTE` escolhe o arquivo (default: a correção humana) |
+| [`../../comum_py/componente_js.py`](../../comum_py/componente_js.py) | Ponte pytest → JS: `import()` de uma `data:` URL e `ErroJS` com `.nome` (`RangeError`...) |
+| [`python/test_aceitacao.py`](python/test_aceitacao.py) | O portão humano em pytest (4 testes; o de `RangeError` é parametrizado em 4 casos) |
+| [`python/execucao-registrada/`](python/execucao-registrada/) | O teste pytest que o LLM escreveu na execução abaixo |
+
+Os testes gerados (`python/gerado/`) ficam fora da coleta padrão (`collect_ignore_glob`): o `main.py` os roda com
+`TESTES_LLM=1`. Assim `uv run pytest` testa só o portão contra a correção humana.
+
+**Como rodar** (da pasta do módulo):
+
+```bash
+uv run python exemplos/02-ideia-ao-componente-testavel/python/main.py      # 2 chamadas ao LLM; sai com código 1 (de propósito)
+uv run pytest exemplos/02-ideia-ao-componente-testavel/python -vv          # aceitação x correção humana (sem LLM)
+COMPONENTE=execucao-registrada/paginacao.gerado.js uv run pytest exemplos/02-ideia-ao-componente-testavel/python
+```
+
+**Saída esperada (Python)** (saída real):
+
+```
+[componente] 146s, 219 tokens -> gerado/paginacao.js
+[teste do LLM] 127s, 627 tokens -> gerado/test_paginacao.py
+
+== testes gerados pelo LLM: pass 0, fail 4, erro 0
+FAILED exemplos/02-ideia-ao-componente-testavel/python/gerado/test_paginacao.py::test_render_paginacao_valida
+FAILED exemplos/02-ideia-ao-componente-testavel/python/gerado/test_paginacao.py::test_render_paginacao_primeira_pagina
+FAILED exemplos/02-ideia-ao-componente-testavel/python/gerado/test_paginacao.py::test_render_paginacao_ultima_pagina
+FAILED exemplos/02-ideia-ao-componente-testavel/python/gerado/test_paginacao.py::test_render_paginacao_invalida
+
+== testes de aceitação (humanos): pass 6, fail 1, erro 0
+FAILED exemplos/02-ideia-ao-componente-testavel/python/test_aceitacao.py::test_so_a_pagina_atual_tem_aria_current
+
+Resultado: testes do LLM FALHARAM; aceitação REPROVADA (veja a seção "Correção humana" do README)
+```
+
+Aceitação contra a correção humana (saída real):
+
+```
+test_nav_com_aria_label_e_um_link_por_pagina PASSED [ 14%]
+test_so_a_pagina_atual_tem_aria_current PASSED [ 28%]
+test_anterior_desabilitado_na_primeira_e_proxima_na_ultima PASSED [ 42%]
+test_range_error_para_entradas_invalidas[{"paginaAtual": 0, "totalPaginas": 3}] PASSED [ 57%]
+test_range_error_para_entradas_invalidas[{"paginaAtual": 4, "totalPaginas": 3}] PASSED [ 71%]
+test_range_error_para_entradas_invalidas[{"paginaAtual": 1.5, "totalPaginas": 3}] PASSED [ 85%]
+test_range_error_para_entradas_invalidas[{"paginaAtual": 1, "totalPaginas": 0}] PASSED [100%]
+============================== 7 passed in 2.24s ===============================
+```
+
+O que aconteceu:
+
+- **Componente:** byte a byte igual ao da execução registrada do JS (mesmo prompt, `temperature=0`, `seed=42`):
+  sem `aria-current` e botões fora do `<nav>`. O portão pytest reprovou pelo mesmo motivo que o `node:test`.
+- **Teste do LLM** ([`python/execucao-registrada/test_paginacao.gerado.py.txt`](python/execucao-registrada/test_paginacao.gerado.py.txt)):
+  mesmo com "a fixture JÁ EXISTE, não a defina" e "NÃO crie mock", o modelo **definiu a própria fixture `renderizar`**,
+  reimplementando a paginação em Python (um mock, de novo), e os testes a chamaram direto em vez de recebê-la como
+  parâmetro: `Fixture "renderizar" called directly. Fixtures are not meant to be called directly`. Ainda esperava
+  `disabled="true"` nos dois botões, o que contradiz a spec. Ou seja: o erro do JS (testar um mock) voltou com outra
+  roupa, e o portão humano continua sendo o que decide.

@@ -1,6 +1,6 @@
 # Model card · Triagem de câncer de mama (regressão logística)
 
-Gerado por `model_card.py` em 2026-10-16 (scikit-learn, `random_state=42`).
+Gerado por `model_card.py` em 2026-10-17 (scikit-learn, `random_state=42`).
 
 ## Detalhes do modelo
 - Tipo: `StandardScaler` + `LogisticRegression(C=1.0)`; 30 atributos numéricos de imagens de punção (FNA).

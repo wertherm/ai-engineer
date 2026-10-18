@@ -72,3 +72,56 @@ O que observar:
 2. Crie um ciclo (T1 dependendo de T6) e confira o erro `Ciclo de dependências detectado`.
 3. Troque `throughputSemanalHistorico` por números do seu time (itens fechados por semana no Monday/Jira)
    e compare o P85 com a data que foi prometida.
+
+## Versão Python
+
+Pasta [`python/`](python/): `cronograma.py` (Kahn, CPM, triangular, Monte Carlo), `main.py` e
+`test_cronograma.py`. O `mulberry32` foi portado bit a bit: o Python tem inteiros sem limite, então cada
+passo é recortado em 32 bits (`& 0xFFFFFFFF`), `Math.imul` vira multiplicação mascarada com sinal e `>>>`
+vira `(x & 0xFFFFFFFF) >> n`. Com a mesma semente e a mesma ordem de sorteios, os percentis saem
+**idênticos ao JS até o último dígito** (há um teste que confere `14.555358611650355`, `16.46508020144106`
+e `17.616741258077038`, os valores impressos pelo Node).
+
+### Como rodar
+
+```bash
+cd modulos/07-ia-gestao-de-projetos
+uv run python exemplos/03-cronograma-monte-carlo/python/main.py   # ~1 s
+uv run pytest exemplos/03-cronograma-monte-carlo/python
+```
+
+### Saída esperada (Python)
+
+Saída real:
+
+```text
+== CPM com duração provável (dias úteis) ==
+│ tarefa │ ES │ EF │ folga │
+├────────┼────┼────┼───────┤
+│ T1     │ 0  │ 5  │ 0     │
+│ T2     │ 0  │ 3  │ 4     │
+│ T5     │ 0  │ 8  │ 1     │
+│ T3     │ 5  │ 9  │ 0     │
+│ T4     │ 5  │ 7  │ 2     │
+│ T6     │ 9  │ 12 │ 0     │
+Caminho crítico: T1 → T3 → T6 | fim em 12 dias (2026-11-18)
+
+Carga em dias de calendário: ana=9 · bruno=8 · carla=8
+
+== Monte Carlo (10.000 cenários, durações triangulares) ==
+P50=14.6d (2026-11-23) · P85=16.5d (2026-11-25) · P95=17.6d
+% de cenários em que a tarefa foi crítica: T1=66% T2=0% T3=64% T4=2% T5=33% T6=100%
+(percentis exatos: P50=14.555358611650355 P85=16.46508020144106 P95=17.616741258077038)
+
+What-if "T4 não depende de T1": P85 16.5d → 16.5d (T4 quase nunca é crítica: mexer nela não adianta)
+What-if "carla em tempo integral": P85 16.5d → 16.1d
+
+== Backlog de 28 itens pelo throughput histórico ==
+P50=6 semanas · P85=7 semanas · P95=8 semanas
+Alvo 5 semanas estoura no P85: sugerido cortar o escopo para ~19 itens (média 4.7/semana).
+```
+
+```text
+......                                                                   [100%]
+6 passed
+```

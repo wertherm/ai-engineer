@@ -53,6 +53,10 @@ num fluxo de atendimento — com um domínio só do começo ao fim: triagem de t
 | torch (CPU, `+cpu`, wheel cp314) | 2.14.1 |
 | transformers · peft · datasets | 5.20.1 · 0.21.2 · 5.1.0 |
 | accelerate · safetensors | 1.15.0 · 0.8.0 |
+| versão Python dos exemplos JS: openai · tiktoken · psycopg[binary] · fastapi · uvicorn · pytest | 3.33.0 · 0.14.0 · 3.3.6 · 0.143.3 · 0.54.0 · 9.1.1 |
+
+- `uv` também roda a **versão Python** dos exemplos JS (pastas `python/` + [`comum_py/`](comum_py/)); o `tiktoken`
+  guarda o `o200k_base` em `.venv/tiktoken/`.
 
 ## Como rodar
 
@@ -78,6 +82,26 @@ uv run python exercicios/01-melhorar-dataset/solucao/comparar.py
 node exercicios/02-decision-framework/solucao/decidir.js
 ```
 
+Versão Python dos exemplos JS (mesmo `uv sync`; o exemplo 01 grava em `dados/python/`, idêntico byte a byte a `dados/`):
+
+```bash
+uv run python exemplos/01-preparacao-de-dataset/python/gerar_brutos.py
+uv run python exemplos/01-preparacao-de-dataset/python/preparar.py
+uv run python exemplos/01-preparacao-de-dataset/python/validar_jsonl.py dados/python/treino.jsonl dados/python/validacao.jsonl
+uv run pytest
+uv run python exemplos/02-fine-tuning-openai-api/python/estimar_custo.py
+uv run python exemplos/02-fine-tuning-openai-api/python/fine_tune_openai.py            # dry-run
+uv run python exemplos/02-fine-tuning-openai-api/python/mock_openai.py &               # porta 30951; anote o PID
+OPENAI_BASE_URL=http://localhost:30951/v1 OPENAI_API_KEY=sk-mock POLL_MS=200 \
+  uv run python exemplos/02-fine-tuning-openai-api/python/fine_tune_openai.py --executar
+kill <PID>
+uv run python exemplos/04-avaliacao-ab/servidor_openai.py &                            # anote o PID
+uv run python exemplos/04-avaliacao-ab/python/avaliar.py
+uv run python exemplos/05-projeto-final-triagem/python/agente.py                       # grava em m09.atendimentos_py
+kill <PID>
+uv run python exercicios/02-decision-framework/solucao/python/decidir.py
+```
+
 ## Status de verificação
 
 Executado em 2026-10-16/17, CPU de 8 núcleos sem GPU, ~2–4 GB de RAM livres, Ollama disputado por outros processos.
@@ -95,6 +119,13 @@ Executado em 2026-10-16/17, CPU de 8 núcleos sem GPU, ~2–4 GB de RAM livres, 
 | Ollama `ADAPTER`/import do modelo fundido | ⚠️ não executado — `ADAPTER` removido do Ollama (PR #14969); import do modelo fundido não testado para não sobrecarregar o Ollama compartilhado |
 | Exercício 01 · ruidoso × limpo (34,8% → 43,5%, 1 época cada) | ✅ executado (variantes em processos separados) |
 | Exercício 02 · decision framework | ✅ executado |
+| **Python** · exemplo 01 (gerador, preparação, validador, 7 testes pytest) | ✅ executado — 456 brutos → 178/46, arquivos idênticos aos do JS |
+| **Python** · exemplo 02 (custo, dry-run, fluxo contra mock FastAPI e contra o mock JS) | ✅ executado — mesmos números do JS |
+| **Python** · exemplo 02 contra a OpenAI real | ⚠️ não executado localmente — mesmo motivo do JS |
+| **Python** · exemplo 03 e exercício 01 | ✅ já eram Python |
+| **Python** · exemplo 04 (`avaliar.py`) | ✅ executado — acurácia LoRA 0,674, igual ao JS |
+| **Python** · exemplo 05 (`agente.py`, `m09.atendimentos_py`) | ✅ executado (2 tickets) |
+| **Python** · exercício 02 (`decidir.py`) | ✅ executado — saída idêntica à do JS |
 
 ## Fontes
 

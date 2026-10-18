@@ -1,0 +1,28 @@
+[project]
+name = "modulo-03-mcp"
+version = "1.0.0"
+description = "Módulo 03 (versão Python): servidores e clients MCP com o SDK oficial mcp 2.x"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "mcp==2.3.0",
+    "openai==3.33.0",
+    "psycopg[binary]==3.3.6",
+    "starlette==1.8.0",
+    "uvicorn==0.54.0",
+    "httpx2==2.13.1",
+    "pytest==9.1.1",
+]
+
+# Projeto próprio do módulo (não é workspace da raiz). É "pacote" só para instalar `comum_py`
+# em modo editável: assim qualquer script em exemplos/*/python/ faz `from comum_py import ...`.
+[build-system]
+requires = ["uv_build==0.13.1"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "comum_py"
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["exemplos", "exercicios"]
+addopts = "-q"

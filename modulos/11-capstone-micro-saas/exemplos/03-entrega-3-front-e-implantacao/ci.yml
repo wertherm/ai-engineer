@@ -21,6 +21,18 @@ jobs:
       - run: npm run lint
       - run: npm test                      # unitários + contrato REST/MCP com dublês (sem LLM, ~5 s)
 
+  api-python:
+    # Versão Python do back-end (app_py/): lint com ruff + pytest (unitários e contrato REST/MCP com dublês).
+    # Localmente: bash exemplos/03-entrega-3-front-e-implantacao/python/ci-local.sh
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with: { version: 0.13.1, enable-cache: true }
+      - run: uv sync --frozen               # o uv baixa o Python 3.14 se o runner não tiver
+      - run: uv run ruff check .
+      - run: uv run pytest                 # testes de integração/LLM ficam pulados sem INTEGRACAO=1
+
   web:
     runs-on: ubuntu-24.04
     defaults: { run: { working-directory: app/web } }
@@ -32,11 +44,12 @@ jobs:
       - run: npx ng build
 
   imagens:
-    needs: [api, web]
+    needs: [api, api-python, web]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - run: docker build -t m11-politicas-api:${{ github.sha }} -f app/Dockerfile .
+      - run: docker build -t m11-politicas-api-py:${{ github.sha }} -f app_py/Dockerfile .
       - run: docker build -t m11-politicas-web:${{ github.sha }} app/web
 
   deploy:

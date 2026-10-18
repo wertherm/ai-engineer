@@ -74,3 +74,43 @@ Sprint 6 (controle): 0 risco(s)
 
 Repare: "entregue = 18" **não** passou do limiar de anomalia (as sprints 9–11 já vinham caindo e
 puxaram a mediana), mas a **tendência** pegou. Anomalia e tendência se complementam.
+
+## Versão Python
+
+Solução em [`solucao/python/`](solucao/python/): `detector.py` (usa `statistics.median`), `main.py` e
+`test_detector.py` (pytest). Lê o mesmo `historico-sprints.json`. As evidências usam `to_fixed`/`js_round`
+de [`comum_py/js.py`](../../comum_py/js.py) para imprimir exatamente como o `toFixed`/`Math.round` do JS.
+
+### Como rodar
+
+```bash
+cd modulos/07-ia-gestao-de-projetos
+uv run python exercicios/01-detector-risco-cronograma/solucao/python/main.py
+uv run pytest exercicios/01-detector-risco-cronograma/solucao/python
+```
+
+### Saída esperada (Python)
+
+Saída real (idêntica à do JS):
+
+```text
+Analisando sprint 12 contra 11 sprints anteriores
+
+[ALTA] risco de escopo
+   evidência: escopoAdicionado=9 é anômalo (z robusto 4.0)
+   evidência: escopo adicionado = 30% do planejado (limite 20%)
+   mitigação: Congelar escopo da sprint; mudanças entram só pelo PO via change request priorizado.
+[ALTA] risco de recursos
+   evidência: horasExtras=21 é anômalo (z robusto 5.4)
+   mitigação: Limitar horas extras, redistribuir carga e checar dependência de uma única pessoa.
+[MEDIA] risco de cronograma
+   evidência: taxa de entrega caindo -7.8 p.p./sprint nas últimas 4
+   mitigação: Replanejar com previsão Monte Carlo (P85) e negociar corte de escopo ou nova data.
+
+Sprint 6 (controle): 0 risco(s)
+```
+
+```text
+....                                                                     [100%]
+4 passed
+```

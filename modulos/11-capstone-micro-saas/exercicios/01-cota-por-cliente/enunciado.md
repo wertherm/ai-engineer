@@ -52,3 +52,35 @@ Saída real de `npm run exe01`:
  ✓ exercicios/01-cota-por-cliente/solucao/cota.test.js > contador no Postgres > incremento atômico com 20 requisições simultâneas 159ms
       Tests  5 passed (5)
 ```
+
+## Versão Python
+
+[`solucao/python/cota.py`](solucao/python/cota.py) e [`solucao/python/test_cota.py`](solucao/python/test_cota.py),
+sobre a API FastAPI de [`app_py/`](../../app_py/). Mesma separação: `ContadorMemoria` (relógio injetável) e
+`ContadorPg` (UPSERT atômico em `m11.uso_diario_py`) com a interface `incrementar`/`consultar`, e o gancho
+`cota_diaria(contador)` para o `build_app(..., ganchos=[...])`, sem alterar `app_py/api.py`.
+
+O gancho recebe o `APIRouter` de `/v1` (já autenticado pela guarda ASGI: `request.state.tenant` existe),
+acrescenta uma **dependência** que só age em `POST /v1/perguntas` e registra `GET /v1/uso`. Uma diferença de
+framework: no Fastify o `preHandler` roda **depois** da validação; no FastAPI as dependências rodam antes de o
+erro de validação ser levantado. Por isso a dependência valida o corpo com `PerguntaIn` antes de contar — um
+pedido inválido (400) não consome cota (o teste confere). Para ligar na API de verdade, crie o contador no
+lifespan (`await criar_contador_pg(pool)`) e passe `ganchos=[cota_diaria(contador)]`.
+
+Como rodar:
+
+```bash
+cd modulos/11-capstone-micro-saas
+INTEGRACAO=1 uv run pytest exercicios/01-cota-por-cliente -v
+```
+
+Saída real (o último teste dispara 20 `incrementar` simultâneos com `asyncio.gather` sobre um pool de 5 conexões):
+
+```
+exercicios/01-cota-por-cliente/solucao/python/test_cota.py::test_plano_free_2_perguntas_passam_a_3a_recebe_429_com_upgrade PASSED [ 20%]
+exercicios/01-cota-por-cliente/solucao/python/test_cota.py::test_a_cota_de_um_tenant_nao_afeta_o_outro PASSED [ 40%]
+exercicios/01-cota-por-cliente/solucao/python/test_cota.py::test_a_cota_zera_na_virada_do_dia PASSED [ 60%]
+exercicios/01-cota-por-cliente/solucao/python/test_cota.py::test_so_post_perguntas_consome_cota_e_get_uso_mostra_o_consumo PASSED [ 80%]
+exercicios/01-cota-por-cliente/solucao/python/test_cota.py::test_contador_pg_incremento_atomico_com_20_requisicoes_simultaneas PASSED [100%]
+============================== 5 passed in 0.95s ===============================
+```

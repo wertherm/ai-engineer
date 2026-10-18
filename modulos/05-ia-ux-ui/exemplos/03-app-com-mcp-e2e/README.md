@@ -93,3 +93,74 @@ culpar o modelo. O estado final via MCP mostrava que a **aplicação** estava ce
    `http://127.0.0.1:30510/mcp` com o header `Authorization: Bearer tok-e2e-demo` e chame `mostrar_painel`.
 3. Configure o servidor no Gemini CLI com o [`settings.json`](../02-ideia-ao-componente-testavel/gemini/.gemini/settings.json)
    do exemplo 02 e peça "liste minhas tarefas pendentes" (exige login).
+
+## Versão Python
+
+O que roda no navegador (`index.html` e o `<script>` do painel) é o mesmo; o que roda no Node virou Python:
+
+| Arquivo | Papel |
+|---|---|
+| [`python/estado.py`](python/estado.py) | Estado em memória (com `threading.Lock`: o uvicorn roda numa thread) |
+| [`python/mcp_app.py`](python/mcp_app.py) | Tools com o SDK `mcp` 2.3.0 (`MCPServer`, `@mcp.tool`, `ToolError` → `isError`) + recurso `ui://tarefas/painel` pela extensão **`mcp.server.apps.Apps`** do próprio SDK; gancho `extras` |
+| [`python/painel.py`](python/painel.py) | HTML do recurso de UI (gerado no servidor; o `<script>` dele continua JS) |
+| [`python/app.py`](python/app.py) | **FastAPI**: UI + API REST + app Streamable HTTP do MCP montado atrás de um middleware ASGI de Bearer token |
+| [`python/cliente_mcp.py`](python/cliente_mcp.py) | `Client` + `streamable_http_client(url, http_client=httpx2.AsyncClient(headers=...))` e a mini-host (`page.expose_function` + iframe sandbox) |
+| [`python/test_e2e.py`](python/test_e2e.py) | E2E determinístico em pytest (anyio) + Playwright async, porta 30551 |
+| [`python/agente_e2e.py`](python/agente_e2e.py) | Agente plan-and-execute: `chat.completions.parse(response_format=Plano)` (pydantic) + validação semântica + executor (porta 30550) |
+| [`python/server.py`](python/server.py) | Sobe a app para uso manual na porta 30550 |
+
+**MCP-UI em Python:** existe o pacote `mcp-ui-server` (1.0.0, de 04/11/2025, mcpui.dev), mas ele gera o recurso como
+`text/html` (MCP-UI antigo, não o perfil MCP Apps) e **nem funciona com o `mcp` 2.x**: `create_ui_resource` falha com
+`Input should be a valid string [type=string_type, input_value=AnyUrl('ui://x')]`. Não precisou: o SDK `mcp` 2.3.0 traz
+a extensão MCP Apps em `mcp.server.apps` (`Apps`, `APP_MIME_TYPE = "text/html;profile=mcp-app"`, `@apps.tool(resource_uri=...)`
+grava `_meta.ui.resourceUri`). Como o painel reflete o estado, o recurso é um `FunctionResource` (HTML montado a cada
+`resources/read`) registrado com `apps.add_resource(...)`.
+
+**Montagem FastAPI + MCP:** app montado não roda o próprio lifespan, então o `mcp.session_manager.run()` entra no
+lifespan do FastAPI; as rotas `/` e `/api/*` vêm antes e o `app.mount("/", ...)` do MCP fica por último.
+
+**Como rodar** (da pasta do módulo):
+
+```bash
+uv run pytest exemplos/03-app-com-mcp-e2e/python -vv                # sem LLM (~6 s, porta 30551)
+uv run python exemplos/03-app-com-mcp-e2e/python/agente_e2e.py       # agente (1 ou 2 chamadas; porta 30550)
+uv run python exemplos/03-app-com-mcp-e2e/python/server.py           # manual: http://127.0.0.1:30550 (Bearer tok-e2e-demo)
+```
+
+**Saída esperada (Python)** (saída real). E2E:
+
+```
+test_mcp_exige_token PASSED [ 33%]
+test_adicionar_e_concluir_pela_ui_conferindo_pelo_mcp PASSED [ 66%]
+test_recurso_de_ui_mcp_apps_e_anunciado_e_age_via_tools_call PASSED [100%]
+============================== 3 passed in 6.06s ===============================
+```
+
+Agente (a execução real ainda imprimia linhas `HTTP Request: POST ...` e `StreamableHTTP session manager started`,
+omitidas aqui; a causa era o `MCPServer` com `log_level` default `INFO`, que configura o logging raiz, e o código já
+passa `log_level="WARNING"`):
+
+```
+Objetivo: Partindo de uma lista vazia, adicione pela interface a tarefa "Pagar boleto", confirme pelo MCP que ela existe, marque-a como concluída pela interface e confirme pelo MCP que ficou concluída.
+Tools MCP descobertas: mostrar_painel, listar_tarefas, adicionar_tarefa, concluir_tarefa, resetar_estado
+
+Plano do LLM, tentativa 1 (145s):
+  1. mcp "resetar_estado" "{}"
+  2. preencher "Nova tarefa" "Pagar boleto"
+  3. clicar "Adicionar" 
+  4. verificar "listar_tarefas" "Pagar boleto"
+  5. marcar "Pagar boleto" 
+  6. verificar "listar_tarefas" "\"titulo\":\"Pagar boleto\",\"concluida\":true"
+  passo 1 (mcp resetar_estado): ok
+  passo 2 (preencher Nova tarefa): ok
+  passo 3 (clicar Adicionar): ok
+  passo 4 (verificar listar_tarefas): ok
+  passo 5 (marcar Pagar boleto): ok
+  passo 6 (verificar listar_tarefas): ok
+
+Estado final (via MCP): [{"id":1,"titulo":"Pagar boleto","concluida":true}]
+Resultado: fluxo E2E aprovado
+```
+
+O plano saiu igual ao do JS, mesmo com o catálogo de tools em outra ordem (as tools da extensão `Apps` são registradas
+primeiro, então `mostrar_painel` vem na frente).

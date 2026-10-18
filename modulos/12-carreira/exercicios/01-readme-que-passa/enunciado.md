@@ -49,3 +49,31 @@ nota: 0% -> 93% · PASSA
 
 O critério `testes` ficou de fora de propósito: o README cita `casos.yaml`, mas não um comando de teste
 separado. Para fechar 100%, documente um `pytest` dos casos ou um `make test`.
+
+## Versão Python da solução
+
+`solucao/python/verificar.py` reaproveita `exemplos/01-auditoria-de-readme/python/checklist.py` e lê os
+mesmos `readme-fraco.md` e `solucao/README-reescrito.md`. Sai com código 0 quando passa.
+
+```bash
+cd modulos/12-carreira
+uv run python exercicios/01-readme-que-passa/solucao/python/verificar.py
+```
+
+Saída real (2026-10-17), idêntica à do JS:
+
+```text
+critério          antes  depois
+proposito          [ ]   [x]
+como-rodar         [ ]   [x]
+pre-requisitos     [ ]   [x]
+saida-real         [ ]   [x]
+metricas           [ ]   [x]
+diagrama           [ ]   [x]
+demo               [ ]   [x]
+limitacoes         [ ]   [x]
+testes             [ ]   [ ]
+versoes            [ ]   [x]
+
+nota: 0% -> 93% · PASSA
+```

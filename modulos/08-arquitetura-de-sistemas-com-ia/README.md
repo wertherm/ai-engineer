@@ -6,6 +6,11 @@ RAG, roteamento, cache, human-in-the-loop e arquitetura enterprise. Cada padrão
 Estudado em 2026-10-16 com Node 24.11, `openai` **7.34.0**, `pg` **8.23.1**, `pgvector` **0.3.0**, Postgres 18 + pgvector 0.8.7
 e os modelos locais `qwen3.5:4b` (chat) e `qwen3-embedding:0.6b` (embeddings) no Ollama. Schema do Postgres: `m08`.
 
+Versão Python (2026-10-17): todos os exemplos e as soluções dos exercícios têm um equivalente em `python/` dentro da
+própria pasta, com código comum em [`comum_py/`](comum_py/) e projeto próprio (`pyproject.toml` + `uv.lock`, Python 3.14).
+As tabelas Python levam o sufixo `_py` no mesmo schema `m08` (e os canais de NOTIFY o prefixo `py_`), para as duas
+versões rodarem juntas sem apagar os dados uma da outra.
+
 ## Mapa da ementa
 
 | Tópico da ementa | Onde está |
@@ -47,6 +52,9 @@ e os modelos locais `qwen3.5:4b` (chat) e `qwen3-embedding:0.6b` (embeddings) no
 
 - Infra do repositório no ar (Ollama + Postgres com pgvector), a partir da raiz: `bash infra/subir-ia.sh`.
 - Node 22.19+ (estudado no 24.11) e, na pasta do módulo, `npm install`.
+- Versão Python: [`uv`](https://docs.astral.sh/uv/) e Python 3.14 (fixado na raiz). Na pasta do módulo, `uv sync`
+  cria a `.venv` a partir do `pyproject.toml`/`uv.lock` próprios: `openai` 3.34.0, `psycopg[binary]` 3.3.6,
+  `pgvector` 0.5.1, `fastapi` 0.143.3, `uvicorn` 0.54.0, `httpx` 0.28.1, `prometheus-client` 0.26.0, `pytest` 9.1.1.
 - Variáveis (opcionais; os defaults apontam para a infra local): veja `infra/.env.example`. Preços fictícios dos tiers via `PRECOS`.
 - Sem chave de API: tudo roda local. Em CPU o `qwen3.5:4b` faz ~5 tokens/s; exemplos com LLM levam minutos.
 
@@ -67,24 +75,43 @@ npm run exe02    # exercício 02: Agentic RAG (5 chamadas)
 npm test         # 11 testes rápidos (resiliência, gate, roteador), sem LLM
 ```
 
+Versão Python (mesma pasta):
+
+```bash
+cd modulos/08-arquitetura-de-sistemas-com-ia
+uv sync
+uv run python exemplos/01-decision-framework/python/main.py          # 8 chamadas ao LLM
+uv run python exemplos/02-single-agent-simulado/python/main.py       # 6 chamadas
+uv run python exemplos/03-multiagente-com-fila/python/main.py        # asyncio + Postgres LISTEN/NOTIFY (sem LLM)
+uv run python exemplos/04-padroes-de-rag/python/main.py              # só embeddings
+uv run python exemplos/05-roteador-e-cache-semantico/python/main.py  # 3 chamadas + streaming
+uv run python exemplos/06-hitl-approval-gate/python/main.py          # sem LLM
+uv run python exemplos/07-gateway-de-ia/python/teste.py              # FastAPI na porta 30850 (2 chamadas)
+uv run python exercicios/01-tier-e-orcamento/solucao/python/simulacao.py
+uv run python exercicios/02-agentic-rag/solucao/python/main.py       # 5 chamadas
+uv run pytest   # os mesmos 11 testes (resiliência, gate, roteador) em pytest, sem LLM
+```
+
 ## Status de verificação
 
-| Item | Status |
-|---|---|
-| Exemplo 01 · decision framework | ✅ executado (híbrido 100% de acerto pela metade do custo do LLM) |
-| Exemplo 02 · single-agent simulado | ✅ executado (Reactive esquece, Memory-Enhanced lembra) |
-| Exemplo 03 · multi-agente com fila | ✅ executado + 3 testes |
-| Exemplo 04 · padrões de RAG | ✅ executado (recall@1: basic 9/10, hybrid 9/10, federado 9/10, roteado 8/10) |
-| Exemplo 05 · roteador + cache | ✅ executado (economia de 68% contra "tudo no caro") |
-| Exemplo 06 · HITL + audit trail | ✅ executado + 4 testes |
-| Exemplo 07 · AI Gateway | ✅ executado (200/403/429/401 e `/metrics`) |
-| Exercício 01 · tier e orçamento | ✅ executado + 4 testes |
-| Exercício 02 · Agentic RAG | ✅ executado |
-| YAML de Kubernetes do doc 04 | ⚠️ não executado localmente: ilustrativo; implantação real em cluster na trilha LLMOps |
-| Prompt Cache | ⚠️ conceitual: o Ollama local devolveu `cached_tokens: 0`; o comportamento depende do provedor |
+| Item | Status (JS) | Python |
+|---|---|---|
+| Exemplo 01 · decision framework | ✅ executado (híbrido 100% de acerto pela metade do custo do LLM) | ✅ executado (mesmo acerto e custo) |
+| Exemplo 02 · single-agent simulado | ✅ executado (Reactive esquece, Memory-Enhanced lembra) | ✅ executado (mesmos 280 × 323 tokens) |
+| Exemplo 03 · multi-agente com fila | ✅ executado + 3 testes | ✅ executado + 3 testes pytest |
+| Exemplo 04 · padrões de RAG | ✅ executado (recall@1: basic 9/10, hybrid 9/10, federado 9/10, roteado 8/10) | ✅ executado (recall idêntico ao JS) |
+| Exemplo 05 · roteador + cache | ✅ executado (economia de 68% contra "tudo no caro") | ✅ executado (mesma economia de 68%) |
+| Exemplo 06 · HITL + audit trail | ✅ executado + 4 testes | ✅ executado + 4 testes pytest |
+| Exemplo 07 · AI Gateway | ✅ executado (200/403/429/401 e `/metrics`) | ✅ executado (FastAPI, porta 30850) |
+| Exercício 01 · tier e orçamento | ✅ executado + 4 testes | ✅ executado + 4 testes pytest (números idênticos) |
+| Exercício 02 · Agentic RAG | ✅ executado | ✅ executado (mesmas decisões e citações) |
+| YAML de Kubernetes do doc 04 | ⚠️ não executado localmente: ilustrativo; implantação real em cluster na trilha LLMOps | — (não se aplica) |
+| Prompt Cache | ⚠️ conceitual: o Ollama local devolveu `cached_tokens: 0`; o comportamento depende do provedor | ⚠️ conceitual (o `main.py` lê `usage.prompt_tokens_details.cached_tokens`) |
 
 ## Fontes
 
+- OpenAI Python SDK: https://github.com/openai/openai-python · psycopg 3 (LISTEN/NOTIFY): https://www.psycopg.org/psycopg3/docs/advanced/async.html#asynchronous-notifications
+- pgvector-python: https://github.com/pgvector/pgvector-python · FastAPI: https://fastapi.tiangolo.com/ · prometheus_client: https://prometheus.github.io/client_python/
 - OpenAI Node SDK: https://github.com/openai/openai-node · Chat Completions: https://platform.openai.com/docs/api-reference/chat
 - Ollama · compatibilidade OpenAI: https://docs.ollama.com/api/openai-compatibility
 - pgvector: https://github.com/pgvector/pgvector · node-postgres: https://node-postgres.com/

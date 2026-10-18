@@ -60,3 +60,47 @@ Transcrição perfeita de voz sintética é o caso fácil; áudio real (ruído, 
 2. Gere outra frase (`node exemplos/06-audio-e-bot-multimodal/gerar-audio.js "Quero cancelar meu pedido."`) e
    passe ao bot: a resposta deve citar a política de cancelamento.
 3. Grave um áudio seu (WAV), rode a transcrição e compare com a voz sintética.
+
+## Versão Python
+
+[`python/transcrever.py`](python/transcrever.py) usa o **faster-whisper** (Whisper `base` no CTranslate2,
+`int8` em CPU; ~145 MB baixados para `.venv/cache-modelos/faster-whisper`) e transcreve o **mesmo
+`pergunta.wav`** gerado pelo JS. [`python/bot.py`](python/bot.py) é o mesmo roteador texto/áudio/imagem.
+O faster-whisper lê e reamostra o WAV sozinho (PyAV com FFmpeg embutido na wheel), sem a conversão manual
+para 16 kHz Float32 do JS.
+
+`ex06:audio` (TTS com MMS) **não foi portado**: exigiria `transformers` + PyTorch só para gerar um arquivo que
+já está versionado; usar o mesmo áudio também deixa a transcrição comparável.
+
+### Como rodar
+
+```bash
+cd modulos/02-apis-ia-generativa
+uv run python exemplos/06-audio-e-bot-multimodal/python/transcrever.py   # 1ª vez baixa o modelo
+uv run python exemplos/06-audio-e-bot-multimodal/python/bot.py          # áudio → texto → resposta
+uv run python exemplos/06-audio-e-bot-multimodal/python/bot.py "Vocês abrem no domingo?"
+uv run python exemplos/06-audio-e-bot-multimodal/python/bot.py exemplos/05-documentos-ocr-e-visao/nota-fiscal-pequena.png "Qual é o valor total desta nota? Responda só o valor."
+```
+
+### Saída esperada (Python)
+
+Saídas reais:
+
+```
+$ uv run python exemplos/06-audio-e-bot-multimodal/python/transcrever.py
+transcrição (3.0 s): Olá, eu gostaria de saber qual é o prazo para trocar um fone de ouvido.
+
+$ uv run python exemplos/06-audio-e-bot-multimodal/python/bot.py
+[áudio → texto em 4.4 s] Olá, eu gostaria de saber qual é o prazo para trocar um fone de ouvido.
+[audio] resposta (41.8 s, 265 tokens de entrada): O prazo para troca do seu fone de ouvido é de 7 dias após o recebimento, pois se trata de um eletrônico.
+
+$ uv run python .../bot.py "Vocês abrem no domingo?"
+[texto] resposta (41.8 s, 254 tokens de entrada): Não, nosso atendimento ao chat não funciona aos domingos, operando apenas de segunda a sexta das 8h às 20h e aos sábados das 9h às 13h.
+
+$ uv run python .../bot.py .../nota-fiscal-pequena.png "Qual é o valor total desta nota? Responda só o valor."
+[imagem] nota-fiscal-pequena.png + "Qual é o valor total desta nota? Responda só o valor."
+[imagem] resposta (44.3 s, 418 tokens de entrada): R$ 225,80
+```
+
+Mesma transcrição e mesmos tokens de entrada do JS; o Whisper em CTranslate2 `int8` transcreveu em ~3 s
+(vs 10,3 s do ONNX no Node).

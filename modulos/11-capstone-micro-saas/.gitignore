@@ -1,2 +1,7 @@
 app/web/.angular/
 app/web/dist/
+# versão Python (uv.lock e pyproject.toml são versionados)
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/

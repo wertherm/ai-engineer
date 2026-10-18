@@ -52,3 +52,36 @@ acumular atraso). Testamos `delegate: 'GPU'`: no headless sem GPU real o WebGL �
 1. Mude `scoreThreshold` de `0.4` para `0.7` e veja quais detecções somem (menos falsos positivos, mais falsos negativos).
 2. Em `index.html`, faça `video.playbackRate = 0.1` antes do `play()` para processar quase todos os frames.
 3. Troque o filtro: em vez de `grayscale`, pixele os objetos (desenhe a região em 1/10 do tamanho e amplie) para anonimizar pessoas.
+
+## Versão Python
+
+O pacote `mediapipe` (1.1.1) tem wheel `py3-none-manylinux` e roda no Python 3.14. A versão Python usa o
+**mesmo modelo, o mesmo vídeo e o mesmo tracker por IoU**, mas não é "ML no browser": roda localmente com
+MediaPipe Tasks (TFLite + XNNPACK) e OpenCV, que lê o `.webm` e aplica o filtro. Serve para processar vídeo
+gravado em lote (servidor, notebook). Se os assets não existirem, o script baixa e gera tudo (mesma lógica do
+`baixar-assets.js`).
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exemplos/03-visao-no-browser/python/main.py
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+frames processados: 40 | inferência média: 51.4 ms/frame (TFLite, CPU)
+primeiro frame: #1 dog, #2 dog, #3 cat, #4 cat
+último frame:   #1 dog, #2 dog, #3 cat, #4 cat
+trilhas (id rótulo -> em quantos frames apareceu):
+  #1 dog     40
+  #2 dog     40
+  #3 cat     40
+  #4 cat     40
+imagem do último frame: exemplos/03-visao-no-browser/assets/resultado_py.png
+```
+
+Aqui os **40** frames são processados (no browser foram 7): sem relógio de vídeo ao vivo, nada é descartado, e o
+TFLite nativo leva ~50 ms por frame contra ~600 ms do WASM no Chrome headless. As 4 trilhas mantêm o ID nos 40
+frames. A imagem `resultado_py.png` mostra as mesmas 4 caixas sobre o fundo cinza.

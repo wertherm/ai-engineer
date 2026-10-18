@@ -1,2 +1,7 @@
 saida/
 gerado/
+
+# versão Python
+.venv/
+__pycache__/
+.pytest_cache/

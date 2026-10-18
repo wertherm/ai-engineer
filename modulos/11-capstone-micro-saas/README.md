@@ -14,6 +14,11 @@ testes, undici), [03](../03-mcp/) (MCP HTTP com token e Inspector), [04](../04-a
 [10](../10-seguranca-e-governanca/) (prompt injection, PII). O mapa do que veio de onde está no
 [doc 01](docs/01-ideacao-e-arquitetura.md#arquitetura).
 
+**Versão Python do back-end** em [`app_py/`](app_py/) (2026-10-18, Python 3.14 + uv): FastAPI 0.141.1 (OpenAPI
+automático), SDK `mcp` 2.3.0, psycopg 3 + pgvector, `google-adk` 2.12.0 com LiteLLM. MESMO contrato da API JS
+(rotas `/v1`, status, JSON, `/mcp` com as mesmas tools), provado rodando o e2e da UI Angular, sem mudar o
+Angular, contra a API Python. Cada exemplo/exercício tem a seção "Versão Python" no seu README.
+
 ## Mapa da ementa
 
 | Tópico da ementa | Onde está |
@@ -51,6 +56,8 @@ app/
   dados/      corpus de demonstração: acme/ e padaria/
   web/        UI Angular 22 (cliente REST + cliente MCP) + Dockerfile/nginx
   Dockerfile  imagem da API
+app_py/       versão Python do back-end: config, llm, db, rag, servico, agente, pii, tenants, api (FastAPI+MCP),
+              servidor_mcp, server, seed, tests/ (pytest) e Dockerfile
 docs/         01 ideação e arquitetura · 02 RAG, agentes, MCP e ADK · 03 front, CI/CD e implantação · 04 apresentação e defesa
 exemplos/     as entregas incrementais 01, 02, 03 + 04 orquestração com ADK
 exercicios/   01 cota por cliente · 02 avaliação no CI
@@ -62,6 +69,8 @@ exercicios/   01 cota por cliente · 02 avaliação no CI
   Os dados ficam no schema `m11`.
 - Node 24 e `npm install` nesta pasta. Docker (build do Angular, imagens e compose), `jq`, Google Chrome
   (teste e2e).
+- Versão Python: [`uv`](https://docs.astral.sh/uv/) e `uv sync` nesta pasta (projeto próprio: [`pyproject.toml`](pyproject.toml)
+  + `uv.lock`, Python 3.14). Os dados Python ficam nas tabelas `m11.*_py` (as do JS não são tocadas).
 - Variáveis opcionais (defaults locais, ver `infra/.env.example`): `OPENAI_BASE_URL`, `OPENAI_API_KEY`,
   `MODELO_CHAT`, `MODELO_EMBED`, `DATABASE_URL`.
 - O LLM em CPU é lento e compartilhado: uma resposta nova leva de segundos a vários minutos. Cache semântico
@@ -104,6 +113,43 @@ npm run lint
 Portas: 31100 (API avulsa), 31101–31121 (scripts e testes: 31110 vitest, 31120 Inspector, 31121 demo),
 31180 (API no compose), 31181 (UI no compose).
 
+### Versão Python
+
+```bash
+cd modulos/11-capstone-micro-saas
+uv sync
+uv run python -m app_py.seed                      # tabelas m11.*_py + 2 tenants + indexação
+
+# Entrega 1 · RAG em CLI
+uv run python exemplos/01-entrega-1-rag-cli/python/cli.py buscar acme "limite de alimentação em viagem"
+uv run python exemplos/01-entrega-1-rag-cli/python/cli.py perguntar acme "Posso dividir minhas férias em partes?"
+uv run python exemplos/01-entrega-1-rag-cli/python/cli.py perguntar acme "Vou viajar 3 dias: quanto gasto com alimentação no total?" --agente
+
+# Entrega 2 · API FastAPI + OpenAPI + MCP
+uv run pytest                                     # unidade + contrato REST/MCP + cota (sem LLM, ~1 s)
+INTEGRACAO=1 uv run pytest                        # + integração no banco real e concorrência da cota
+uv run ruff check .                               # lint
+bash exemplos/02-entrega-2-api-e-mcp/python/demo.sh
+bash exemplos/02-entrega-2-api-e-mcp/python/inspector.sh
+uv run python -m app_py.server                    # API avulsa em http://127.0.0.1:31150 (Swagger em /docs)
+
+# Entrega 3 · mesma UI Angular na frente da API Python
+docker compose -f exemplos/03-entrega-3-front-e-implantacao/python/compose.yaml up -d --build --wait   # API :31190, UI :31191
+URL_UI=http://localhost:31191 npm run e3:ui       # o e2e JS inalterado contra a API Python
+uv run python exemplos/03-entrega-3-front-e-implantacao/python/ui_e2e.py
+uv run python exemplos/03-entrega-3-front-e-implantacao/python/agente_mcp.py
+bash exemplos/03-entrega-3-front-e-implantacao/python/ci-local.sh
+docker compose -f exemplos/03-entrega-3-front-e-implantacao/python/compose.yaml down
+
+# Orquestração com ADK Python (LiteLLM -> Ollama) e exercícios
+uv run python exemplos/04-orquestracao-adk/python/main.py
+INTEGRACAO=1 uv run pytest exercicios/01-cota-por-cliente -v
+uv run python exercicios/02-avaliacao-no-ci/solucao/python/avaliar.py
+```
+
+Portas da versão Python: 31150 (API avulsa), 31151 (demo), 31152 (Inspector), 31160 (pytest do MCP),
+31190 (API no compose), 31191 (UI no compose).
+
 ## Status de verificação
 
 | Item | Status |
@@ -123,10 +169,21 @@ Portas: 31100 (API avulsa), 31101–31121 (scripts e testes: 31110 vitest, 31120
 | Exercício 01 · cota por cliente (inclui teste de concorrência no Postgres) | ✅ executado |
 | Exercício 02 · avaliação hit@k/MRR/citações (+ reprovação provocada) | ✅ executado |
 | Job nightly de avaliação no GitHub Actions | ⚠️ não executado localmente: precisa de runner do GitHub |
+| **Python** · Entrega 1 · CLI (indexar, buscar, perguntar, PII, cache, "não encontrei", `--agente`) | ✅ executado |
+| **Python** · pytest (9 RAG + 10 contrato REST/MCP + 4 integração + 5 cota) e `ruff check` | ✅ executado |
+| **Python** · Entrega 2 · FastAPI + OpenAPI 3.1 + Swagger UI + `python/openapi.json`; `demo.sh` e MCP Inspector CLI | ✅ executado |
+| **Python** · Entrega 3 · compose alternativo (imagem `app_py/Dockerfile` + UI Angular inalterada) | ✅ executado |
+| **Python** · Entrega 3 · e2e da UI Angular (o `ui.e2e.js` JS e o `ui_e2e.py` Playwright Python) contra a API Python | ✅ executado |
+| **Python** · Entrega 3 · agente externo via MCP; CI local (`python/ci-local.sh`) | ✅ executado |
+| **Python** · job `api-python` no GitHub Actions | ⚠️ não executado localmente: precisa de runner do GitHub |
+| **Python** · Exemplo 04 · Workflow do ADK Python (`LiteLlm` `ollama_chat/`) no Ollama local | ✅ executado |
+| **Python** · Exercícios 01 (cota + concorrência) e 02 (portão de qualidade + reprovação provocada) | ✅ executado |
+| **Python** · UI Angular | não se aplica: é front-end (roda no navegador); a compatibilidade foi provada pelo e2e |
 
 ## Fontes
 
 - Google ADK: https://google.github.io/adk-docs/ · https://github.com/google/adk-js · https://www.npmjs.com/package/@google/adk
+- Versão Python: https://fastapi.tiangolo.com/ · https://github.com/modelcontextprotocol/python-sdk · https://www.psycopg.org/psycopg3/docs/ · https://github.com/pgvector/pgvector-python · https://google.github.io/adk-docs/agents/models/litellm/ · https://google.github.io/adk-docs/agents/models/ollama/ · https://docs.litellm.ai/docs/providers/ollama · https://docs.astral.sh/uv/ · https://playwright.dev/python/
 - Angular: https://angular.dev/reference/versions · https://angular.dev/guide/signals
 - MCP: https://modelcontextprotocol.io/specification/2025-11-25/basic/transports · https://github.com/modelcontextprotocol/typescript-sdk · https://github.com/modelcontextprotocol/inspector
 - Fastify + OpenAPI: https://fastify.dev/ · https://github.com/fastify/fastify-swagger

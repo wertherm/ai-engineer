@@ -33,6 +33,8 @@ Estudado em 2026-10-16 com Node 24 (`node:test` embutido), `openai` **7.34.0** e
 - Só para o feedback com LLM (`npm run ex04:llm`): a infra no ar, a partir da **raiz** do repo:
   `bash infra/subir-ia.sh` (Ollama com `qwen3.5:4b`). Variáveis opcionais `OPENAI_BASE_URL`, `OPENAI_API_KEY`,
   `MODELO_CHAT` (veja [`infra/.env.example`](../../infra/.env.example)). Não usa Postgres.
+- Versão Python: [`uv`](https://docs.astral.sh/uv/) e Python 3.14 (o da raiz). Na pasta do módulo: `uv sync`
+  (projeto próprio em `pyproject.toml`: `openai==3.33.0`, `pytest==9.1.1`). Código compartilhado em `comum_py/`.
 
 ## Como rodar
 
@@ -53,19 +55,40 @@ npm run exe02       # exercício 02: estimativa por etapa da triagem de tickets
 npm test            # 14 testes (node:test), nenhum depende do LLM
 ```
 
+Versão Python (mesmos arquivos de dados; saídas idênticas às do JS):
+
+```bash
+cd modulos/12-carreira
+uv sync
+
+uv run python exemplos/01-auditoria-de-readme/python/auditar.py
+uv run python exemplos/02-perfil-linkedin/python/analisar.py
+uv run python exemplos/03-star-e-brag-document/python/validar_star.py
+uv run python exemplos/03-star-e-brag-document/python/caso_de_promocao.py
+uv run python exemplos/04-simulador-de-entrevista/python/simulador.py --sortear 3 --seed 12
+uv run python exemplos/04-simulador-de-entrevista/python/simulador.py --avaliar rag-vs-fine-tuning --llm \
+  --resposta-arquivo exemplos/04-simulador-de-entrevista/resposta-exemplo.txt
+uv run python exemplos/05-system-design-rag/python/main.py
+
+uv run python exercicios/01-readme-que-passa/solucao/python/verificar.py
+uv run python exercicios/02-system-design-com-custo/solucao/python/estimativa.py
+
+uv run pytest       # 16 testes (pytest), nenhum depende do LLM
+```
+
 ## Status de verificação
 
-| Item | Status |
-|---|---|
-| Exemplo 01 · auditoria de README | ✅ executado contra 3 pastas reais do repo + 1 README fraco (3 testes) |
-| Exemplo 02 · perfil do LinkedIn | ✅ executado (2 testes) · ⚠️ o LinkedIn em si não é acessado (sem login nem scraping): o texto é colado em `perfil.json` |
-| Exemplo 03 · STAR + brag document | ✅ executado (2 testes) |
-| Exemplo 04 · simulador (sorteio e checklist) | ✅ executado (3 testes) |
-| Exemplo 04 · feedback com LLM | ✅ executado uma vez com `qwen3.5:4b` (66 s, 44 tokens) |
-| Exemplo 05 · system design RAG | ✅ executado (3 testes) · custos com preços **ilustrativos** |
-| Exercício 01 · README que passa | ✅ executado (0% → 93%, PASSA) |
-| Exercício 02 · system design com custo | ✅ executado (1 teste) |
-| Networking, negociação, entrevista de RH ao vivo | ⚠️ conceitual (docs 01–03): dependem de pessoas reais; os artefatos (templates, checklists) estão nos exemplos |
+| Item | Status (JS) | Status (Python) |
+|---|---|---|
+| Exemplo 01 · auditoria de README | ✅ executado contra 3 pastas reais do repo + 1 README fraco (3 testes) | ✅ saída idêntica; mesma nota nos 235 `.md` do repo (3 testes) |
+| Exemplo 02 · perfil do LinkedIn | ✅ executado (2 testes) · ⚠️ o LinkedIn em si não é acessado (sem login nem scraping): o texto é colado em `perfil.json` | ✅ saída idêntica (2 testes) |
+| Exemplo 03 · STAR + brag document | ✅ executado (2 testes) | ✅ saída idêntica (3 testes) |
+| Exemplo 04 · simulador (sorteio e checklist) | ✅ executado (3 testes) | ✅ mesmo sorteio por seed (4 testes) |
+| Exemplo 04 · feedback com LLM | ✅ executado uma vez com `qwen3.5:4b` (66 s, 44 tokens) | ✅ executado uma vez (21 s, 44 tokens, mesmo texto) |
+| Exemplo 05 · system design RAG | ✅ executado (3 testes) · custos com preços **ilustrativos** | ✅ saída e floats idênticos (3 testes) |
+| Exercício 01 · README que passa | ✅ executado (0% → 93%, PASSA) | ✅ 0% → 93%, PASSA |
+| Exercício 02 · system design com custo | ✅ executado (1 teste) | ✅ US$ 943/mês, idêntico (1 teste) |
+| Networking, negociação, entrevista de RH ao vivo | ⚠️ conceitual (docs 01–03): dependem de pessoas reais; os artefatos (templates, checklists) estão nos exemplos | ⚠️ idem |
 
 ## Fontes
 

@@ -41,3 +41,26 @@ agente            0,63       5,0          150      208
 TOTAL: US$ 943 /mês · US$ 0,0018 por ticket · 838 tok/s de saída no pico
 Maior custo: "sugerir" -> é onde otimizar primeiro (menos trechos, cache, modelo menor se a avaliação deixar).
 ```
+
+## Versão Python da solução
+
+`solucao/python/estimativa.py` reaproveita `exemplos/05-system-design-rag/python/capacidade.py`;
+`solucao/python/test_estimativa.py` é o teste pytest.
+
+```bash
+cd modulos/12-carreira
+uv run python exercicios/02-system-design-com-custo/solucao/python/estimativa.py
+uv run pytest exercicios/02-system-design-com-custo/
+```
+
+Saída real (2026-10-17), idêntica à do JS:
+
+```text
+etapa         RPS pico  concorr.  tok/s saída  US$/mês
+classificar       2,08       3,1           63      105
+sugerir           2,08      12,5          625      630
+agente            0,63       5,0          150      208
+
+TOTAL: US$ 943 /mês · US$ 0,0018 por ticket · 838 tok/s de saída no pico
+Maior custo: "sugerir" -> é onde otimizar primeiro (menos trechos, cache, modelo menor se a avaliação deixar).
+```

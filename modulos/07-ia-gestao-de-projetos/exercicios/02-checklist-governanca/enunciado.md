@@ -85,3 +85,52 @@ Auditoria de governança: /home/werther/Repos/ai-engineer/modulos/07-ia-gestao-d
 - Corrija o `projeto-exemplo` até o checklist passar com código 0.
 - Rode o checklist em um repositório seu (ex.: um serviço NestJS) e transforme em job de CI.
 - Adicione GOV-08: todo commit desde a última tag segue Conventional Commits (`git log v1.2.0..HEAD`).
+
+## Versão Python
+
+Solução em [`solucao/python/`](solucao/python/): `checklist.py` (uma função por verificação, `pathlib` +
+`re` + `subprocess.run([...])` sem shell para o `git tag`), `main.py` (CLI, grava
+`solucao/python/auditoria.json`) e `test_checklist.py`. Audita o mesmo `projeto-exemplo/` (um projeto Node:
+as regras olham `package.json`, CHANGELOG, ADRs e `*.test.js`). Os arquivos são percorridos em ordem
+alfabética (`sorted`) para a evidência sair estável.
+
+### Como rodar
+
+```bash
+cd modulos/07-ia-gestao-de-projetos
+uv run python exercicios/02-checklist-governanca/solucao/python/main.py      # sai com código 1 de propósito
+uv run python exercicios/02-checklist-governanca/solucao/python/main.py /caminho/de/outro/projeto
+uv run pytest exercicios/02-checklist-governanca/solucao/python
+```
+
+### Saída esperada (Python)
+
+Saída real:
+
+```text
+Auditoria de governança: /home/werther/Repos/ai-engineer/modulos/07-ia-gestao-de-projetos/exercicios/02-checklist-governanca/projeto-exemplo
+
+✅ GOV-01 README e CHANGELOG presentes
+      ambos presentes
+❌ GOV-02 Versão do package.json registrada no CHANGELOG (controle de versão)
+      versão 1.3.0 não aparece no CHANGELOG
+❌ GOV-03 Dependências com versão exata (build reproduzível)
+      zod@^4.6.7
+❌ GOV-04 ADRs com Status, Data e Decisores (trilha de decisão)
+      incompletos: 0002-email-sem-link.md
+❌ GOV-05 Rastreabilidade: todo requisito citado em algum teste
+      sem teste: HU-02
+❌ GOV-06 Sem segredo fixo no código
+      possível segredo em: src/config.js
+⏭  GOV-07 Tag git da versão atual (se for repositório git)
+      não é repositório git: verificação pulada
+
+5 falha(s). Evidências em solucao/python/auditoria.json
+```
+
+(código de saída 1)
+
+```text
+.                                                                        [100%]
+1 passed
+```

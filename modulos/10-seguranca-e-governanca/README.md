@@ -4,7 +4,7 @@ Como governar um sistema de IA (frameworks, leis e matriz de risco), explicar e 
 proteger aplicações com LLM contra prompt injection, vazamento de dados pessoais e consumo descontrolado.
 
 Estudado em 2026-10-16 com scikit-learn 1.9.1, pandas 3.0.6, Python 3.14.7, Node 24.11, `openai` 7.34.0,
-`pg` 8.23.1 e o modelo local `qwen3.5:4b` (Ollama). Status regulatório conferido em fontes oficiais em 2026-10-16.
+`pg` 8.23.1 e o modelo local `qwen3.5:4b` (Ollama). Status regulatório conferido em fontes oficiais em 2026-10-16. Versão Python (2026-10-17): `openai` 3.34.0 (PyPI), `psycopg` 3.3.6, pytest 9.1.1.
 
 ## Mapa da ementa
 
@@ -24,7 +24,8 @@ MCP no [módulo 03](../03-mcp/docs/04-seguranca-e-governanca.md) · system desig
 ## Pré-requisitos
 
 - Infra do repositório no ar (Postgres na 5433 e Ollama com `qwen3.5:4b`). A partir da raiz: `bash infra/subir-ia.sh`.
-- Python via `uv` (o `pyproject.toml` da raiz já tem scikit-learn, pandas e scipy; nenhuma dependência Python extra).
+- Python 3.14 via `uv`: o módulo tem `pyproject.toml` próprio (scikit-learn, pandas, numpy, openai, psycopg,
+  pytest; versões exatas). `cd modulos/10-seguranca-e-governanca && uv sync` uma vez.
 - `cd modulos/10-seguranca-e-governanca && npm install` (só `openai` e `pg`).
 - Internet na 1ª execução do exemplo 02 (baixa o dataset Adult do OpenML, ~2 MB).
 - Variáveis opcionais com defaults locais: `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`, `DATABASE_URL`
@@ -52,19 +53,39 @@ npm run exe02         # exercício 02: bateria contra a solução (5 chamadas)
 npm test              # tudo que não depende do LLM
 ```
 
+Versão Python (mesma pasta; exemplos 01, 02 e exercício 01 já eram Python):
+
+```bash
+cd modulos/10-seguranca-e-governanca
+uv sync
+
+uv run python exemplos/01-explicabilidade/explicar.py
+uv run python exemplos/02-vieses-e-equidade/equidade.py
+uv run python exemplos/03-prompt-injection/python/bateria.py --casos I1     # 2 chamadas ao LLM
+uv run python exemplos/04-pii-e-mascaramento/python/demo.py [--sem-llm]     # 1 chamada ao LLM
+uv run python exemplos/05-custos-e-orcamento/python/custos.py
+uv run python exemplos/05-custos-e-orcamento/python/orcamento.py [--com-cota]   # tabela m10.uso_llm_py
+
+uv run python exercicios/01-model-card-e-matriz-de-risco/solucao/model_card.py
+uv run python exercicios/02-endurecer-o-prompt/python/bateria.py exercicios/02-endurecer-o-prompt/python/vulneravel.py
+uv run python exercicios/02-endurecer-o-prompt/python/bateria.py exercicios/02-endurecer-o-prompt/solucao/python/endurecido.py
+
+uv run pytest         # 15 testes, nenhum chama o LLM
+```
+
 ## Status de verificação
 
-| Item | Status |
-|---|---|
-| Exemplo 01 · permutação + explicação local (breast cancer) | ✅ executado |
-| Exemplo 02 · métricas de equidade + 3 mitigações (Adult/OpenML) | ✅ executado |
-| Exemplo 03 · guardas (4 testes) e bateria de 4 ataques + 1 benigno com `qwen3.5:4b` | ✅ executado (ingênuo 4/4, defendido 0/4) |
-| Exemplo 04 · PII (7 testes) + ida e volta pelo LLM | ✅ executado |
-| Exemplo 05 · calculadora + orçamento no Postgres `m10` | ✅ executado |
-| Exercício 01 · model card + matriz de risco | ✅ executado |
-| Exercício 02 · endurecer o prompt | ✅ executado (vulnerável 3/4 ataques, solução 0/4) |
-| Preços reais de provedores de LLM e de GPU | ⚠️ não executado localmente: valores hipotéticos (exigiria conta/API paga); links das páginas oficiais no doc 04 |
-| Certificação ISO/IEC 42001, avaliação de conformidade do EU AI Act | ⚠️ não executado localmente: processo organizacional/auditoria externa, coberto conceitualmente no doc 01 |
+| Item | Status (JS) | Status (Python) |
+|---|---|---|
+| Exemplo 01 · permutação + explicação local (breast cancer) | ✅ executado | ✅ já era Python (roda com o pyproject do módulo) |
+| Exemplo 02 · métricas de equidade + 3 mitigações (Adult/OpenML) | ✅ executado | ✅ já era Python (roda com o pyproject do módulo) |
+| Exemplo 03 · guardas (4 testes) e bateria de 4 ataques + 1 benigno com `qwen3.5:4b` | ✅ executado (ingênuo 4/4, defendido 0/4) | ✅ 4 testes pytest; bateria só com `--casos I1` (ingênuo 1/1, defendido 0/1) |
+| Exemplo 04 · PII (7 testes) + ida e volta pelo LLM | ✅ executado | ✅ 8 testes pytest (os 7 do JS + 1 de Unicode) + ida e volta pelo LLM |
+| Exemplo 05 · calculadora + orçamento no Postgres `m10` | ✅ executado | ✅ saída idêntica ao JS; orçamento em `m10.uso_llm_py` |
+| Exercício 01 · model card + matriz de risco | ✅ executado | ✅ já era Python (roda com o pyproject do módulo) |
+| Exercício 02 · endurecer o prompt | ✅ executado (vulnerável 3/4 ataques, solução 0/4) | ✅ vulnerável só `--casos A2` (vazou a faixa, exit 1); solução 0/4 ataques, 0/5 falhas, exit 0 |
+| Preços reais de provedores de LLM e de GPU | ⚠️ não executado localmente: valores hipotéticos (exigiria conta/API paga); links das páginas oficiais no doc 04 | ⚠️ idem |
+| Certificação ISO/IEC 42001, avaliação de conformidade do EU AI Act | ⚠️ não executado localmente: processo organizacional/auditoria externa, coberto conceitualmente no doc 01 | ⚠️ idem |
 
 ## Fontes
 
@@ -75,4 +96,5 @@ npm test              # tudo que não depende do LLM
 - PL 2338/2023: https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2487262
 - OWASP Top 10 for LLM Applications 2025: https://genai.owasp.org/llm-top-10/
 - scikit-learn, permutation importance: https://scikit-learn.org/stable/modules/permutation_importance.html
+- psycopg 3: https://www.psycopg.org/psycopg3/docs/ · SDK `openai` Python: https://pypi.org/project/openai/
 - Fairlearn: https://fairlearn.org/ · Model Cards (Mitchell et al.): https://arxiv.org/abs/1810.03993
