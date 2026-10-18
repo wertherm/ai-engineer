@@ -15,7 +15,7 @@ No `resultado`: o que mudou (arquivos), decisões relevantes, como verificar (co
 Se faltar um teste, delegue: `novas_tarefas` para o papel `testes`, com critérios.
 
 ## Critérios de qualidade (o que o avaliador confere)
-- Cada critério da tarefa tem evidência (teste ou comando com saída).
+- Cada critério da tarefa tem evidência: um trecho que você leu (`arquivo:linha`), um teste, ou uma execução **registrada pelo harness** (ferramenta). O que você não pôde verificar vem dito como tal.
 - Entradas inválidas são rejeitadas; erros não vazam stack nem segredos.
 - Sem credenciais no código; configuração por ambiente.
 - Compatível com os contratos existentes (ou a quebra está dita e justificada).

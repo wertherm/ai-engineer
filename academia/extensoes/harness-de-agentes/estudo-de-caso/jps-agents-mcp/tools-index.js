@@ -1,6 +1,6 @@
 // SNAPSHOT DE ESTUDO. Não use em produção e não rode: ele existe para ser lido, analisado por engenharia reversa e endurecido.
-// Origem: mcp-server/tools/index.js do repositório jps-agents (privado), commit 81d4a2e. Sem alterações no código abaixo.
-// Roteiro de análise: ../README.md e ../../engenharia-reversa/README.md.
+// Origem: mcp-server/tools/index.js do repositório privado de squad de agentes do mantenedor. Sem alterações no código abaixo.
+// Roteiro de análise: ../../README.md#3-estudo-de-caso-o-servidor-de-ferramentas-do-jps-agents e ../../../engenharia-reversa/README.md.
 
 import { browserSearch } from './browser/search.js';
 import { httpGet } from './http/get.js';

@@ -42,7 +42,8 @@ export function criarServidor(memoria) {
       valor: z.string().describe(`texto de até ${LIMITES.valor} caracteres`),
       ttl_dias: z.number().int().min(1).max(LIMITES.ttlDiasMax).optional().describe('expira depois de N dias'),
     },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    // destructiveHint: a mesma chave SUBSTITUI o valor anterior (o histórico fica no arquivo, mas some da busca)
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   }, responder((a) => memoria.salvar({ ...a, fonte: 'mcp' })));
 
   server.registerTool('search_memory', {
@@ -59,7 +60,7 @@ export function criarServidor(memoria) {
 
   server.registerTool('forget_memory', {
     title: 'Esquecer memória',
-    description: 'Remove uma memória pelo escopo e chave (o histórico permanece no arquivo de auditoria).',
+    description: 'Remove uma memória da busca pelo escopo e chave. O registro continua no arquivo (auditoria) até um humano rodar a compactação.',
     inputSchema: { escopo, chave: z.string() },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   }, responder((a) => memoria.esquecer(a)));

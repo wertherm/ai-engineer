@@ -54,7 +54,8 @@ Dois tipos de alvo, com regras diferentes:
 
 ## 3. Usando um agente de código para isso
 
-Peça **somente leitura** e exija evidência. Prompt-base (adapte as perguntas):
+Peça **somente leitura** e exija evidência. Atenção: pedir isso no prompt **não é garantia**; use também o modo somente leitura/planejamento do seu agente, ou rode-o
+sobre uma cópia do repositório (de preferência em um contêiner/sandbox, sobretudo se o código não for seu). Prompt-base (adapte as perguntas):
 
 ```text
 Você vai fazer engenharia reversa do repositório em <caminho>, que é meu (ou tenho autorização). Modo SOMENTE LEITURA: não altere
@@ -90,8 +91,8 @@ Escopo, autorização e perguntas · Data · Commit analisado
 
 ## 5. Exemplo resolvido: o `mcp-remember-jps`
 
-Alvo: [`estudo-de-caso/mcp-remember-jps.index.js`](../memoria-persistente-mcp/estudo-de-caso/mcp-remember-jps.index.js) (65 linhas; as linhas citadas são
-as desse arquivo). Pergunta: *o que este servidor faz, onde guarda o quê e que risco ele traz a um agente que o use?*
+Alvo: [`estudo-de-caso/mcp-remember-jps.index.js`](../memoria-persistente-mcp/estudo-de-caso/mcp-remember-jps.index.js) (65 linhas de código mais 4 de cabeçalho do snapshot; as linhas citadas
+são as do snapshot, 4 acima das do original). Pergunta: *o que este servidor faz, onde guarda o quê e que risco ele traz a um agente que o use?*
 
 **Componentes e fluxo (fatos):**
 
@@ -126,8 +127,9 @@ A tabela completa e as correções estão no [estudo de caso da extensão de mem
 
 1. **Relatório completo do `mcp-remember-jps`** no modelo da seção 4, sem olhar a tabela de problemas da extensão de memória. *Critério:* ≥ 8 achados etiquetados com
    `arquivo:linha`, 1 diagrama com fontes, ≥ 3 itens "desconhecido" e como respondê-los.
-2. **Relatório do servidor de ferramentas do `jps-agents`** ([snapshots](../harness-de-agentes/estudo-de-caso/jps-agents-mcp/)). *Critério:* inclua o confronto
-   "documentação × código" para pelo menos 3 afirmações do que está descrito em [`TOOLS_ARCHITECTURE`](../harness-de-agentes/README.md#3-estudo-de-caso-o-servidor-de-ferramentas-do-jps-agents) (a validação do `inputSchema`, a lista de tools, o tratamento de erros).
+2. **Relatório do servidor de ferramentas do `jps-agents`** ([snapshots](../harness-de-agentes/estudo-de-caso/jps-agents-mcp/), com o trecho da documentação em
+   [`TOOLS_ARCHITECTURE.trecho.md`](../harness-de-agentes/estudo-de-caso/jps-agents-mcp/TOOLS_ARCHITECTURE.trecho.md)). *Critério:* inclua o confronto "documentação × código" para pelo
+   menos 3 afirmações do trecho (a validação do `inputSchema`, o tratamento de erros, "não expor informações sensíveis em logs" / "usar timeouts").
 3. **Confira o relatório de um agente.** Rode o prompt da seção 3 em um coding agent sobre o exercício 1, depois confira 20 afirmações. *Critério:* taxa de acerto e lista das
    afirmações erradas (e por quê).
 4. **Seu legado** (projeto [P7](../time-de-agentes/projetos-praticos.md#p7--engenharia-reversa-de-um-sistema-legado-seu)). *Critério:* ≥ 90% das afirmações verificadas por você em uma amostra de 20.
@@ -143,7 +145,7 @@ A tabela completa e as correções estão no [estudo de caso da extensão de mem
 
 | Critério | 1 | 2 | 3 |
 |---|---|---|---|
-| **Evidência** (C22) | descreve o que "parece" | cita arquivo e linha | separa fato de inferência e diz como confirmar |
+| **Evidência** (C20, C22) | descreve o que "parece" | cita arquivo e linha | separa fato de inferência e diz como confirmar |
 | **Riscos** (C18) | lista genérica | liga cada risco a uma fronteira e a um cenário | prioriza e propõe a correção mínima testável |
 | **Uso do agente** (C20) | aceita o que ele escreve | exige etiquetas e fontes | mede a taxa de acerto e ajusta o prompt |
 

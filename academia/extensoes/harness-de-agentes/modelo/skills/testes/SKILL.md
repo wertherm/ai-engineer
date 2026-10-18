@@ -10,7 +10,8 @@ description: Escreve e roda testes determinísticos a partir de critérios de ac
 2. Para cada critério, acrescente o caso negativo mais provável (entrada vazia, tipo errado, limite, dependência indisponível).
 3. Mantenha os testes determinísticos: simule rede, relógio e aleatoriedade; use dados mínimos e explícitos; um assunto por teste.
 4. Antes de corrigir um bug, escreva o teste que o reproduz e veja-o **falhar**; só então corrija e veja passar.
-5. Rode tudo e **cole a saída** (quantos passaram, falharam, foram pulados). Rode duas vezes se houver suspeita de instabilidade.
+5. Rode tudo (com a ferramenta de testes do ambiente, quando houver; senão diga "não executei") e **relate a saída real** (quantos passaram, falharam, foram pulados). Rode duas vezes
+   se houver suspeita de instabilidade. Nunca relate um resultado que você não obteve.
 
 ## Relatório
 Arquivos criados, comando para rodar, resultado, lacunas (o que não está coberto e por quê). Nunca altere o código de produção para fazer um teste passar:

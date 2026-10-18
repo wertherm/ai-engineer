@@ -84,11 +84,12 @@ export async function verificar(pasta) {
     if (!ehInteiro(c.max_tokens, 1)) p1.push(`${c.id}: max_tokens deve ser inteiro > 0`);
   }
   // O script de medição pode estar em qualquer linguagem: medir.mjs, medir.py, medir.ts...
-  let scriptDeMedicao = null;
+  // Todos os medir.* da pasta entram na varredura de segredos (não só o primeiro encontrado).
+  let scriptsDeMedicao = [];
   try {
-    scriptDeMedicao = (await readdir(pasta)).find((f) => /^medir\.[a-z0-9]+$/i.test(f)) ?? null;
+    scriptsDeMedicao = (await readdir(pasta)).filter((f) => /^medir\.[a-z0-9]+$/i.test(f)).sort();
   } catch { /* pasta ilegível: o relatório.json já teria falhado acima */ }
-  if (!scriptDeMedicao) p1.push(`entregue também o seu script de medição (medir.mjs, medir.py, medir.ts...) em ${pasta}`);
+  if (!scriptsDeMedicao.length) p1.push(`entregue também o seu script de medição (medir.mjs, medir.py, medir.ts...) em ${pasta}`);
   criterio('CA1', 'Relatório válido: ambiente, ≥ 12 chamadas com contagens coerentes e o script de medição', p1);
 
   const exp = ehObjeto(r.experimentos) ? r.experimentos : {};
@@ -204,8 +205,8 @@ export async function verificar(pasta) {
   const p7 = [];
   const lerOpcional = async (arq) => { try { return await readFile(path.join(pasta, arq), 'utf8'); } catch { return null; } };
   const md = await lerOpcional('relatorio.md');
-  const codigo = scriptDeMedicao ? await lerOpcional(scriptDeMedicao) : null;
-  for (const [arq, texto] of [['relatorio.json', textoJson], ['relatorio.md', md], [scriptDeMedicao ?? 'medir', codigo]]) {
+  const codigos = await Promise.all(scriptsDeMedicao.map(async (arq) => [arq, await lerOpcional(arq)]));
+  for (const [arq, texto] of [['relatorio.json', textoJson], ['relatorio.md', md], ...codigos]) {
     if (texto === null) continue;
     for (const s of acharSegredos(texto.replace(/\r\n?/g, '\n'))) p7.push(`${arq}:${s.linha}: possível segredo (${s.nome}); remova e troque a credencial`);
   }

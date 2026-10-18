@@ -45,30 +45,41 @@ flowchart LR
 - **Tipo:** `tarefa`, `aprendizado`, `decisao`, `bug`, `padrao`, `nota`. Vem do catálogo de chaves tipadas do
   `jps-agents` (`task_`, `learning_`, `arch_decision_`, `bug_`...), agora como campo próprio em vez de prefixo.
 - **Busca com limite:** nunca devolve a memória inteira para dentro do contexto do modelo.
-- **TTL e esquecimento:** o que envelhece expira; o que está errado é esquecido (com rastro).
+- **TTL e esquecimento:** o que envelhece expira; o que está errado é esquecido. **Esquecer remove da busca, mas o registro continua no arquivo** (é o rastro
+  de auditoria) **até alguém rodar `compactar()`**, que reescreve o arquivo só com o que está vigente e apaga do disco o histórico, o esquecido e o expirado. Se
+  a razão de esquecer é privacidade ou um segredo que escapou, esquecer não basta: compacte (e troque a credencial). `compactar()` é uma operação humana: não está exposta por MCP.
 - **Fonte:** quem escreveu (agente, humano, MCP), para auditar e para desconfiar.
+- **Texto que engana quem lê:** valor e fonte com caracteres de controle, escape ANSI, marcas bidi ou caracteres invisíveis são recusados (num terminal eles escondem
+  ou trocam o que parece estar escrito).
 
 ## 3. Por MCP: o que muda
 
 Três ferramentas (`save_memory`, `search_memory`, `forget_memory`) com anotações honestas (`readOnlyHint`,
-`destructiveHint`, `idempotentHint`). Regras do transporte que o original quebrava:
+`destructiveHint`, `idempotentHint`): `save_memory` é marcada como **destrutiva** porque a mesma chave substitui o valor anterior. Regras do transporte que o original quebrava:
 
 1. **stdio:** o servidor **não pode escrever em `stdout` nada que não seja mensagem MCP**; logs vão para o `stderr`
    ([especificação](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)). Um `console.log`
    corrompe o protocolo. (O `mcp-remember-jps` acerta isso; o `server-index.js` do harness do `jps-agents` erra, veja a
    [extensão de harness](../harness-de-agentes/README.md).)
-2. **HTTP:** se precisar de HTTP, use o transporte Streamable HTTP do SDK, **ligado em `127.0.0.1`**, com autenticação
-   e validação do cabeçalho `Origin` (a mesma especificação exige isso contra *DNS rebinding*). Um "health check"
-   escutando em `0.0.0.0` sem autenticação é superfície de ataque grátis. Veja o [exemplo 04 do módulo 03](../../../modulos/03-mcp/exemplos/04-mcp-http-producao/).
+2. **HTTP:** se o **endpoint MCP** for HTTP, use o transporte Streamable HTTP do SDK, **ligado em `127.0.0.1`** quando local, com autenticação
+   e validação do cabeçalho `Origin` (a especificação exige o `Origin` contra *DNS rebinding* e recomenda localhost e autenticação). O "health check" do original só devolve
+   JSON estático em `/health`, então o risco dele é **baixo**; ainda assim é uma porta a mais, sem autenticação, escutando em `0.0.0.0`. Dentro de um contêiner `0.0.0.0` é comum e o risco
+   depende de a porta estar publicada; prefira um *healthcheck* por comando, que não abre porta. Veja o [exemplo 04 do módulo 03](../../../modulos/03-mcp/exemplos/04-mcp-http-producao/).
 3. **Segurança em geral:** [boas práticas de segurança do MCP](https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices).
+4. **Versão da especificação:** os links e o SDK deste guia (1.32.1) seguem a revisão **2025-11-25**. Existe uma revisão mais nova, **2026-07-28**, que muda o handshake `initialize`
+   e as sessões do Streamable HTTP, mas **mantém** as regras citadas aqui (`stdout` só com mensagens MCP, `Origin` obrigatório, localhost e autenticação
+   recomendados: [stdio](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio) e
+   [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http), conferidos em 2026-10-18). Confira a revisão que o seu cliente fala.
 
 ## 4. Segurança da memória
 
 | Risco | Como acontece | Defesa neste desenho |
 |---|---|---|
-| **Credenciais em texto plano** | o agente "lembra" uma senha porque a ferramenta diz que pode | política de segredos: o valor é **recusado** (sem repeti-lo); segredos vão para cofre/variável de ambiente |
+| **Credenciais em texto plano** | o agente "lembra" uma senha porque a ferramenta diz que pode | política de segredos: o valor é **recusado** (sem repeti-lo); segredos vão para cofre/variável de ambiente. É **melhor esforço**: reconhece formatos conhecidos e algumas formas em prosa (`senha: ...`), não prova ausência de segredo; a busca ainda mascara o que casar, caso o arquivo tenha sido editado à mão |
+| **Gravação direta pelo agente** | um agente com `save_memory` grava sem passar por nenhuma aprovação | o servidor não tem aprovação humana: quem exige aprovação (como o [time de agentes](../time-de-agentes/README.md)) deve usar **um arquivo/escopo separado** do que o agente acessa por MCP |
+| **Esquecer não apaga do disco** | `forget_memory` só acrescenta um registro de esquecimento | `compactar()` (humano) apaga o histórico; para segredos, troque a credencial |
 | **Envenenamento da memória** | alguém (ou um documento recuperado) faz o agente gravar uma instrução maliciosa que será obedecida depois | `fonte` registrada; resultado marcado como **dado, não instrução**; revisão humana de memórias de alto impacto. Isso **reduz**, não elimina: o harness também precisa tratar texto recuperado como não confiável ([etapa 11](../../ROADMAP.md)) |
-| **Vazamento entre projetos** | `get_memory project=X` sem autenticação lê qualquer projeto | escopos liberados na **configuração do servidor**, nunca escolhidos pelo modelo |
+| **Vazamento entre projetos** | `get_memory project=X` sem autenticação lê qualquer projeto | o servidor só atende os escopos liberados na **configuração**; o modelo escolhe entre eles a cada chamada, então isolamento real entre projetos exige **um servidor (um escopo) por projeto** |
 | **Estouro de contexto** | a ferramenta devolve tudo | `limite` máximo e `total` informando o excedente |
 | **Crescimento sem fim / dado velho** | só se acrescenta | limite por escopo, TTL, `forget_memory` |
 | **Dado pessoal** | o agente grava e-mails, CPFs, dados de clientes | fora do escopo desta referência: aplique o mascaramento do [M10 · exemplo 04](../../../modulos/10-seguranca-e-governanca/exemplos/04-pii-e-mascaramento/) antes de gravar |
@@ -79,22 +90,21 @@ Código original em [`estudo-de-caso/mcp-remember-jps.index.js`](estudo-de-caso/
 são as desse arquivo). **O que está certo:** consultas parametrizadas (sem injeção de SQL), logs no `stderr`, uso do SDK.
 O que a revisão encontra:
 
-| # | Onde | Problema | Consequência | Correção na referência |
-|---|---|---|---|---|
-| 1 | L22 | a descrição convida a salvar "credencial" | segredos em texto plano num arquivo/volume que viaja em backups | recusa de segredos; descrição proíbe |
-| 2 | L22–23 | `inputSchema` sem `required`, sem limites e aberto | o modelo manda `undefined`, textos gigantes ou campos inventados | esquemas com limites, tipos e `.default` |
-| 3 | L28–39 | argumentos nunca são validados; ferramenta desconhecida retorna `undefined` | linhas com `NULL`; erro obscuro no cliente | validação explícita e erros com código |
-| 4 | L31 | o callback de `db.run` ignora `err` | responde "salva com sucesso" mesmo quando falhou | erros viram `isError` |
-| 5 | L36 | `get_memory` devolve **todas** as linhas do projeto; `err` ignorado | estoura o contexto; memória cresce sem controle | `search_memory` com `limite` e `total` |
-| 6 | L31, L36 | nenhuma autenticação nem escopo: qualquer `project` lê qualquer projeto | vazamento entre projetos | escopos liberados na configuração |
-| 7 | L15 | sem `UNIQUE(project, key)`: `INSERT` sempre cria outra linha | duas "verdades" para a mesma chave | upsert com histórico |
-| 8 | L36 | o conteúdo volta cru, como texto | caminho de injeção de prompt via memória envenenada | marcação como dado + `fonte` |
-| 9 | L42–55 | servidor HTTP em `0.0.0.0`, sem autenticação, só para "manter o container vivo" | superfície de ataque desnecessária (a especificação recomenda `127.0.0.1`) | removido; healthcheck do contêiner por comando |
-| 10 | L11 | caminho fixo `/data/memory.db`, sem TTL, sem `delete`, sem exportação | não dá para esquecer, migrar nem auditar | arquivo configurável, TTL, `forget_memory`, histórico |
+| # | Gravidade | Onde | Problema | Consequência | Correção na referência |
+|---|---|---|---|---|---|
+| 1 | alta | L22 | a descrição convida a salvar "credencial" | segredos em texto plano num arquivo/volume que viaja em backups | recusa de segredos; descrição proíbe |
+| 2 | média | L22–23 | `inputSchema` sem `required`, sem limites e aberto | o modelo manda `undefined`, textos gigantes ou campos inventados | esquemas com limites, tipos e `.default` |
+| 3 | média | L28–39 | argumentos nunca são validados; ferramenta desconhecida retorna `undefined` | linhas com `NULL`; erro obscuro no cliente | validação explícita e erros com código |
+| 4 | média | L31 | o callback de `db.run` ignora `err` | responde "salva com sucesso" mesmo quando falhou | erros viram `isError` |
+| 5 | alta | L36 | `get_memory` devolve **todas** as linhas do projeto; `err` ignorado | estoura o contexto; memória cresce sem controle | `search_memory` com `limite` e `total` |
+| 6 | alta | L31, L36 | nenhuma autenticação nem escopo: qualquer `project` lê qualquer projeto | vazamento entre projetos | escopos liberados na configuração |
+| 7 | média | L15 | sem `UNIQUE(project, key)`: `INSERT` sempre cria outra linha | duas "verdades" para a mesma chave | upsert com histórico |
+| 8 | alta | L36 | o conteúdo volta cru, como texto | caminho de injeção de prompt via memória envenenada | marcação como dado + `fonte` |
+| 9 | baixa | L42–55 | servidor HTTP em `0.0.0.0`, sem autenticação, só para "manter o container vivo" | uma porta a mais e sem autenticação; o `/health` só devolve JSON estático, então o risco é baixo e depende de a porta estar publicada | removido; healthcheck do contêiner por comando |
+| 10 | média | L11 | caminho fixo `/data/memory.db`, sem TTL, sem `delete`, sem exportação | não dá para esquecer, migrar nem auditar | arquivo configurável, TTL, `forget_memory`, histórico |
 
-> Observação de arquitetura: o README do `jps-agents` acessa esse servidor por `ssh ... docker exec -i ...` como `root`.
-> Isso funciona, mas concentra privilégio máximo no transporte e acopla o cliente ao host. Prefira um usuário sem
-> privilégios e, para acesso remoto, Streamable HTTP autenticado.
+> Observação de arquitetura: acessar um servidor MCP remoto por `ssh ... docker exec` com um usuário de máximo privilégio concentra poder no transporte e acopla o
+> cliente ao host. Prefira um usuário sem privilégios e, para acesso remoto, Streamable HTTP autenticado.
 
 ## 6. Rodar a referência
 
@@ -113,7 +123,13 @@ Sem `npm install`, os testes do núcleo (`memoria.test.mjs`) ainda rodam; os do 
 |---|---|
 | [`referencia/memoria.mjs`](referencia/memoria.mjs) | núcleo: escopo, validação, política de segredos, upsert com histórico, busca, TTL, esquecimento |
 | [`referencia/servidor.mjs`](referencia/servidor.mjs) | servidor MCP (stdio) sobre o núcleo |
-| [`referencia/*.test.mjs`](referencia/) | testes do núcleo, do servidor e da regra "stdout só protocolo" |
+| [`referencia/*.test.mjs`](referencia/) | testes do núcleo, de robustez (vários processos de verdade, compactação, arquivo danificado, texto enganoso), do servidor e da regra "stdout só protocolo" |
+
+Para compactar (humano, sem outro processo gravando):
+
+```bash
+node -e "import('./referencia/memoria.mjs').then(({criarMemoria}) => console.log(criarMemoria({arquivo:'./memoria.jsonl',escoposPermitidos:['meu-projeto']}).compactar()))"
+```
 
 ## 7. Exercícios
 
@@ -146,8 +162,10 @@ Sem `npm install`, os testes do núcleo (`memoria.test.mjs`) ainda rodam; os do 
 
 ## 9. Limites e fontes
 
-- A referência guarda em arquivo JSONL, um processo por vez. Vários processos escrevendo no mesmo arquivo exigem trava
-  ou um banco (SQLite/Postgres) atrás da mesma interface.
+- A referência guarda em arquivo JSONL. Cada operação lê primeiro o que outros processos acrescentaram e cada gravação é um único `append` de uma linha, o que
+  serve para **poucos processos e registros pequenos** (há um teste com quatro processos gravando ao mesmo tempo). Não é um banco: sem transações, sem
+  garantia de ordem entre processos além da ordem do arquivo, e `compactar()` só protege contra gravações novas (arquivo de trava), não contra quem já está no meio de uma. Para mais que isso, use
+  um banco (SQLite/Postgres) atrás da mesma interface. O arquivo tem teto de 50 MB (acima disso, `compactar()`).
 - A busca é por palavras-chave. Para memória grande, troque por busca híbrida/vetorial ([etapas 5 e 8](../../ROADMAP.md)).
 - O servidor de memória de referência do projeto MCP (grafo de conhecimento) está em
   [modelcontextprotocol/servers · memory](https://github.com/modelcontextprotocol/servers/tree/main/src/memory): compare os modelos de dados.

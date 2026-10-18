@@ -76,26 +76,30 @@ compartilhado. É a mesma ideia de `AGENTS.md` + skills de outros ambientes, com
 | **Tempo medido pelo próprio agente** ("timeout 30s/60s/120s") | um LLM não tem relógio confiável | o **harness** mede o tempo e impõe o timeout (`timeoutMs` no registro) |
 | **Credenciais "na memória MCP"** (persona do manager e do configurador) | segredo em texto plano, persistente e legível pelo modelo | cofre ou variável de ambiente; a [memória recusa segredos](../memoria-persistente-mcp/README.md#4-segurança-da-memória) |
 | **Afirmações sem evidência** ("reduz entregas ruins em 95%", "6–10x mais rápido") nos "aprendizados" | vira dogma que o próprio squad consulta depois | todo aprendizado cita **dado, comando ou link**; sem evidência, é hipótese |
-| **Infraestrutura em arquivo de regras** (IP, id de contêiner, usuário root, chave pública no README) | vaza para forks, logs e contexto de modelo | configuração fora do repositório; acesso com usuário sem privilégios |
+| **Infraestrutura em arquivos de regras e README** (endereços, usuários, identificadores) | vaza para forks, logs e contexto de modelo, e dá o mapa de ataque | configuração fora do repositório; acesso com usuário sem privilégios |
 | **Ferramenta de rede sem limites** (`http_get`) | veja SSRF abaixo | lista de destinos permitidos, bloqueio de redes internas, limite de tamanho |
 | **Documentação que descreve o que o código não faz** | confiança falsa | engenharia reversa: teste a afirmação ([extensão de engenharia reversa](../engenharia-reversa/README.md)) |
 
 ## 3. Estudo de caso: o servidor de ferramentas do `jps-agents`
 
-Código em [`estudo-de-caso/jps-agents-mcp/`](estudo-de-caso/jps-agents-mcp/) (snapshots; as linhas abaixo são as desses arquivos).
+Código em [`estudo-de-caso/jps-agents-mcp/`](estudo-de-caso/jps-agents-mcp/) (snapshots; as linhas abaixo são as desses arquivos). A documentação que o código deveria
+cumprir está no trecho [`TOOLS_ARCHITECTURE.trecho.md`](estudo-de-caso/jps-agents-mcp/TOOLS_ARCHITECTURE.trecho.md) (aqui o número da linha é o do trecho). Gravidade é uma
+estimativa para um agente que usa a ferramenta com texto não confiável: **alta** = abuso direto; **média** = falha provável ou degradação; **baixa** = hardening.
 
-| # | Onde | Achado | Consequência | Correção |
-|---|---|---|---|---|
-| 1 | `server-index.js` L33, L56, L70 | `console.log` em servidor **stdio** | escreve no `stdout`, que é o canal JSON-RPC: corrompe o protocolo ([especificação](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports): o servidor "MUST NOT write anything to its stdout that is not a valid MCP message") | `console.error` para logs |
-| 2 | `tools-index.js` L40; `TOOLS_ARCHITECTURE.md` ("3. Valida inputSchema") | a documentação afirma validar o `inputSchema`; o código chama `tool.execute(args)` direto | argumentos do modelo chegam sem validação | `validarEsquema` antes de executar (referência) |
-| 3 | `server-index.js` L36–L46 | o resultado de falha (`success: false`) é devolvido como texto normal, sem `isError` | o cliente/modelo não distingue erro de sucesso | erro estruturado com código; `isError` no MCP |
-| 4 | `tools-http-get.js` L31, L37–L40 | `http_get` aceita **qualquer URL** e segue até 5 redirecionamentos | **SSRF**: o modelo (ou um texto injetado) pode alcançar `localhost`, redes internas e o serviço de metadados da nuvem | lista de destinos permitidos; resolver o DNS e bloquear IPs privados/loopback/link-local; não seguir redirecionamentos para fora da lista |
-| 5 | `tools-http-get.js` L19, L57 | cabeçalhos arbitrários na entrada e **todos** os cabeçalhos da resposta na saída | enviar credenciais a terceiros; devolver `set-cookie` ao modelo | lista de cabeçalhos permitidos; devolver só o necessário |
-| 6 | `tools-http-get.js` (sem limite) | sem limite de tamanho da resposta; `data.length` quebra se `data` não for texto | estouro de memória/contexto | `maxContentLength`; limite de saída (`limiteSaida` no registro) |
-| 7 | `tools-index.js` (todas) | nenhuma noção de risco nem de permissão | uma ferramenta de escrita futura (`file_write`, `shell_exec` no roadmap) entra com o mesmo poder da leitura | campo `risco`, permissões e aprovação humana |
-| 8 | `tools-http-get.js` L35 | loga a URL completa | tokens em query string vão para o log | logar só host e caminho |
+| # | Gravidade | Onde | Achado | Consequência | Correção |
+|---|---|---|---|---|---|
+| 1 | média | `server-index.js` L33, L56, L70; `tools-http-get.js` L35, L49 | `console.log` em servidor **stdio** | escreve no `stdout`, que é o canal JSON-RPC: corrompe o protocolo ([especificação](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports): o servidor "MUST NOT write anything to its stdout that is not a valid MCP message"; a revisão 2026-07-28 mantém a regra) | `console.error` para logs |
+| 2 | média | `tools-index.js` L40; `TOOLS_ARCHITECTURE.trecho.md` L36 ("3. Valida inputSchema") e L71 ("Validar inputs em todas as tools") | a documentação afirma validar o `inputSchema`; o código chama `tool.execute(args)` direto | argumentos do modelo chegam sem validação | `validarEsquema` antes de executar (referência) |
+| 3 | média | `server-index.js` L36–L46 | o resultado de falha (`success: false`) é devolvido como texto normal, sem `isError` | o cliente/modelo não distingue erro de sucesso | erro estruturado com código; `isError` no MCP |
+| 4 | **alta** | `tools-http-get.js` L31, L37–L40 | `http_get` aceita **qualquer URL** e segue até 5 redirecionamentos | **SSRF**: o modelo (ou um texto injetado) pode alcançar `localhost`, redes internas e o serviço de metadados da nuvem | lista de destinos permitidos; resolver o DNS e bloquear IPs privados/loopback/link-local; não seguir redirecionamentos para fora da lista |
+| 5 | média | `tools-http-get.js` L31 e L38 (entrada); L57 (saída) | cabeçalhos arbitrários na entrada e **todos** os cabeçalhos da resposta na saída | enviar credenciais a terceiros; devolver `set-cookie` ao modelo | lista de cabeçalhos permitidos; devolver só o necessário |
+| 6 | média | `tools-http-get.js` L37–L40, L48 | sem limite de tamanho da resposta; `data` pode voltar em qualquer tipo e o log calcula `data.length` sem conferir | estouro de memória/contexto; log com "undefined chars" quando não é texto | `maxContentLength`; converter para texto e limitar (`limiteSaida` no registro) |
+| 7 | média | `tools-index.js` (todas) | nenhuma noção de risco nem de permissão | uma ferramenta de escrita futura (`file_write`, `shell_exec` no roadmap, `TOOLS_ARCHITECTURE.trecho.md` L61–L63) entra com o mesmo poder da leitura | campo `risco`, permissões e aprovação humana |
+| 8 | baixa | `tools-http-get.js` L35 | loga a URL completa (a documentação promete "não expor informações sensíveis em logs", L73) | tokens em query string vão para o log | logar só host e caminho |
+| 9 | média | `tools-http-get.js` L22–L24, L31 | o `timeout` vem do modelo, sem teto | o modelo escolhe quanto tempo prender o servidor | teto fixo no harness (`timeoutMs` do registro) |
+| 10 | média | `tools-http-get.js` L61–L66 (retorno de erro) | `error.message` e o `status` voltam ao modelo | com SSRF, serve de oráculo para varrer portas e serviços internos (a mensagem muda entre "recusou", "tempo esgotado" e "404") | erros genéricos para o modelo; detalhes só no log do harness |
 
-O roadmap do `TOOLS_ARCHITECTURE.md` (`shell_exec`, `file_write`, `email_send`...) é exatamente o ponto em que o
+O roadmap da documentação (`shell_exec`, `file_write`, `email_send`...) é exatamente o ponto em que o
 registro precisa de **riscos e aprovação** antes de crescer.
 
 ## 4. O registro de ferramentas de referência
@@ -107,7 +111,7 @@ import { criarRegistro } from './registro-de-ferramentas.mjs';
 
 const registro = criarRegistro({
   permissoes: ['leitura', 'escrita'],        // 'irreversivel' só com aprovação humana
-  aprovar: async ({ ferramenta, argumentos }) => perguntarAoHumano(ferramenta, argumentos),
+  aprovar: async ({ ferramenta, resumo, quem }) => perguntarAoHumano(ferramenta, resumo, quem),   // `resumo`: argumentos já mascarados e sem caracteres de controle
   auditoria: (evento) => console.error(JSON.stringify(evento)),   // stderr! (veja o item 1 acima)
   timeoutMs: 10_000, limiteSaida: 20_000,
 });
@@ -121,25 +125,37 @@ registro.registrar({
   executar: async ({ consulta }, { signal }) => buscar(consulta, { signal }),
 });
 
-registro.definicoes();                        // vai para o modelo (function calling): sem risco, sem função
+registro.definicoes();                        // vai para o modelo: { name, description, inputSchema } (formato MCP; function calling da OpenAI chama o esquema de `parameters`). Sem risco, sem função
 await registro.executar('buscar_docs', { consulta: 'tokens' }, { quem: 'agente-qa' });
 // -> { ok: true, resultado: '...', truncado: false }  |  { ok: false, erro: { codigo, mensagem, problemas? } }
 ```
 
-O que ele garante (cada item tem teste em [`registro-de-ferramentas.test.mjs`](referencia/registro-de-ferramentas.test.mjs)):
-contrato validado no cadastro; argumentos validados **antes** de executar e **antes** de pedir aprovação; permissões por
-risco; irreversível só com `true` exato do aprovador; timeout com cancelamento (`AbortSignal`); limite de saída; erros
-sem stack e sem segredos; auditoria que registra os **nomes** dos argumentos e nunca os valores.
+O que ele garante (cada item tem teste em [`registro-de-ferramentas.test.mjs`](referencia/registro-de-ferramentas.test.mjs) e
+[`registro-de-ferramentas.robustez.test.mjs`](referencia/registro-de-ferramentas.robustez.test.mjs)):
+
+- **Cadastro:** contrato validado; o esquema só pode usar o que a validação realmente aplica (`oneOf`, `$ref`, `format`... são **recusados**, em vez de ignorados em silêncio),
+  objetos aninhados também fechados, `pattern` exige `maxLength` e recusa o formato clássico de ReDoS. O registro guarda uma **cópia congelada** da ferramenta: mudar o objeto depois
+  do cadastro (risco, esquema, função) não muda a política em vigor.
+- **Argumentos:** validados **antes** de executar e **antes** de pedir aprovação, sobre uma **cópia** (o que foi validado e aprovado é o que executa); `__proto__`/`constructor` não passam por
+  campos; `NaN`, `Infinity`, `BigInt`, `Date` e funções são recusados.
+- **Permissões:** por risco; irreversível só com `true` exato do aprovador (erro ou rejeição na função de aprovação = negado); quem decide recebe um `resumo` mascarado e sem caracteres de controle, não os argumentos crus.
+- **Execução:** timeout com cancelamento (`AbortSignal`); limite de saída; segredos mascarados no resultado; resultado `undefined`/circular/função vira erro estruturado; erros sem stack e sem segredos.
+- **Auditoria:** registra os **nomes** dos argumentos e nunca os valores; para escrita e irreversível há um evento `iniciada` **antes** de executar; se a auditoria falhar, uma ação irreversível **não executa**.
+
+Limite: o timeout é **cooperativo** (a ferramenta recebe um `AbortSignal`); uma ferramenta que o ignore continua rodando em segundo plano. Por isso, enquanto uma ferramenta que estourou o tempo não terminar,
+novas chamadas a ela são recusadas (`ferramenta_ocupada`); ferramentas de escrita precisam, de qualquer forma, ser idempotentes ou respeitar o sinal.
 
 ## 5. Modelos prontos para adaptar
 
 | Arquivo | Para quê |
 |---|---|
 | [`modelo/AGENTS.md`](modelo/AGENTS.md) | contexto do projeto para qualquer coding agent: comandos, estilo, segurança, memória, papéis |
-| [`modelo/personas/`](modelo/personas/) | `manager`, `qa` e `backend`, reescritos com evidência, gates objetivos e sem credenciais na memória |
-| [`modelo/skills/`](modelo/skills/) | `revisao-de-codigo` e `testes` no formato `SKILL.md` (`name` e `description` no frontmatter) |
+| [`modelo/personas/`](modelo/personas/) | 7 executores: `manager`, `backend`, `frontend`, `ux-ui`, `testes`, `diagramas` e `documentos`, com evidência, gates objetivos e sem credenciais na memória |
+| [`modelo/avaliadores/`](modelo/avaliadores/) | 3 avaliadores: `qa`, `seguranca` e `editor` (documentos, diagramas e especificações de UX) |
+| [`modelo/skills/`](modelo/skills/) | `revisao-de-codigo`, `testes`, `diagramas-mermaid` e `documentacao`, cada uma em `SKILL.md` (`name` e `description` no frontmatter) |
 
-Foram reescritos a partir dos arquivos do `jps-agents` (nada de infraestrutura, nomes de projetos ou credenciais).
+Foram reescritos a partir das ideias do `jps-agents` (nada de infraestrutura, nomes de projetos ou credenciais).
+Onde instalar uma skill: no Claude Code, `.claude/skills/<nome>/SKILL.md` (projeto) ou `~/.claude/skills/<nome>/SKILL.md` (pessoal); outros ambientes variam, e `AGENTS.md` é o formato mais portável.
 Substitua os trechos entre `<...>` e **apague o que não usa**: contexto sobrando custa tokens em toda chamada.
 
 ## 6. Exercícios

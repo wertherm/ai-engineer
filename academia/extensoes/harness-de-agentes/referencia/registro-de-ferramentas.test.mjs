@@ -85,7 +85,7 @@ describe('permissões e aprovação humana', () => {
     const humano = criarRegistro({ permissoes: ['irreversivel'], aprovar: async (info) => { pedidos.push(info); return true; } }).registrar(apagar);
     const res = await humano.executar('apagar_arquivo', { caminho: 'a.txt' }, { quem: 'agente-x' });
     assert.deepEqual(res, { ok: true, resultado: 'apagado a.txt', truncado: false });
-    assert.deepEqual(pedidos, [{ ferramenta: 'apagar_arquivo', risco: 'irreversivel', argumentos: { caminho: 'a.txt' }, quem: 'agente-x' }]);
+    assert.deepEqual(pedidos, [{ ferramenta: 'apagar_arquivo', risco: 'irreversivel', argumentos: { caminho: 'a.txt' }, resumo: '{"caminho":"a.txt"}', quem: 'agente-x' }]);
   });
 
   it('argumento inválido é barrado ANTES de pedir aprovação ao humano', async () => {

@@ -43,6 +43,7 @@ describe('servidor MCP da memória', { skip: semSdk && 'instale as dependências
     const por = Object.fromEntries(tools.map((t) => [t.name, t]));
     assert.equal(por.search_memory.annotations.readOnlyHint, true);
     assert.equal(por.forget_memory.annotations.destructiveHint, true);
+    assert.equal(por.save_memory.annotations.destructiveHint, true, 'salvar com a mesma chave substitui o valor');
     assert.match(por.save_memory.description, /nunca credenciais/);
   });
 

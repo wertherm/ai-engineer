@@ -83,13 +83,14 @@ after(async () => {
 const lerRelatorio = async () => JSON.parse(await readFile(path.join(pasta, 'relatorio.json'), 'utf8'));
 
 /** Copia a entrega, aplica a alteração (no objeto do relatório e/ou nos textos) e verifica. */
-async function comAlteracao(alterar, nome, { md = RELATORIO_MD, semMedir = false, jsonBruto, medirNome = 'medir.mjs' } = {}) {
+async function comAlteracao(alterar, nome, { md = RELATORIO_MD, semMedir = false, jsonBruto, medirNome = 'medir.mjs', extras = {} } = {}) {
   const copia = await mkdtemp(path.join(tmpdir(), `licao01-${nome}-`));
   const r = await lerRelatorio();
   const alterado = alterar ? alterar(r) : undefined;
   await writeFile(path.join(copia, 'relatorio.json'), jsonBruto ?? JSON.stringify(alterado ?? r));
   if (md !== null) await writeFile(path.join(copia, 'relatorio.md'), md);
   if (!semMedir) await copyFile(path.join(aqui, 'referencia', 'medir.mjs'), path.join(copia, medirNome));
+  for (const [arq, conteudo] of Object.entries(extras)) await writeFile(path.join(copia, arq), conteudo);
   try {
     return await verificar(copia);
   } finally {
@@ -238,6 +239,16 @@ describe('o verificador não aceita relatório inventado', () => {
     assert.ok(!JSON.stringify(urlNoMd).includes('senha1'), 'a mensagem nunca repete o segredo');
     const falsoPositivo = await comAlteracao(null, 'ca7d', { md: `${RELATORIO_MD}\nrisk-assessment-framework e apiKey: process.env.OPENAI_API_KEY\n` });
     assert.deepEqual(falhas(falsoPositivo), []);
+  });
+
+  it('CA7 varre TODOS os medir.* da pasta, não só o primeiro (medir.mjs limpo + medir.py com chave)', async () => {
+    const chave = 'sk-' + 'q1w2e3r4'.repeat(4);
+    const res = await comAlteracao(null, 'ca7e', { extras: { 'medir.py': `API_KEY = "${chave}"\n` } });
+    assert.deepEqual(falhas(res), ['CA7']);
+    assert.match(problemas(res, 'CA7'), /medir\.py:1/);
+    assert.ok(!JSON.stringify(res).includes('q1w2e3r4'), 'a mensagem nunca repete o segredo');
+    const limpos = await comAlteracao(null, 'ca7f', { extras: { 'medir.py': 'print("ok")\n' } });
+    assert.deepEqual(falhas(limpos), []);
   });
 
   it('CA1: poucas chamadas, null no lugar de objetos, base_url com credenciais/query e medir.mjs ausente reprovam sem exceção', async () => {

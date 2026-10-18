@@ -81,8 +81,9 @@ describe('avaliação em cadeia e revisão (evaluator-optimizer)', () => {
       { titulo: 'Escrever os testes', papel: 'testes', criterios: ['passam'], depende_de: [0] },
     ] });
     const qa = { nome: 'qa', aplicaA: (t) => t.papel === 'backend', avaliar: async () => ({ aprovado: false, feedback: 'ruim' }) };
+    const doGerente = { ...aprova('plano'), aplicaA: (t) => t.papel === 'gerente' };
     const r = await criarOrquestrador({
-      agentes: { gerente: plano, backend: faz('api'), testes: async () => { executou = true; return { resultado: 'x' }; } }, avaliadores: [qa], orcamento: { maxTentativas: 1 },
+      agentes: { gerente: plano, backend: faz('api'), testes: async () => { executou = true; return { resultado: 'x' }; } }, avaliadores: [doGerente, qa], orcamento: { maxTentativas: 1 },
     }).executar(tarefa({ papel: 'gerente', titulo: 'Plano' }));
     assert.deepEqual(estados(r), { Plano: 'aprovada', 'Implementar a API': 'escalada', 'Escrever os testes': 'bloqueada' });
     assert.equal(executou, false);
@@ -94,7 +95,7 @@ describe('avaliação em cadeia e revisão (evaluator-optimizer)', () => {
     const pedidos = [];
     const agentes = { backend: faz('entrega', { novas_tarefas: [{ titulo: 'Documentar o endpoint', papel: 'docs', criterios: ['README atualizado'] }] }), docs: faz() };
     const orq = criarOrquestrador({
-      agentes, avaliadores: [{ nome: 'qa', aplicaA: (t) => t.papel === 'backend', avaliar: reprova.avaliar }], orcamento: { maxTentativas: 1 },
+      agentes, avaliadores: [{ nome: 'qa', aplicaA: (t) => t.papel === 'backend', avaliar: reprova.avaliar }, { ...aprova('editor'), aplicaA: (t) => t.papel === 'docs' }], orcamento: { maxTentativas: 1 },
       humano: async (info) => { pedidos.push(info); return { acao: 'aprovar' }; },
     });
     const r = await orq.executar(tarefa());
@@ -147,7 +148,7 @@ describe('delegação e criação de tarefas (orchestrator-workers)', () => {
 
   it('avaliador também pode pedir tarefas de acompanhamento ao aprovar', async () => {
     const qa = { nome: 'qa', avaliar: async () => ({ aprovado: true, novas_tarefas: [{ titulo: 'Cobrir o caso de borda', papel: 'testes', criterios: ['caso coberto'] }] }) };
-    const r = await criarOrquestrador({ agentes: { backend: faz(), testes: faz() }, avaliadores: [{ ...qa, aplicaA: (t) => t.papel === 'backend' }] }).executar(tarefa());
+    const r = await criarOrquestrador({ agentes: { backend: faz(), testes: faz() }, avaliadores: [{ ...qa, aplicaA: (t) => t.papel === 'backend' }], aprovarSemAvaliador: true }).executar(tarefa());
     assert.deepEqual(r.tarefas.map((t) => [t.titulo, t.estado]), [['Criar o endpoint de clientes', 'aprovada'], ['Cobrir o caso de borda', 'aprovada']]);
   });
 

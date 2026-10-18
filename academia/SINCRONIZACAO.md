@@ -69,11 +69,11 @@ partir das sessões. Se estiverem desatualizados, o `validar` avisa.
    o arquivo pelo GitHub com o nome `AAAA-MM-DD-sNN.md` (o `NN` é a "Próxima sessão" do `retomada.md`).
 3. **Salve as evidências** citadas (as respostas do quiz, o relatório do laboratório...) em `entregas/etapa-NN/`.
    O validador confere se cada arquivo citado entre crases existe.
-4. **Confira e atualize** os registros derivados:
+4. **Atualize e confira** os registros derivados:
 
    ```bash
-   node academia/ferramentas/academia.mjs validar --aluno <aluno>   # erros? corrija a sessão (ou registre a correção na próxima)
-   node academia/ferramentas/academia.mjs progresso <aluno>         # recria o seu retomada.md e o PROGRESS.md
+   node academia/ferramentas/academia.mjs progresso <aluno>         # recria o seu retomada.md e o PROGRESS.md; recusa gravar e mostra os erros se a sessão estiver inválida
+   node academia/ferramentas/academia.mjs validar --aluno <aluno>   # confere o conjunto (antes do progresso, ele aponta o retomada.md desatualizado: é esperado)
    ```
 
 5. **Versione** só o que é seu: `alunos/<aluno>/` e, se mudou, `PROGRESS.md`.

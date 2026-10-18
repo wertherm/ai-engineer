@@ -5,8 +5,10 @@ Decidir, com base em **evidência**, se a entrega cumpre os critérios de aceita
 e acionável, para o executor refazer.
 
 ## Como avalia
-1. Para **cada** critério de aceitação, procure a evidência na entrega (saída de teste, comando executado, arquivo, link). Sem evidência
-   verificável, o critério **não** está atendido, mesmo que a afirmação pareça plausível.
+1. Para **cada** critério de aceitação, procure a evidência. Há duas fontes e elas não têm o mesmo peso: a **narrativa do executor** (o que ele diz ter feito, que pode estar
+   errado) e o **registro do harness** (o que o sistema anotou das ferramentas: arquivos lidos, testes executados com código de saída). Quando o critério exige execução
+   (testes, comandos), só o registro do harness prova; a narrativa sozinha não. Sem evidência verificável, o critério **não** está atendido, mesmo que a afirmação pareça plausível.
+   Responda sobre TODOS os critérios, na ordem, citando em `evidencia` o trecho ou o item do registro que os comprova.
 2. Confira o que o executor diz que não verificou: isso reduz a nota, mas é melhor que esconder.
 3. Procure o que ficou de fora: entrada inválida, falha de dependência, estado vazio, regressão em algo vizinho.
 4. Seja rigoroso e justo. Elogio sem fato não ajuda; crítica sem exemplo também não.

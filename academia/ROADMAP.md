@@ -303,7 +303,7 @@ quando houver valor pedagógico.
 | Sistemas multiagente | 10 | [M04 · exemplo 07](../modulos/04-agentes-autonomos/exemplos/07-multiagente-supervisor/) · [M08 · exemplo 03](../modulos/08-arquitetura-de-sistemas-com-ia/exemplos/03-multiagente-com-fila/) |
 | CRAG, Self-RAG e GraphRAG | 8 | [extensão RAG avançado](extensoes/rag-avancado/README.md) (guia + fluxo corretivo testado; GraphRAG só conceitual, sem laboratório) |
 | Memória persistente via MCP | 10 | [extensão](extensoes/memoria-persistente-mcp/README.md) |
-| Harness de agentes, personas e skills | 11 | [extensão](extensoes/harness-de-agentes/README.md) |
+| Harness de agentes, personas e skills | 13 | [extensão](extensoes/harness-de-agentes/README.md) |
 | Engenharia reversa assistida por IA | 13 | [extensão](extensoes/engenharia-reversa/README.md) |
 | Time de agentes que delega, avalia e aprende | 10 | [extensão](extensoes/time-de-agentes/README.md) · [projetos práticos](extensoes/time-de-agentes/projetos-praticos.md) |
 | MLOps (tracking, registry, drift) | 14 | [trilha MLOps](../trilhas-extras/mlops/) |

@@ -13,7 +13,7 @@
   "avaliadores": [
     { "nome": "qa", "persona": "../harness-de-agentes/modelo/avaliadores/qa.md", "limiar": 0.8, "aplicaA": ["backend", "frontend", "testes"] },
     { "nome": "seguranca", "persona": "../harness-de-agentes/modelo/avaliadores/seguranca.md", "limiar": 0.9, "aplicaA": ["backend", "frontend"] },
-    { "nome": "editor", "persona": "../harness-de-agentes/modelo/avaliadores/editor.md", "limiar": 0.8, "aplicaA": ["documentos", "diagramas", "uxui"] }
+    { "nome": "editor", "persona": "../harness-de-agentes/modelo/avaliadores/editor.md", "limiar": 0.8, "aplicaA": ["manager", "documentos", "diagramas", "uxui"] }
   ],
   "roteador": {
     "padrao": "manager",
@@ -21,9 +21,24 @@
       "backend": ["api", "endpoint", "banco", "servidor", "migracao", "autenticacao"],
       "frontend": ["tela", "componente", "interface", "formulario", "pagina"],
       "uxui": ["fluxo", "usabilidade", "design", "acessibilidade", "wireframe"],
-      "testes": ["teste", "cobertura", "regressao", "reproduzir"],
+      "testes": ["teste", "testes", "cobertura", "regressao", "reproduzir"],
       "diagramas": ["diagrama", "arquitetura", "sequencia", "mermaid"],
       "documentos": ["readme", "documentar", "documentacao", "adr", "changelog"]
+    }
+  },
+  "delegacoes": {
+    "manager": ["backend", "frontend", "uxui", "testes", "diagramas", "documentos"],
+    "backend": ["testes", "documentos"],
+    "frontend": ["testes", "documentos"]
+  },
+  "ferramentas": {
+    "comandoTestes": ["node", "--test"],
+    "timeoutMs": 120000,
+    "papeis": {
+      "backend": ["ler_arquivo", "listar_arquivos", "git_diff"],
+      "frontend": ["ler_arquivo", "listar_arquivos", "git_diff"],
+      "testes": ["ler_arquivo", "listar_arquivos", "git_diff", "rodar_testes"],
+      "documentos": ["ler_arquivo", "listar_arquivos", "git_diff"]
     }
   },
   "orcamento": { "maxTarefas": 15, "maxProfundidade": 3, "maxTentativas": 3, "maxChamadas": 60 }

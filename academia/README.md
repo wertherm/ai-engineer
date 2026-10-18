@@ -49,7 +49,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 ## Como interagir com o conteúdo
 
 - **Você (pessoa) + um assistente de IA em uma conversa:** gere o kit (`kit <aluno>`), cole numa conversa nova, estude a lição, peça o relatório no fim e
-  registre com `sessao`, `validar --aluno` e `progresso`. Passo a passo e prompts: [SINCRONIZACAO.md](SINCRONIZACAO.md).
+  registre com `sessao`, `progresso` e `validar --aluno`. Passo a passo e prompts: [SINCRONIZACAO.md](SINCRONIZACAO.md).
 - **Um agente com acesso ao repositório** (Claude Code, Codex, Cursor...): ele lê `AI_CONTEXT.md`, o `retomada.md` do aluno e a lição; conduz a sessão e roda os mesmos comandos.
 - **Só ler e rodar:** os módulos em [`../modulos/`](../modulos/) têm README, exemplos executáveis e exercícios com solução; a Academia só dá a ordem e o registro.
 - **Usar o time de agentes no seu dia a dia:** [extensão Time de agentes](extensoes/time-de-agentes/README.md) e os [projetos práticos](extensoes/time-de-agentes/projetos-praticos.md).

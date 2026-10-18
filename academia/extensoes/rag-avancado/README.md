@@ -37,7 +37,7 @@ dos documentos recuperados para a consulta e, com base nessa confiança, o siste
 fonte (os autores usam busca na web em larga escala) ou combinar as duas coisas; um passo de **decompor e recompor** filtra os documentos até as
 informações-chave. A ideia que importa para engenharia: *o sistema avalia a própria recuperação antes de gerar*, e a **abstenção** é uma ação válida.
 
-No código ([`referencia/crag.mjs`](referencia/crag.mjs)) o fluxo é: recuperar → avaliar cada trecho → classificar (**correta**, **ambígua** ou
+No código ([`referencia/crag.mjs`](referencia/crag.mjs)) há um fluxo corretivo **inspirado no CRAG** (não é uma reimplementação do artigo: não há o passo de decompor e recompor; no caso "incorreto" ele reescreve a consulta e recupera de novo, em vez de buscar na web; a busca externa só entra no caso "ambíguo"; e a abstenção é um acréscimo). O fluxo é: recuperar → avaliar cada trecho → classificar (**correta**, **ambígua** ou
 **incorreta**, por dois limiares) → agir (usar os bons; complementar; reescrever e recuperar de novo; abster-se). Pontos de projeto que o teste fixa: o gerador
 **nunca** recebe trecho abaixo do limiar mínimo; trecho que o avaliador esqueceu vale nota 0; o número de reescritas é limitado; busca externa é uma função
 injetada (**use lista de permissão**, tudo que vem da web é dado não confiável).
