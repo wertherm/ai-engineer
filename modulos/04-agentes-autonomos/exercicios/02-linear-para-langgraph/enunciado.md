@@ -58,3 +58,30 @@ Saída real da solução:
 
 Repare que a trilha mostra só `calcular_frete#3(falhou)`: as atualizações de estado das tentativas que
 lançaram exceção são descartadas pelo LangGraph; só a tentativa que retornou entra no estado.
+
+## Versão Python
+
+- Ponto de partida: [`inicial/python/linear.py`](inicial/python/linear.py) ·
+  `uv run python exercicios/02-linear-para-langgraph/inicial/python/linear.py` → saída real: `2x cadeiras, frete R$ 25`.
+- Solução: [`solucao/python/grafo.py`](solucao/python/grafo.py) + [`solucao/python/main.py`](solucao/python/main.py)
+  · `uv run python exercicios/02-linear-para-langgraph/solucao/python/main.py`.
+
+Diferença idiomática: o LangGraph **Python** 1.2 tem `add_node(..., error_handler=...)`. Em vez de capturar a
+exceção na última tentativa (a dica acima, que é o caminho no JS), `calcular_frete` só lança; esgotadas as 3
+tentativas do `RetryPolicy`, o handler `frete_falhou(state, error: NodeError)` grava o erro e a trilha e devolve
+`Command(goto="frete_padrao")`. A falha simulada é `FreteIndisponivel(ConnectionError)`: o `retry_on` padrão do
+Python retenta `ConnectionError`, mas **não** retentaria um `ValueError`/`RuntimeError`. O CEP é limpo com
+`re.sub(r"\D", "", ..., flags=re.ASCII)` (sem `re.ASCII`, `\D` deixaria passar dígitos não ASCII).
+
+Saída real da solução Python:
+
+```
+[API ok] extrair -> validar -> calcular_frete#1 -> responder
+  2x cadeiras, frete R$ 25 (api)
+[API fora do ar] extrair -> validar -> calcular_frete#3(falhou) -> frete_padrao -> responder
+  2x cadeiras, frete R$ 50 (tabela padrão (fallback))
+[pedido sem CEP] extrair -> validar(CEP inválido) -> fallback
+  Não consegui entender o pedido (CEP inválido). Um atendente vai assumir.
+
+✅ 3 caminhos do grafo verificados · 3 chamadas ao LLM · 183 tokens de prompt · 61 de resposta · 18.5s no modelo
+```

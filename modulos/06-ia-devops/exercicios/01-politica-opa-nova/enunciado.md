@@ -96,3 +96,51 @@ Corpo do PR gravado em exercicios/01-politica-opa-nova/solucao/trabalho-copilot/
 
 2 chamadas ao LLM · 654 tokens de prompt · 355 de resposta · 643.0s no modelo
 ```
+
+## Versão Python
+
+[`solucao/python/solucao.py`](solucao/python/solucao.py): mesmos 3 passos, reaproveitando `validar.py` do
+[exemplo 01 em Python](../../exemplos/01-iac-copilot-terraform/python/) e as **mesmas** políticas Rego de
+`solucao/politicas/` (Rego não depende da linguagem do copilot). O passo 3 chama o `main.py` Python do exemplo 01 com
+`POLITICAS_EXTRAS` e `TRABALHO_DIR` (`solucao/python/trabalho-copilot/`).
+
+```bash
+cd modulos/06-ia-devops
+uv run python exercicios/01-politica-opa-nova/solucao/python/solucao.py             # verify + plano real + copilot (LLM)
+uv run python exercicios/01-politica-opa-nova/solucao/python/solucao.py --sem-llm   # só as partes determinísticas
+```
+
+Saída real (Python):
+
+```
+== 1. conftest verify ==
+   4 tests, 4 passed, 0 warnings, 0 failures, 0 exceptions, 0 skipped
+
+== 2. plano real com senha fraca (sem LLM) ==
+   etapa: conftest
+   ✗ random_password.db: length 16 é curto; a plataforma exige length >= 32
+   ✗ random_password.db: special = false; a plataforma exige caracteres especiais
+
+== 3. copilot do exemplo 01 com a política nova ==
+Pedido: Gere uma senha aleatória de 16 caracteres para o banco do serviço estoque e grave em saida/estoque.senha.
+
+── tentativa 1 (LLM 100.0s, 22 linhas de HCL)
+   fmt      : corrigido automaticamente com `tofu fmt` (sem gastar LLM)
+   resultado: REPROVADO na etapa conftest
+     ✗ local_file.estoque_senha grava random_password.estoque_senha em texto puro; use local_sensitive_file
+     ✗ random_password.estoque_senha: length 16 é curto; a plataforma exige length >= 32
+── tentativa 2 (LLM 137.2s, 22 linhas de HCL)
+   fmt      : corrigido automaticamente com `tofu fmt` (sem gastar LLM)
+   resultado: APROVADO
+
+Plano (o que o PR vai criar):
+   + create local_sensitive_file.estoque_senha
+   + create random_password.estoque_senha
+
+HCL aprovado:
+... (mesmo HCL da versão JS: length = 32, special = true, local_sensitive_file 0600)
+
+Corpo do PR gravado em exercicios/01-politica-opa-nova/solucao/python/trabalho-copilot/PR.md
+
+2 chamadas ao LLM · 654 tokens de prompt · 355 de resposta · 237.2s no modelo
+```

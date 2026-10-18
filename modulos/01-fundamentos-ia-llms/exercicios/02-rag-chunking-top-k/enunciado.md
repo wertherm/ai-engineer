@@ -51,3 +51,31 @@ Conclusão desta medição: `paragrafo` empata com `documento` em hit@k e MRR ma
 (menos tokens, menos custo, menos ruído para o LLM). `janela160` é a pior em MRR: corta frases no meio e
 perde o título que dava contexto ao trecho. Com corpus pequeno o documento inteiro "funciona"; com
 documentos longos ele estoura a janela de contexto e dilui a similaridade.
+
+## Versão Python
+
+[`solucao/python/solucao.py`](solucao/python/solucao.py): as mesmas 3 estratégias, as mesmas 10 perguntas, usando
+[`comum_py/rag.py`](../../comum_py/rag.py) (`psycopg` 3 + `pgvector`) na tabela `m01.chunks_py`.
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`; só embeddings, ~20 s):
+
+```bash
+uv run python exercicios/02-rag-chunking-top-k/solucao/python/solucao.py
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+chunking   chunks  k  hit@k   MRR  contexto médio (chars)
+documento       6  1   9/10  0.90                     472
+documento       6  3  10/10  0.95                    1442
+paragrafo      17  1   9/10  0.90                     171
+paragrafo      17  3  10/10  0.95                     535
+janela160      24  1   8/10  0.80                     151
+janela160      24  3  10/10  0.87                     414
+hit@k = a resposta estava em algum dos k trechos | MRR = média de 1/posição do 1º trecho certo
+```
+
+Tabela idêntica à do JS (mesmos embeddings, mesma busca). Na primeira execução a linha `janela160 k=1` deu 150 em
+vez de 151: `round(150.5)` no Python dá 150 (arredonda para o par), `Math.round` do JS dá 151. A solução usa
+`int(x + 0.5)` para comparar as duas versões.

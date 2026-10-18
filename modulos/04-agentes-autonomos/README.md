@@ -5,7 +5,8 @@ Como construir agentes que percebem, raciocinam, agem e aprendem com o feedback:
 guardrails, auditoria e sistemas multiagente, tudo rodando com um LLM local.
 
 Estudado em 2026-10-16 com `@langchain/langgraph` **1.5.0**, `langchain` **1.5.18**, `openai` **7.34.0** e
-o modelo local `qwen3.5:4b` (Ollama).
+o modelo local `qwen3.5:4b` (Ollama). Versão Python (2026-10-17): `langgraph` **1.2.16**, `langchain` **1.4.6**,
+`openai` **3.35.0**, `mcp` **2.3.0**, Python 3.14.
 
 ## Mapa da ementa
 
@@ -62,6 +63,8 @@ o modelo local `qwen3.5:4b` (Ollama).
   A partir da raiz do repo: `bash infra/subir-ia.sh`.
 - Node 24 (`@langchain/openai` e `pgvector` exigem Node >= 22).
 - Dependências: `cd modulos/04-agentes-autonomos && npm install`.
+- Versão Python (opcional): [`uv`](https://docs.astral.sh/uv/) e Python 3.14; o módulo tem `pyproject.toml` e
+  `uv.lock` próprios (`uv sync` na pasta do módulo). Código compartilhado em [`comum_py/`](comum_py/).
 - Variáveis opcionais (defaults locais, veja `infra/.env.example`): `OPENAI_BASE_URL`, `OPENAI_API_KEY`,
   `MODELO_CHAT`, `MODELO_EMBED`, `DATABASE_URL`. Os dados ficam só no schema `m04`.
 - Paciência: o modelo roda em CPU (~5 tokens/s). Cada chamada leva de 30 s a vários minutos, conforme a
@@ -90,7 +93,31 @@ npm run exe02           # exercício 02: agente linear -> grafo LangGraph com fa
 npm run tudo            # tudo em sequência (lento: ~30+ min em CPU)
 ```
 
-Porta usada: 30400 (API REST do exemplo 03; sobe e desce dentro do próprio script).
+Versão Python (mesmos exemplos, pastas `python/`; tabelas `_py` no schema `m04`):
+
+```bash
+cd modulos/04-agentes-autonomos
+uv sync
+
+uv run python exemplos/01-agent-loop-do-zero/python/main.py
+uv run python exemplos/02-react-vs-plan-execute/python/main.py
+uv run python exemplos/02-react-vs-plan-execute/python/react_langchain.py   # langchain.agents.create_agent
+uv run python exemplos/03-tools-externas/python/main.py                     # FastAPI na porta 30450 + MCP stdio
+uv run python exemplos/04-reflection-e-memoria/python/main.py 1
+uv run python exemplos/04-reflection-e-memoria/python/main.py 2
+uv run python exemplos/05-gerenciamento-de-contexto/python/main.py
+uv run python exemplos/06-langgraph-hitl-guardrails/python/main.py
+uv run python exemplos/07-multiagente-supervisor/python/main.py
+
+uv run python exercicios/01-tool-nova-e-orcamento/solucao/python/main.py
+uv run python exercicios/02-linear-para-langgraph/inicial/python/linear.py
+uv run python exercicios/02-linear-para-langgraph/solucao/python/main.py
+
+uv run pytest            # testes sem LLM (contexto, grafo com chat falso, executor multiagente)
+```
+
+Portas usadas: 30400 (API REST do exemplo 03 em JS) e 30450 (a mesma API em FastAPI, versão Python); as duas
+sobem e descem dentro do próprio script.
 
 ## Status de verificação
 
@@ -106,6 +133,16 @@ Porta usada: 30400 (API REST do exemplo 03; sobe e desce dentro do próprio scri
 | Exemplo 07 · multiagente supervisor assíncrono | ✅ executado (replanejamento por orçamento) |
 | Exercício 01 · tool nova + orçamento | ✅ executado (asserts ok) |
 | Exercício 02 · linear → LangGraph com fallback | ✅ executado (3 caminhos com asserts) |
+| **Python** · Exemplo 01 (`python/main.py`) | ✅ executado (2 chamadas, 923 tokens de prompt, igual ao JS) |
+| **Python** · Exemplo 02 · ReAct × Plan-and-Execute | ✅ executado (ReAct 6 chamadas/5195 tokens; Plan-Execute 1/377; ambos 6450) |
+| **Python** · Exemplo 02 · `langchain.agents.create_agent` | ✅ executado (3 chamadas, tools em paralelo, 6450) |
+| **Python** · Exemplo 03 · FastAPI + Postgres + MCP (`mcp` 2.3.0) | ✅ executado (mesmo fluxo; `m04.tarefas_py`/`notificacoes_py`) |
+| **Python** · Exemplo 04 · Reflection + pgvector (2 sessões) | ✅ executado (`m04.memorias_py`; distância 0,556 na sessão 2) |
+| **Python** · Exemplo 05 · pruning, sumarização, stitching | ✅ executado + 4 testes pytest |
+| **Python** · Exemplo 06 · LangGraph Python (retry, `error_handler`, HITL, auditoria) | ✅ executado (`m04.auditoria_py`) + 4 testes pytest |
+| **Python** · Exemplo 07 · multiagente com `asyncio.Queue` | ✅ executado (replanejamento por orçamento) + 1 teste pytest |
+| **Python** · Exercício 01 | ✅ executado (asserts ok) |
+| **Python** · Exercício 02 (inicial + solução) | ✅ executado (3 caminhos com asserts) |
 | LangSmith / tracing gerenciado | ⚠️ não executado localmente: exige conta; substituído por `stream` + tabela de auditoria |
 | Padrões Hierarchical, Group Chat e Consensus; CrewAI, AutoGPT, AutoGen, Agentarium, Claude agent teams | ⚠️ não executado localmente: conceitual no doc 04 (frameworks/produtos externos) |
 | U8 · Projeto prático | fora do escopo deste repositório, a pedido |
@@ -120,6 +157,8 @@ Ollama. Compare chamadas e tokens, não segundos.
 - Anthropic · Multi-agent research system: https://www.anthropic.com/engineering/multi-agent-research-system
 - LangGraph JS: https://docs.langchain.com/oss/javascript/langgraph/overview (npm: https://registry.npmjs.org/@langchain/langgraph/latest)
 - LangChain JS v1 · Agents: https://docs.langchain.com/oss/javascript/langchain/agents
+- LangChain/LangGraph Python: https://docs.langchain.com/oss/python/langchain/agents · https://docs.langchain.com/oss/python/langgraph/overview (PyPI: https://pypi.org/project/langgraph/)
+- SDK MCP Python: https://github.com/modelcontextprotocol/python-sdk · pgvector Python: https://github.com/pgvector/pgvector-python
 - OpenAI · Function calling: https://platform.openai.com/docs/guides/function-calling
 - ReAct: https://arxiv.org/abs/2210.03629 · ReWOO: https://arxiv.org/abs/2305.18323 · Reflexion: https://arxiv.org/abs/2303.11366
 - pgvector: https://github.com/pgvector/pgvector

@@ -76,3 +76,62 @@ E o log estruturado do Fastify (pino) para a chamada que usou o LLM:
    sem quebrar os testes do `/v1`.
 2. Adicione um teste que garante que o `texto` acima de 4000 caracteres é recusado com 400 **sem** chamar o LLM.
 3. Envolva `llm.resumir` com um timeout (`AbortSignal.timeout(30_000)` no SDK) e mapeie o estouro para 504.
+
+## Versão Python
+
+A mesma API em **FastAPI** ([`python/`](python/)): [`app.py`](python/app.py) (`criar_app(token)`, `APIRouter`
+com prefixo `/v1`, `HTTPBearer` + `secrets.compare_digest`, corpo validado por um modelo pydantic, falha do
+LLM → 502), [`llm.py`](python/llm.py) (adaptador `resumir`), [`server.py`](python/server.py) (uvicorn na
+porta **30250**), [`test_app.py`](python/test_app.py) (7 testes, LLM = `Mock` injetado com
+`app.dependency_overrides[obter_llm]`) e [`test_integracao.py`](python/test_integracao.py) (só com `INTEGRACAO=1`).
+
+Diferença de contrato: corpo inválido responde **422** (padrão do FastAPI) em vez do 400 do Fastify.
+
+### Como rodar
+
+```bash
+cd modulos/02-apis-ia-generativa
+uv run pytest exemplos/04-api-backend-com-llm -v                                   # unitários (~2 s, sem rede)
+INTEGRACAO=1 uv run pytest exemplos/04-api-backend-com-llm/python/test_integracao.py -s   # com o Ollama
+
+API_TOKEN=segredo-local uv run python exemplos/04-api-backend-com-llm/python/server.py   # outro terminal para o curl
+curl -s localhost:30250/health
+curl -s -X POST localhost:30250/v1/resumos -H 'authorization: Bearer segredo-local' \
+  -H 'content-type: application/json' \
+  -d '{"texto":"O time decidiu migrar o banco de dados para o PostgreSQL 18 em novembro, depois de testar a performance das consultas de relatório."}'
+```
+
+### Saída esperada (Python)
+
+Testes (saída real):
+
+```
+exemplos/04-api-backend-com-llm/python/test_app.py .......               [ 87%]
+exemplos/04-api-backend-com-llm/python/test_integracao.py s              [100%]
+========================= 7 passed, 1 skipped in 1.90s =========================
+```
+
+```
+$ INTEGRACAO=1 uv run pytest exemplos/04-api-backend-com-llm/python/test_integracao.py -s
+resposta real: {'resumo': 'O lançamento do aplicativo foi adiado para março devido à conclusão pendente dos testes de segurança.', 'modelo': 'qwen3.5:4b', 'tokens': 75, 'versao': 'v1'}
+.
+1 passed in 10.00s
+```
+
+API no ar com `curl` (saída real: health, sem token, texto curto, resumo):
+
+```
+{"status":"ok"}
+{"detail":"token ausente ou inválido"}
+{"detail":[{"type":"string_too_short","loc":["body","texto"],"msg":"String should have at least 20 characters","input":"oi","ctx":{"min_length":20}}]}
+{"resumo":"O time decidiu migrar seu banco de dados para o PostgreSQL 18 em novembro após testes de desempenho.","modelo":"qwen3.5:4b","tokens":83,"versao":"v1"}
+```
+
+Log do servidor (uvicorn + o log JSON da rota):
+
+```
+INFO:     127.0.0.1:49672 - "POST /v1/resumos HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:49682 - "POST /v1/resumos HTTP/1.1" 422 Unprocessable Content
+INFO api {"msg": "resumo gerado", "tokens": 83, "ms": 6986}
+INFO:     127.0.0.1:49692 - "POST /v1/resumos HTTP/1.1" 200 OK
+```

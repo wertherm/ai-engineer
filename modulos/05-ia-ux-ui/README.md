@@ -38,6 +38,10 @@ interativa via MCP Apps/MCP-UI) e colocar a lógica de IA no lugar certo: o serv
 - Node 24 e npm 11. Na pasta do módulo: `npm install` (~87 MB; o `.npmrc` pula o Bun opcional de ~170 MB).
 - **Google Chrome instalado** (`/usr/bin/google-chrome`): o `playwright-core` usa `channel: 'chrome'`; nenhum
   browser é baixado.
+- **Versão Python** (opcional): [`uv`](https://docs.astral.sh/uv/) e Python 3.14. Na pasta do módulo, `uv sync`
+  (projeto próprio: [`pyproject.toml`](pyproject.toml) + `uv.lock`). O `npm install` continua necessário: a auditoria
+  Python injeta o mesmo `node_modules/axe-core/axe.min.js` e as páginas (HTML/JS de browser) são as mesmas. Portas
+  da versão Python: 30550–30570. Tabelas Postgres: `m05.*_py`.
 - Variáveis opcionais (defaults apontam para a infra local): `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`,
   `MODELO_EMBED`, `DATABASE_URL` (veja [`infra/.env.example`](../../infra/.env.example)).
 - Paciência com a CPU: cada chamada ao LLM leva de 15 s a 3 min (mais se o Ollama estiver ocupado).
@@ -50,6 +54,14 @@ interativa via MCP Apps/MCP-UI) e colocar a lógica de IA no lugar certo: o serv
 | @modelcontextprotocol/sdk · @mcp-ui/server | 1.32.1 · 6.1.0 |
 | express · zod | 5.3.0 · 4.6.7 |
 | pg · pgvector | 8.23.1 · 0.3.0 |
+
+| Dependência Python (`pyproject.toml`, Python 3.14) | Versão |
+|---|---|
+| openai · mcp · httpx2 | 3.35.0 · 2.3.0 · 2.13.1 |
+| playwright (sem baixar browsers: `channel="chrome"`) | 1.64.0 |
+| fastapi · uvicorn · pydantic | 0.143.3 · 0.54.0 · 2.14.1 |
+| psycopg[binary] · pgvector | 3.3.6 · 0.5.1 |
+| pytest (+ plugin do anyio, que vem com o mcp) | 9.1.1 |
 
 ## Como rodar
 
@@ -70,6 +82,25 @@ npm run ex03:server     # app de tarefas manual: http://127.0.0.1:30510 (MCP em 
 npm run ex04:server     # central de ajuda manual: http://127.0.0.1:30520
 ```
 
+Versão Python (mesmos exemplos; o que roda no navegador continua HTML/JS):
+
+```bash
+cd modulos/05-ia-ux-ui
+npm install && uv sync
+
+uv run pytest           # 20 testes sem LLM (~25 s): juiz de acessibilidade, aceitação do componente, E2E UI+MCP+MCP Apps, exercícios
+
+uv run python exemplos/01-text-to-ui-acessivel/python/gerar.py          # Text-to-UI auditado (2 chamadas)
+uv run python exemplos/02-ideia-ao-componente-testavel/python/main.py    # componente JS + testes pytest gerados (2 chamadas)
+uv run python exemplos/03-app-com-mcp-e2e/python/agente_e2e.py           # agente plan-and-execute (1 chamada; porta 30550)
+uv run python exemplos/04-ia-cliente-vs-servidor/python/verificar.py     # proxy FastAPI + pgvector + chatbot (1 chamada; porta 30561)
+uv run python exercicios/01-componente-acessivel/solucao/python/corrigir.py   # até 3 chamadas
+uv run pytest exercicios/02-tool-mcp-e-teste-e2e                          # sem LLM
+
+uv run python exemplos/03-app-com-mcp-e2e/python/server.py       # manual: http://127.0.0.1:30550 (MCP em /mcp)
+uv run python exemplos/04-ia-cliente-vs-servidor/python/servidor.py  # manual: http://127.0.0.1:30560
+```
+
 ## Status de verificação
 
 | Item | Status |
@@ -84,11 +115,22 @@ npm run ex04:server     # central de ajuda manual: http://127.0.0.1:30520
 | Firebase Studio (Figma → código) | ⚠️ não executado localmente: exige login Google/Figma e está em descontinuação (novos workspaces e importação desativados desde 22/06/2026) |
 | Gemini CLI | ⚠️ não executado localmente: exige login Google ou chave; só `gemini --version` e `--help` (0.53.0) rodaram |
 | Firebase AI Logic | ⚠️ não executado localmente: exige projeto Firebase, login e provedor Gemini |
+| **Python** · `uv run pytest` (juiz, aceitação, E2E UI+MCP+MCP Apps, exercícios 01 e 02) | ✅ executado: 20 testes passando |
+| **Python** · Exemplo 01 | ✅ executado: nota 85 → 100 (mesmas respostas do modelo que no JS) |
+| **Python** · Exemplo 02 | ✅ executado: componente JS idêntico ao do JS; o teste pytest do LLM definiu a própria fixture (mock) e falhou 0/4; aceitação reprovou (6/7) de propósito; correção humana passa 7/7 |
+| **Python** · Exemplo 03 | ✅ executado: FastAPI + `mcp` 2.3.0 + MCP Apps do próprio SDK; plano de 6 passos, fluxo aprovado |
+| **Python** · Exemplo 04 | ✅ executado: chave não vazou, 400 na entrada grande, 429 na rajada (`m05.faq_py`) |
+| **Python** · Exercício 01 | ✅ executado: 0 → 100 em 1 tentativa |
+| **Python** · Exercício 02 | ✅ executado: 3/3 |
+| **Python** · Gemini CLI, Firebase Studio, Firebase AI Logic | ⚠️ não executado localmente (mesmos motivos acima; não há o que portar) |
 | Host MCP Apps real (Claude, VS Code, MCPJam...) | ⚠️ não executado localmente: o recurso `ui://` foi testado com a mini-host própria (`cliente-mcp.js`) |
 
 ## Fontes
 
 - MCP Apps: https://modelcontextprotocol.io/extensions/apps/overview · MCP-UI: https://mcpui.dev
+- Versão Python: SDK `mcp` (extensão `mcp.server.apps`): https://pypi.org/project/mcp/ · Playwright Python:
+  https://playwright.dev/python/docs/api/class-page · FastAPI: https://fastapi.tiangolo.com/advanced/events/ ·
+  `mcp-ui-server` (não usado, ver exemplo 03): https://pypi.org/project/mcp-ui-server/
 - `@mcp-ui/server`: https://www.npmjs.com/package/@mcp-ui/server
 - axe-core / `@axe-core/playwright`: https://github.com/dequelabs/axe-core-npm
 - Playwright (locators): https://playwright.dev/docs/locators

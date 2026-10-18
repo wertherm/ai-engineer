@@ -145,3 +145,61 @@ Isso é o comportamento **correto** do copilot: nada inválido chega ao PR.
 2. Peça "grave a senha em texto num local_file" e veja a regra 2 reprovar até o LLM trocar para `local_sensitive_file`.
 3. Mude `MAX_TENTATIVAS=1 npm run ex01` e meça quantas vezes o modelo acerta de primeira (taxa de acerto
    sem loop de correção): é o número que justifica (ou não) o loop.
+
+## Versão Python
+
+Arquivos em [`python/`](python/): `validar.py` (mesmo pipeline `fmt → init → validate → plan → show -json → conftest`,
+com o mesmo grounding de `tofu providers schema -json` quando o validate acusa argumento inventado) e `main.py`
+(mesmo prompt, mesmo loop de correção, mesmo corpo de PR). Os binários são chamados por `subprocess` com argv em lista
+(`comum_py/shell.py`); as políticas Rego são as **mesmas** de `politicas/`. Cache de providers e `TF_DATA_DIR`
+continuam fora do repo, em `~/.cache/ai-engineer-m06/` (compartilhados com o JS). Diretório de trabalho: `python/trabalho/`.
+
+### Como rodar
+
+```bash
+cd modulos/06-ia-devops
+uv sync
+uv run python exemplos/01-iac-copilot-terraform/python/main.py
+uv run python exemplos/01-iac-copilot-terraform/python/main.py "Gere um arquivo saida/motd.txt com a mensagem Bem-vindo"
+MAX_TENTATIVAS=1 uv run python exemplos/01-iac-copilot-terraform/python/main.py
+```
+
+### Saída esperada (Python)
+
+```
+Pedido: Crie a configuração do serviço "pagamentos" no ambiente homolog: um arquivo saida/pagamentos.conf com as linhas porta=8080 e ambiente=homolog, e uma senha aleatória de 24 caracteres para o banco gravada em saida/pagamentos.senha.
+
+── tentativa 1 (LLM 93.4s, 38 linhas de HCL)
+   fmt      : corrigido automaticamente com `tofu fmt` (sem gastar LLM)
+   resultado: REPROVADO na etapa validate
+     ✗ Unsupported argument: An argument named "min_uppercase" is not expected here. (linha 27)
+     ✗ Unsupported argument: An argument named "min_lowercase" is not expected here. (linha 28)
+     ✗ Unsupported argument: An argument named "min_numbers" is not expected here. (linha 29)
+     ✗ Incorrect attribute value type: Inappropriate value for attribute "min_special": number required, but have bool. (linha 30)
+     ✗ Argumentos válidos de local_file: content (string), content_base64 (string), directory_permission (string), file_permission (string), filename (string), sensitive_content (string), source (string)
+     ✗ Argumentos válidos de local_sensitive_file: content (string), content_base64 (string), directory_permission (string), file_permission (string), filename (string), source (string)
+     ✗ Argumentos válidos de random_password: keepers (map), length (number), lower (bool), min_lower (number), min_numeric (number), min_special (number), min_upper (number), number (bool), numeric (bool), override_special (string), special (bool), upper (bool)
+── tentativa 2 (LLM 284.3s, 39 linhas de HCL)
+   fmt      : corrigido automaticamente com `tofu fmt` (sem gastar LLM)
+   resultado: REPROVADO na etapa conftest
+     ✗ local_file.config: file_permission "0644" dá acesso a outros usuários; use "0640" ou mais restrito
+── tentativa 3 (LLM 282.5s, 39 linhas de HCL)
+   fmt      : corrigido automaticamente com `tofu fmt` (sem gastar LLM)
+   resultado: APROVADO
+
+Plano (o que o PR vai criar):
+   + create local_file.config
+   + create local_sensitive_file.password
+   + create random_password.db_password
+
+HCL aprovado:
+... (idêntico ao HCL da versão JS acima)
+
+Corpo do PR gravado em exemplos/01-iac-copilot-terraform/python/trabalho/PR.md
+
+3 chamadas ao LLM · 1658 tokens de prompt · 930 de resposta · 660.1s no modelo
+```
+
+Com `temperature=0` e o mesmo prompt, o modelo devolveu **exatamente** as mesmas 3 tentativas do JS (mesmos erros,
+mesmo HCL final, mesma contagem de tokens): o que mudou foi só o tempo de fila no Ollama. É a prova de que o
+pipeline determinístico, não a linguagem do cliente, é quem decide.

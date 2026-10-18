@@ -120,3 +120,90 @@ Variáveis por ferramenta: `JIRA_SITE`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PR
    `erro` na trilha.
 3. Torne a trilha idempotente: grave um hash do pedido e recuse rodar duas vezes o mesmo pedido já
    executado.
+
+## Versão Python
+
+Pasta [`python/`](python/):
+
+| Arquivo | Papel |
+|---|---|
+| `mock_trello.py` | FastAPI + uvicorn em memória, mesmos caminhos `/1/...`, porta **30750** (`PORTA_MOCK`) |
+| `trello.py` | cliente `httpx` com `key`/`token` na query; `TRELLO_BASE_URL` (default `http://localhost:30750/1`) |
+| `politica.py` | aprovação, lembretes e payload Slack |
+| `trilha.py` | `psycopg` 3, tabela **`m07.trilha_bot_py`** (não mistura com a cadeia do JS), hash encadeado |
+| `bot.py` / `auditar_trilha.py` | mesmo fluxo do JS; plano com enums gerados do board via `create_model` |
+| `integracoes_reais.py` | Jira, Slack, Asana, Notion com `httpx` — ⚠️ não executado localmente (exige contas e tokens) |
+
+O JSON canônico é `json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)`, byte a byte
+igual ao `canonico()` do `trilha.js`. Prova: os hashes da trilha Python (`9a5309446c`, `471a782368`,
+`63a797bc24`, `5361c74ec0`) são **os mesmos** da trilha do JS acima, e `test_hash_igual_ao_do_js` chama o
+`hashDe()` do Node e compara (pulado se não houver Node/`npm install`).
+
+### Como rodar
+
+```bash
+cd modulos/07-ia-gestao-de-projetos
+uv run python exemplos/05-bot-cards-aprovacao/python/mock_trello.py &      # pare depois com kill %1
+uv run python exemplos/05-bot-cards-aprovacao/python/bot.py
+uv run python exemplos/05-bot-cards-aprovacao/python/bot.py "Arquive o card Tema escuro no portal"
+uv run python exemplos/05-bot-cards-aprovacao/python/bot.py "Arquive o card Tema escuro no portal" --aprovador=marina
+uv run python exemplos/05-bot-cards-aprovacao/python/auditar_trilha.py      # exit 1 se a cadeia estiver quebrada
+uv run pytest exemplos/05-bot-cards-aprovacao/python
+```
+
+Para zerar a trilha Python: `psql postgres://ia:ia@localhost:5433/ia -c "DROP TABLE m07.trilha_bot_py"`.
+
+### Saída esperada (Python)
+
+Saída real das três execuções e da auditoria:
+
+```text
+Pedido: Crie um card "Aviso por e-mail" no Backlog com prioridade média e mova a Regra dos 60 dias para Feito
+Plano do LLM:
+   {'acao': 'criar', 'card': 'Aviso por e-mail', 'lista': 'Backlog', 'prioridade': 'media'}
+   {'acao': 'mover', 'card': 'Regra dos 60 dias', 'lista': 'Feito', 'prioridade': 'manter'}
+✅ criado id101 "Aviso por e-mail"
+✅ movido "Regra dos 60 dias" → Feito
+
+Slack (não enviado): {"channel":"#portal-boletos","text":"2 lembrete(s) do board","blocks":[{"type":"section","text":{"type":"mrkdwn","text":"🟡 \"Subir homologação\" vence em 48h e está sem responsável\n🔴 \"Texto do e-mail no jurídico\" venceu há 24h"}}]}
+
+Trilha íntegra? {'ok': True, 'total': 2}
+Pedido: Arquive o card Tema escuro no portal
+Plano do LLM:
+   {'acao': 'arquivar', 'card': 'Tema escuro no portal', 'lista': 'Backlog', 'prioridade': 'manter'}
+⏸  arquivar "Tema escuro no portal": aguardando aprovação (arquivar card é irreversível para o time)
+...
+Trilha íntegra? {'ok': True, 'total': 3}
+Pedido: Arquive o card Tema escuro no portal
+...
+✅ arquivado "Tema escuro no portal"
+...
+Trilha íntegra? {'ok': True, 'total': 4}
+```
+
+```text
+│ id │ hora     │ acao     │ card                  │ status               │ motivo                                   │ hash       │
+├────┼──────────┼──────────┼───────────────────────┼──────────────────────┼──────────────────────────────────────────┼────────────┤
+│ 1  │ 23:04:25 │ criar    │ Aviso por e-mail      │ executado            │ -                                        │ 9a5309446c │
+│ 2  │ 23:04:25 │ mover    │ Regra dos 60 dias     │ executado            │ -                                        │ 471a782368 │
+│ 3  │ 23:05:03 │ arquivar │ Tema escuro no portal │ aguardando_aprovacao │ arquivar card é irreversível para o time │ 63a797bc24 │
+│ 4  │ 23:06:08 │ arquivar │ Tema escuro no portal │ aprovado_e_executado │ aprovado por marina                      │ 5361c74ec0 │
+✅ cadeia íntegra (4 linhas)
+```
+
+Adulterando (`UPDATE m07.trilha_bot_py SET status='executado' WHERE id=3`) e auditando de novo (exit 1):
+
+```text
+❌ cadeia quebrada na linha 3: alguém editou a trilha
+```
+
+Integrações reais sem variáveis falham cedo:
+
+```text
+RuntimeError: defina JIRA_SITE no ambiente
+```
+
+```text
+....                                                                     [100%]
+4 passed
+```

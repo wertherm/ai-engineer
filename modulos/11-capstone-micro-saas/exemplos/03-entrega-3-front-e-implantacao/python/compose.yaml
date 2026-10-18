@@ -1,0 +1,35 @@
+# Entrega 3 (versão Python) · a MESMA solução "implantada", trocando só a imagem da API pela Python
+# (app_py/Dockerfile). O front é a imagem Angular de app/web SEM nenhuma mudança: o nginx dela faz proxy
+# de /v1, /mcp e /docs para http://api:31100, e a API Python escuta nessa mesma porta dentro do container.
+# Portas próprias (31190 API, 31191 UI) para conviver com o compose JS (31180/31181).
+#   subir:  docker compose -f exemplos/03-entrega-3-front-e-implantacao/python/compose.yaml up -d --build --wait
+#   descer: docker compose -f exemplos/03-entrega-3-front-e-implantacao/python/compose.yaml down
+name: m11-capstone-py
+services:
+  api:
+    build:
+      context: ../../..
+      dockerfile: app_py/Dockerfile
+    image: m11-politicas-api-py:1.0.0
+    environment:
+      OPENAI_BASE_URL: http://ollama:11434/v1   # nome do serviço na rede da infra
+      DATABASE_URL: postgres://ia:ia@postgres:5432/ia
+      ORIGENS_PERMITIDAS: http://localhost:31191,http://127.0.0.1:31191
+      LOG_LEVEL: info                          # access log do uvicorn (docker compose logs -f api)
+    ports: ["127.0.0.1:31190:31100"]           # API direta (agentes MCP, curl)
+    networks: [default, infra]
+    restart: unless-stopped
+
+  web:
+    build: ../../../app/web                    # a MESMA UI Angular da versão JS
+    image: m11-politicas-web:1.0.0
+    ports: ["127.0.0.1:31191:80"]              # UI (e /v1, /mcp via proxy para a API Python)
+    depends_on:
+      api: { condition: service_healthy }
+    networks: [default]                        # o front só enxerga a API, nunca o banco
+    restart: unless-stopped
+
+networks:
+  infra:
+    external: true
+    name: ai-engineer_default

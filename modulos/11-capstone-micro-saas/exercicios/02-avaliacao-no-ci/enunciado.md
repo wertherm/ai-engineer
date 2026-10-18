@@ -100,3 +100,61 @@ e `node exercicios/02-avaliacao-no-ci/solucao/avaliar.js --golden /tmp/golden-er
 Resultado: REPROVADO (o CI falharia)
 exit code: 1
 ```
+
+## Versão Python
+
+[`solucao/python/avaliar.py`](solucao/python/avaliar.py): o mesmo portão (hit@1, hit@3, MRR, guarda de
+citações com as 6 fixtures, `--com-llm N` opcional, exit code 1 abaixo do limiar) sobre a fachada
+`app_py.servico` e as tabelas `_py`. Usa o MESMO [`golden.json`](solucao/golden.json) da versão JS.
+
+Como rodar:
+
+```bash
+cd modulos/11-capstone-micro-saas
+uv run python exercicios/02-avaliacao-no-ci/solucao/python/avaliar.py --com-llm 2
+jq '.[2].fonte="ferias.md" | .[9].fonte="ferias.md" | .[10].fonte="ferias.md"' exercicios/02-avaliacao-no-ci/solucao/golden.json > /tmp/golden-errado.json
+uv run python exercicios/02-avaliacao-no-ci/solucao/python/avaliar.py --golden /tmp/golden-errado.json; echo "exit code: $?"
+```
+
+No job nightly, troque os passos Node por `astral-sh/setup-uv`, `uv sync --frozen`, `uv run python -m app_py.seed`
+e `uv run python exercicios/02-avaliacao-no-ci/solucao/python/avaliar.py` (não executado localmente: precisa de runner do GitHub).
+
+Saída real (as 2 respostas já estavam no cache semântico `m11.cache_py`, geradas antes pela entrega 1 e pelo e2e):
+
+```
+== Recuperação (golden set rotulado: pergunta -> arquivo que responde)
+  ok  pos=1 acme     Qual o valor do auxílio home office?
+  ok  pos=1 acme     Posso dividir minhas férias em partes?
+  ...
+  ok  pos=1 padaria  Até quando entrego o atestado médico?
+
+== Guarda de citações: 6/6 fixtures classificadas corretamente
+
+== Respostas reais (2, LLM local)
+  ok Qual o valor do auxílio home office? -> [home-office.md] (cache)
+  ok Posso dividir minhas férias em partes? -> [ferias.md] (cache)
+
+== Portão de qualidade
+  PASSOU  hit@1                1.000 (mínimo 0.75)
+  PASSOU  hit@3                1.000 (mínimo 0.9)
+  PASSOU  mrr                  1.000 (mínimo 0.8)
+  PASSOU  citacoes             1.000 (mínimo 1)
+  PASSOU  citacao_correta_llm  1.000 (mínimo 1)
+
+Resultado: APROVADO
+```
+
+Reprovação provocada (idêntica à do JS, número a número):
+
+```
+  X   pos=- acme     Quanto posso gastar com comida numa viagem a trabalho?
+  X   pos=- padaria  Posso usar aliança na produção?
+  ~   pos=2 padaria  Quero trocar de turno com uma colega, o que preciso fazer?
+== Portão de qualidade
+  PASSOU  hit@1                0.750 (mínimo 0.75)
+  REPROVOU hit@3                0.833 (mínimo 0.9)
+  REPROVOU mrr                  0.792 (mínimo 0.8)
+  PASSOU  citacoes             1.000 (mínimo 1)
+Resultado: REPROVADO (o CI falharia)
+exit code: 1
+```

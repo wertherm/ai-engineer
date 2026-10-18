@@ -54,3 +54,46 @@ Saídas de LLM variam; com `temperature: 0` costumam se repetir.
    Em produção, o host pediria confirmação por causa de `readOnlyHint: false` (implemente esse "sim/não" no loop).
 2. Piore a `description` de `listar_faturas` (ex.: "lista coisas") e veja se o modelo ainda acerta.
 3. Aponte para o servidor do exemplo 04 (HTTP com token) trocando o `StdioClientTransport` por `StreamableHTTPClientTransport`.
+
+## Versão Python
+
+[`python/agente.py`](python/agente.py): mesmo loop com o SDK `openai` 3.33.0 (Python) e o `Client` do `mcp` 2.3.0,
+usando o servidor CRM Python do exemplo 02. Cliente OpenAI em [`comum_py/llm.py`](../../comum_py/llm.py)
+(`timeout=900`, `max_retries=0`, mesmas variáveis do JS). A chamada síncrona do `openai` roda em
+`asyncio.to_thread` para não travar o loop do client MCP.
+
+Conversão (o `input_schema` do MCP já é JSON Schema):
+
+```python
+{"type": "function", "function": {"name": t.name, "description": t.description,
+ "parameters": {k: v for k, v in t.input_schema.items() if k != "$schema"}}}
+```
+
+O resultado devolvido ao modelo é o `structured_content` em JSON **compacto**: o `MCPServer` Python põe no
+`content` o mesmo JSON **indentado**, que gasta bem mais tokens (importa a ~5 tokens/s em CPU).
+
+### Como rodar
+
+```bash
+cd modulos/03-mcp
+uv run python exemplos/03-ponte-mcp-llm/python/agente.py
+uv run python exemplos/03-ponte-mcp-llm/python/agente.py "Qual o e-mail da Oficina Turbo?"
+RODAR_LLM=1 uv run pytest -k llm        # mesmo teste, via pytest
+```
+
+### Saída esperada (Python)
+
+Execução real com o `qwen3.5:4b` já carregado na memória do Ollama (~25 s no total; a frio, some o tempo de carga):
+
+```text
+Tools enviadas ao modelo: buscar_clientes, listar_faturas, registrar_pagamento
+Pergunta: Quanto a Padaria Pão Quente deve no total em faturas abertas?
+
+[passo 1, 5.3s] modelo chamou buscar_clientes({"termo": "Padaria Pão Quente"})
+  resultado: {"clientes": [{"id": 1, "nome": "Padaria Pão Quente", "email": "contato@paoquente.example", "plano": "basico"}]}
+
+[passo 2, 8.9s] modelo chamou listar_faturas({"cliente_id": 1, "status": "aberta"})
+  resultado: {"faturas": [{"id": 2, "cliente_id": 1, "valor": 199.9, "vencimento": "2026-10-10", "status": "aberta"}, {"id": 3, "cliente_id": 1, "valor": 49.9, "vencimento": "2026-10-20", "status": "aberta"}], "to
+
+[passo 3, 8.2s] Resposta final: A Padaria Pão Quente deve no total em faturas abertas R$ 249,80.
+```

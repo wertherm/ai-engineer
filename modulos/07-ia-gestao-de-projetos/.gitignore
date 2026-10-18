@@ -3,3 +3,7 @@ node_modules/
 exemplos/01-requirements-copilot/backlog.gerado.json
 exemplos/04-reuniao-ata-status-report/acoes.ics
 exercicios/02-checklist-governanca/solucao/auditoria.json
+# saídas geradas pela versão Python
+exemplos/01-requirements-copilot/python/backlog.gerado.json
+exemplos/04-reuniao-ata-status-report/python/acoes.ics
+exercicios/02-checklist-governanca/solucao/python/auditoria.json

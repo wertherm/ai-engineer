@@ -70,3 +70,49 @@ condição ("anterior a 60 dias") com resultados opostos. Revisão humana contin
    da HU-02) e um teste para ela.
 3. Rode com um modelo maior apontando `OPENAI_BASE_URL`/`MODELO_CHAT` para outro provedor e compare a
    qualidade dos critérios com o mesmo schema.
+
+## Versão Python
+
+Pasta [`python/`](python/): `schema.py` (contrato **pydantic** no lugar do zod), `validar.py` (mesmas regras),
+`main.py` e `test_validar.py`. O cliente LLM compartilhado é [`comum_py/llm.py`](../../comum_py/llm.py):
+`client.chat.completions.parse(response_format=Requisitos)` converte o modelo pydantic em JSON Schema estrito
+e valida a volta (o equivalente ao `zodResponseFormat`). Lê o mesmo `pedido.txt`.
+
+### Como rodar
+
+```bash
+cd modulos/07-ia-gestao-de-projetos
+uv sync
+uv run python exemplos/01-requirements-copilot/python/main.py     # ~3–4 min em CPU
+uv run pytest exemplos/01-requirements-copilot/python
+```
+
+### Saída esperada (Python)
+
+Saída real (qwen3.5:4b, CPU). Com `temperature=0` e o mesmo schema, o backlog saiu **idêntico** ao do JS,
+inclusive o erro da HU-02 e a mudança apontando para `EP-01`:
+
+```text
+LLM: 163.1s
+
+EP-01 · Geração e download de segunda via de boleto no portal
+  HU-01 Como Cliente que já possui uma segunda via gerada pelo atendente, quero Baixar a segunda via do boleto diretamente pelo portal, para Evitar filas e agilizar o recebimento do documento
+     ✔ Dado que o usuário está logado no portal, quando ele buscar por 'Segunda Via' usando seu CPF, então o sistema exibe a lista de boletos disponíveis para download com opção de PDF.
+     ...
+EP-02 · Notificações proativas por e-mail sobre vencimento
+  HU-03 Como Cliente cadastrado no sistema, quero Receber um aviso por e-mail 3 dias antes do vencimento do boleto, para Evitar o atraso no pagamento e gerar multas
+     ...
+
+Mudanças: ['Adição da regra de negócio que impede a reemissão de boletos vencidos há mais de 60 dias pelo portal, permitindo apenas via atendimento. -> EP-01,HU-02']
+Dúvidas para o PO: ['Qual o comportamento do sistema se o cliente tentar baixar uma segunda via de um boleto que já foi pago ou cancelado?', 'O e-mail de aviso deve conter links diretos para pagamento ou apenas informativo?']
+
+Auditoria determinística: 3 histórias, 1 problema(s)
+  ⚠ mudança "Adição da regra de negócio que impede a ..." aponta para ids inexistentes: EP-01
+
+Salvo em exemplos/01-requirements-copilot/python/backlog.gerado.json
+```
+
+```text
+..                                                                       [100%]
+2 passed
+```

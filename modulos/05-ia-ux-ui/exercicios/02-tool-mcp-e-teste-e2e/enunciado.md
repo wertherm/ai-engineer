@@ -46,3 +46,32 @@ Saída real:
 ℹ pass 3
 ℹ fail 0
 ```
+
+## Versão Python
+
+[`solucao/python/tool_buscar.py`](solucao/python/tool_buscar.py) (tool com o SDK `mcp` 2.3.0, registrada pelo gancho
+`criar_app(estado, extras_mcp=...)` do [exemplo 03 em Python](../../exemplos/03-app-com-mcp-e2e/python/)) e
+[`solucao/python/test_e2e.py`](solucao/python/test_e2e.py) (pytest + Playwright async + cliente MCP, porta 30570).
+
+Diferenças em relação ao JS:
+
+- O schema vem das anotações de tipo: `texto: Annotated[str | None, Field(max_length=80)] = None` e
+  `concluida: Annotated[bool | None, Field(strict=True)] = None`. Sem `strict=True` o pydantic aceitaria `"true"`,
+  `"yes"` e `"1"` como booleano (o zod do JS recusa); `"sim"` é recusado nos dois modos.
+- Acentos: `unicodedata.normalize("NFD", s)` e descartar `unicodedata.combining(c)` (equivale ao `\p{Diacritic}`).
+- `@mcp.tool(..., structured_output=False)` devolve só o texto JSON, como o JS.
+
+**Como rodar** (da pasta do módulo, sem LLM):
+
+```bash
+uv run pytest exercicios/02-tool-mcp-e-teste-e2e -vv
+```
+
+**Saída esperada (Python)** (saída real, encurtada):
+
+```
+test_a_tool_nova_aparece_no_tools_list_com_schema_e_e_somente_leitura PASSED [ 33%]
+test_ui_cria_e_conclui_mcp_filtra_por_texto_e_status PASSED [ 66%]
+test_entrada_invalida_e_recusada_pelo_schema_sem_tocar_no_estado PASSED [100%]
+============================== 3 passed in 6.05s ===============================
+```

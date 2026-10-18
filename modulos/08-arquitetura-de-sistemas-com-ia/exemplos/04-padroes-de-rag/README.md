@@ -42,3 +42,29 @@ Como ler (é aqui que mora a arquitetura):
 1. Tire o desempate `min(pos) FILTER (WHERE fonte = 'txt')` do SQL em `buscas.js` e veja o RRF empatar `p3`/`p7`.
 2. Troque o `| ` (OR) por `websearch_to_tsquery` (AND) na consulta full-text e veja o recall do hybrid cair.
 3. Crie um índice HNSW (`CREATE INDEX ON m08.rag_docs USING hnsw (emb vector_cosine_ops)`) e meça com 10 mil documentos.
+
+## Versão Python
+
+[`python/corpus.py`](python/corpus.py) (mesmo corpus e mesmas perguntas), [`python/buscas.py`](python/buscas.py)
+(mesmo SQL do RRF, com o desempate `min(pos) FILTER (WHERE fonte = 'txt')` e o OR de lexemas) e
+[`python/main.py`](python/main.py). O vetor vai como parâmetro do `pgvector.psycopg` (`register_vector` +
+`Vector`), sem `numpy`. Tabela própria: `m08.rag_docs_py`.
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exemplos/04-padroes-de-rag/python/main.py   # só embeddings: ~15 s (~35 s na 1ª vez, indexando)
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+estrategia           | recall@1 | recall@3 | ms/consulta | erros no top-1 (gabarito→veio)
+---------------------|----------|----------|-------------|-------------------------------
+basic                | 9/10     | 10/10    | 4.0         | p3→p7
+hybrid               | 9/10     | 10/10    | 7.2         | d4→d1
+multi-index federado | 9/10     | 10/10    | 11.6        | d4→d1
+multi-index roteado  | 8/10     | 9/10     | 4.1         | p5→d6 d4→d1
+```
+
+Recall@1 e recall@3 **idênticos** aos do JS, com os mesmos erros no top-1: mesmo modelo de embedding, mesmo SQL.

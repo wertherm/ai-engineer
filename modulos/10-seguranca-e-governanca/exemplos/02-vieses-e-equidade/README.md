@@ -55,3 +55,15 @@ O que observar:
 1. Troque o atributo sensível para `race` (agrupe em "White" x demais) e veja quais métricas pioram.
 2. Recoloque `sex` nas features: quanto o disparate impact da base muda? Isso mede quanto os proxies já carregavam.
 3. Instale `fairlearn` num `pyproject.toml` próprio e compare com `fairlearn.metrics.demographic_parity_difference`.
+
+## Versão Python
+
+Este exemplo já é em Python. Também roda com o `pyproject.toml` próprio do módulo, a partir da pasta do módulo:
+
+```bash
+cd modulos/10-seguranca-e-governanca
+uv sync
+uv run python exemplos/02-vieses-e-equidade/equidade.py
+```
+
+Saída esperada (Python): a mesma de cima (conferida em 2026-10-17: `Linhas: 45222  |  taxa base >50K: Female=0.114, Male=0.312`).

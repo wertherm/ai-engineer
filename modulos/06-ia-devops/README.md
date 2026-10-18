@@ -5,7 +5,8 @@ troubleshooting no Kubernetes, AIOps, ChatOps com aprovação, segurança, FinOp
 o princípio **o LLM propõe, ferramentas determinísticas validam e humanos aprovam ações críticas**.
 
 Estudado em 2026-10-17 com OpenTofu **1.13.1**, conftest **0.71.0** (OPA 1.21.0), Trivy **0.75.0**, kubectl
-**1.37** + kind (Kubernetes 1.37.0), `openai` **7.34.0**, scikit-learn **1.9.1** e o modelo local `qwen3.5:4b` (Ollama).
+**1.37** + kind (Kubernetes 1.37.0), `openai` **7.34.0**, scikit-learn **1.9.1** e o modelo local `qwen3.5:4b` (Ollama). Versão Python (2026-10-18): Python 3.14, `openai` 3.35.1 (PyPI),
+`psycopg` 3.3.6, `pgvector` 0.5.1, PyYAML 6.0.3, pytest 9.1.1; mesmos binários chamados por `subprocess`.
 
 ## Mapa da ementa
 
@@ -90,7 +91,8 @@ Estudado em 2026-10-17 com OpenTofu **1.13.1**, conftest **0.71.0** (OPA 1.21.0)
 
 - Infra do repositório no ar (Ollama + Postgres/pgvector): a partir da raiz, `bash infra/subir-ia.sh`.
 - Node 22+ e, na pasta do módulo, `npm install`.
-- Python via `uv` na raiz (`uv sync`), para o exemplo 04.
+- Python 3.14 via [`uv`](https://docs.astral.sh/uv/): o módulo tem `pyproject.toml` próprio (versões exatas, `uv.lock`);
+  na pasta do módulo, `uv sync` (exemplo 04 · `anomalias.py` e toda a versão Python dos exemplos/exercícios).
 - Cluster kind `estudo` (exemplos 02, 03, 05, 06 e exercício 02): `docker start estudo-control-plane`
   (contexto `kind-estudo`; todo `kubectl` do módulo usa `--context kind-estudo`, nunca o contexto atual).
 - Docker com a imagem `prom/prometheus:v3.15.0` (exemplo 04, `promtool`).
@@ -135,28 +137,47 @@ npm run exe02 -- --auto-aprovar   # exercício 02: RAG de runbooks + remediaçã
 npm run limpar:k8s      # apaga os namespaces m06-* se algum exemplo foi rodado com --manter
 ```
 
+Versão Python (mesmas pastas, subpasta `python/`; `exemplos/04-…/anomalias.py` já era Python):
+
+```bash
+cd modulos/06-ia-devops
+uv sync
+uv run python exemplos/01-iac-copilot-terraform/python/main.py
+uv run python exemplos/02-agente-de-deploy-kind/python/main.py
+uv run python exemplos/03-troubleshooting-react/python/main.py
+uv run python exemplos/04-aiops-anomalias-e-promql/anomalias.py          # já era Python
+uv run python exemplos/04-aiops-anomalias-e-promql/python/promql.py      # --sem-llm: só o autoteste
+uv run python exemplos/05-chatops-com-aprovacao/python/main.py           # --interativo
+uv run python exemplos/06-seguranca-scan-e-ai-fix/python/main.py
+uv run python exercicios/01-politica-opa-nova/solucao/python/solucao.py  # --sem-llm
+uv run python exercicios/02-runbook-rag-e-postmortem/solucao/python/solucao.py --auto-aprovar
+uv run pytest                                                            # guardrails determinísticos (sem LLM/cluster)
+kubectl --context kind-estudo delete ns m06py-deploy m06py-troubleshoot m06py-chatops m06py-runbook --ignore-not-found
+```
+
 Os exemplos de cluster criam e apagam o próprio namespace (`m06-deploy`, `m06-troubleshoot`, `m06-chatops`,
-`m06-runbook`). Dados no Postgres ficam só no schema `m06`.
+`m06-runbook`; na versão Python, `m06py-*`). Dados no Postgres ficam só no schema `m06` (tabelas da versão
+Python com sufixo `_py`).
 
 ## Status de verificação
 
-| Item | Status |
-|---|---|
-| Exemplo 01 · IaC copilot (OpenTofu + conftest) | ✅ executado: aprovado na 3ª tentativa (validate → OPA → ok); execuções anteriores sem grounding/sem dica de schema registradas no README do exemplo |
-| Exemplo 02 · agente de deploy no kind | ✅ executado: release 1 pronta, release 2 (tag inexistente) revertida automaticamente |
-| Exemplo 03 · troubleshooting ReAct | ✅ executado: acerto de categoria agente 2/3 · regras 3/3 |
-| Exemplo 04 · anomalias + forecast + dashboard (Python) | ✅ executado (determinístico) |
-| Exemplo 04 · NL → PromQL | ✅ executado: 2/3 aprovadas pelos validadores (1 delas semanticamente errada, ver README) |
-| Exemplo 05 · ChatOps com aprovação | ✅ executado no kind + Postgres (`m06.chatops_auditoria`) |
-| Exemplo 06 · Trivy + AI fix + re-scan | ✅ executado: fix rejeitado pelo dry-run server e pelo re-scan (comportamento esperado) |
-| Exercício 01 · política OPA nova | ✅ executado: `conftest verify` 4/4; copilot aprovado na 2ª tentativa com `length = 32` |
-| Exercício 02 · RAG de runbooks + post-mortem | ✅ executado no kind + pgvector (`m06.runbooks`, `m06.postmortems`) |
-| Anthropic Messages API / AWS Bedrock Converse | ⚠️ não executado localmente: exigem chave/conta |
-| Pulumi, Helm, Sentinel, Argo CD, Flux, Argo Rollouts/Flagger | ⚠️ não executado localmente: CLI/conta próprias ou controllers fora do escopo do kind de estudo |
-| Adaptadores Slack/Discord/Teams | ⚠️ não executado localmente: exigem workspace, app e token |
-| Infracost, Snyk, mapeamento SOC2/ISO/PCI | ⚠️ não executado localmente: exigem chave/login/ferramenta comercial |
-| GitHub Actions / GitLab CI / Jenkins | ⚠️ não executado localmente: rodam nas plataformas (YAML de exemplo no doc 02) |
-| Loki/LogQL, Grafana, Jaeger/Zipkin, metrics-server, VPA | ⚠️ não executado localmente: não fazem parte da infra do repo (conceitos no doc 03) |
+| Item | Status (JS) | Status (Python) |
+|---|---|---|
+| Exemplo 01 · IaC copilot (OpenTofu + conftest) | ✅ executado: aprovado na 3ª tentativa (validate → OPA → ok); execuções anteriores sem grounding/sem dica de schema registradas no README do exemplo | ✅ `python/main.py`: aprovado na 3ª tentativa, mesmas tentativas e tokens do JS |
+| Exemplo 02 · agente de deploy no kind | ✅ executado: release 1 pronta, release 2 (tag inexistente) revertida automaticamente | ✅ `python/main.py`: release 1 pronta em 3s, release 2 revertida (`m06py-deploy`) |
+| Exemplo 03 · troubleshooting ReAct | ✅ executado: acerto de categoria agente 2/3 · regras 3/3 | ✅ `python/main.py`: agente 2/3 · regras 3/3 (`m06py-troubleshoot`) |
+| Exemplo 04 · anomalias + forecast + dashboard (Python) | ✅ executado (determinístico) | ✅ já era Python: roda com o `pyproject.toml` do módulo, saída idêntica |
+| Exemplo 04 · NL → PromQL | ✅ executado: 2/3 aprovadas pelos validadores (1 delas semanticamente errada, ver README) | ✅ `python/promql.py`: 2/3 aprovadas (mesmas expressões do JS) |
+| Exemplo 05 · ChatOps com aprovação | ✅ executado no kind + Postgres (`m06.chatops_auditoria`) | ✅ `python/main.py`: mesmas decisões, auditoria em `m06.chatops_auditoria_py` |
+| Exemplo 06 · Trivy + AI fix + re-scan | ✅ executado: fix rejeitado pelo dry-run server e pelo re-scan (comportamento esperado) | ✅ `python/main.py`: mesmo fix rejeitado (dry-run server + `KSV-0125` novo) |
+| Exercício 01 · política OPA nova | ✅ executado: `conftest verify` 4/4; copilot aprovado na 2ª tentativa com `length = 32` | ✅ `solucao/python/solucao.py`: verify 4/4; copilot aprovado na 2ª tentativa com `length = 32` |
+| Exercício 02 · RAG de runbooks + post-mortem | ✅ executado no kind + pgvector (`m06.runbooks`, `m06.postmortems`) | ✅ `solucao/python/solucao.py`: mesmo runbook (0.711), `m06.runbooks_py`/`m06.postmortems_py` |
+| Anthropic Messages API / AWS Bedrock Converse | ⚠️ não executado localmente: exigem chave/conta | ⚠️ idem |
+| Pulumi, Helm, Sentinel, Argo CD, Flux, Argo Rollouts/Flagger | ⚠️ não executado localmente: CLI/conta próprias ou controllers fora do escopo do kind de estudo | ⚠️ idem |
+| Adaptadores Slack/Discord/Teams | ⚠️ não executado localmente: exigem workspace, app e token | ⚠️ idem |
+| Infracost, Snyk, mapeamento SOC2/ISO/PCI | ⚠️ não executado localmente: exigem chave/login/ferramenta comercial | ⚠️ idem |
+| GitHub Actions / GitLab CI / Jenkins | ⚠️ não executado localmente: rodam nas plataformas (YAML de exemplo no doc 02) | ⚠️ idem |
+| Loki/LogQL, Grafana, Jaeger/Zipkin, metrics-server, VPA | ⚠️ não executado localmente: não fazem parte da infra do repo (conceitos no doc 03) | ⚠️ idem |
 
 ## Fontes
 
@@ -168,5 +189,6 @@ Os exemplos de cluster criam e apagam o próprio namespace (`m06-deploy`, `m06-t
 - Prometheus/promtool: https://prometheus.io/docs/prometheus/latest/command-line/promtool/
 - scikit-learn IsolationForest: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html
 - SDK `openai` (npm): https://www.npmjs.com/package/openai · undici: https://undici.nodejs.org/
+- Versão Python: SDK `openai` https://pypi.org/project/openai/ · psycopg 3 https://www.psycopg.org/psycopg3/docs/ · pgvector-python https://github.com/pgvector/pgvector-python · PyYAML https://pyyaml.org/wiki/PyYAMLDocumentation · uv https://docs.astral.sh/uv/
 - Google SRE Book (post-mortem blameless): https://sre.google/sre-book/postmortem-culture/
 - Fontes específicas em cada doc (`docs/*.md`, seção "Fontes").

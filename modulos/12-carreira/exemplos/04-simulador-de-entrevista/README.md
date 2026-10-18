@@ -69,3 +69,57 @@ contra notas humanas (ver [doc 04](../../docs/04-entrevistas-tecnicas-de-ia.md))
 2. Adicione uma pergunta ao `perguntas.json` (ex.: "como você versiona prompts?") — o teste garante que a
    resposta-modelo cobre os próprios pontos-chave.
 3. Peça ao LLM uma nota em JSON por critério da rubrica e compare com o checklist em 5 respostas suas.
+
+## Versão Python
+
+`python/simulador.py` (argparse, mulberry32 com aritmética de 32 bits, LLM via SDK `openai` Python em
+`comum_py/llm.py`) e `python/test_simulador.py` (pytest, nenhum teste chama o LLM). Lê os mesmos
+`perguntas.json`, `rubrica.md` e `resposta-exemplo.txt`.
+
+### Como rodar
+
+```bash
+cd modulos/12-carreira
+uv run python exemplos/04-simulador-de-entrevista/python/simulador.py --sortear 3 --seed 12
+uv run python exemplos/04-simulador-de-entrevista/python/simulador.py --avaliar rag-vs-fine-tuning --llm \
+  --resposta-arquivo exemplos/04-simulador-de-entrevista/resposta-exemplo.txt
+uv run pytest exemplos/04-simulador-de-entrevista/
+```
+
+### Saída esperada (Python)
+
+`--sortear 3 --seed 12` (real, 2026-10-17): as mesmas perguntas do JS. Também conferi as 10 posições do
+sorteio com as seeds 3, 12, 2024 e 99999:
+
+```text
+Entrevista simulada (seed 12) · 10 perguntas no banco
+
+1. [rag · junior] Como você escolhe o tamanho dos chunks num RAG?
+   avaliar: uv run python exemplos/04-simulador-de-entrevista/python/simulador.py --avaliar chunking --resposta "..."
+2. [resiliencia · pleno] Como seu sistema lida com falhas do provedor de LLM (timeout, 429, 5xx)?
+   avaliar: uv run python exemplos/04-simulador-de-entrevista/python/simulador.py --avaliar falhas-do-provedor --resposta "..."
+3. [agentes · pleno] Quando faz sentido usar um agente em vez de um fluxo fixo (workflow)?
+   avaliar: uv run python exemplos/04-simulador-de-entrevista/python/simulador.py --avaliar quando-usar-agentes --resposta "..."
+```
+
+`--avaliar ... --llm` (real, 2026-10-17, executado uma vez, qwen3.5:4b em CPU, 28 s no total). O
+feedback saiu igual ao do JS (temperature 0):
+
+```text
+Cobertura dos pontos-chave: 40%
+  [x] RAG para conhecimento que muda ou precisa de fonte citável
+  [x] fine-tuning para forma, estilo, formato ou tarefa estreita, não para fatos
+  [ ] custo e esforço: dados rotulados, retreino, avaliação
+  [ ] começar por prompt + RAG e medir antes de treinar
+  [ ] podem ser combinados
+
+Armadilhas comuns: dizer que fine-tuning 'ensina a base de conhecimento' · não falar de avaliação para decidir
+
+Pedindo feedback ao LLM (pode levar alguns minutos em CPU)...
+
+Feedback (qwen3.5:4b, 21 s, 44 tokens):
+5 – Nota técnica correta e cobriu bem os cenários de atualização vs. estilo. Faltou mencionar custos, esforço de dados rotulados e a estratégia de começar com RAG antes de treinar.
+
+Resposta-modelo:
+Começo por prompt engineering e RAG, e só considero fine-tuning com uma avaliação mostrando que eles não bastam. ...
+```

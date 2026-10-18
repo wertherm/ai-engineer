@@ -1,0 +1,52 @@
+[project]
+name = "modulo-11-capstone-micro-saas"
+version = "1.0.0"
+description = "Módulo 11 (versão Python): back-end do Micro-SaaS Políticas com Fonte em FastAPI + MCP + RAG híbrido"
+requires-python = ">=3.14,<3.15"
+# Só o que a API precisa em produção (é o que entra na imagem Docker: uv sync --no-dev).
+dependencies = [
+    # 0.141.1 (não a 0.144.0): a partir da 0.142 o fastapi exige opentelemetry-api>=1.44 e o google-adk 2.12 trava <=1.42.1.
+    "fastapi==0.141.1",
+    "uvicorn==0.54.0",
+    "psycopg[binary]==3.3.6",
+    "psycopg-pool==3.3.3",
+    "pgvector==0.5.1",
+    # openai 2.x (não a 3.35.1): o litellm 1.106 (ADK -> Ollama, exemplo 04) exige openai<3. A API usada aqui é igual nas duas.
+    "openai==2.54.0",
+    "mcp==2.3.0",
+]
+
+[dependency-groups]
+# Testes, lint, cliente MCP, e2e no navegador e ADK: ficam fora da imagem da API.
+dev = [
+    "pytest==9.1.1",
+    "httpx==0.28.1",
+    "httpx2==2.13.1",
+    "ruff==0.17.1",
+    "playwright==1.64.0",
+    "google-adk==2.12.0",
+    "litellm==1.106.0",
+]
+
+# Projeto próprio do módulo (não é workspace da raiz). É "pacote" só para instalar `app_py` em modo
+# editável: assim os scripts em exemplos/*/python/ e exercicios/*/solucao/python/ fazem `from app_py import ...`.
+[build-system]
+requires = ["uv_build==0.13.1"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "app_py"
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["app_py/tests", "exemplos", "exercicios"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 150  # o JS do módulo também usa linhas longas (eslint sem max-len)
+target-version = "py314"
+extend-exclude = ["node_modules", "app/web"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

@@ -46,3 +46,35 @@ Orçamento: US$ 5/mês · alerta em 80% · 30000 pedidos
 
 Só o roteamento por intenção corta 84% do custo; a política de orçamento segura a conta em 95% do teto
 rebaixando um degrau a partir de 80%, em vez de recusar pedidos no fim do mês.
+
+## Versão Python
+
+[`solucao/python/roteador.py`](solucao/python/roteador.py), [`solucao/python/simulacao.py`](solucao/python/simulacao.py)
+e [`solucao/python/test_roteador.py`](solucao/python/test_roteador.py) (pytest). A simulação reproduz **a mesma
+sequência** do gerador do JS: lá `semente * 1103515245` passa de 2^53 e é arredondado em double; com `int` do
+Python (precisão arbitrária) a sequência seria outra, então a conta é feita em `float`.
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exercicios/01-tier-e-orcamento/solucao/python/simulacao.py
+uv run pytest -vv exercicios/01-tier-e-orcamento
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+Orçamento: US$ 5/mês · alerta em 80% · 30000 pedidos
+politica          | gastoUSD | recusados | barato | medio | caro
+------------------|----------|-----------|--------|-------|------
+tudo no caro      | 48.60    | 0         | 0      | 0     | 30000
+só tier ideal     | 7.67     | 0         | 18259  | 8680  | 3061
+ideal + orçamento | 4.73     | 0         | 22427  | 5973  | 1600
+exercicios/01-tier-e-orcamento/solucao/python/test_roteador.py::test_classifica_os_tres_tiers_pela_intencao PASSED
+exercicios/01-tier-e-orcamento/solucao/python/test_roteador.py::test_abaixo_do_alerta_usa_o_tier_ideal PASSED
+exercicios/01-tier-e-orcamento/solucao/python/test_roteador.py::test_entre_80_e_100_por_cento_desce_um_degrau PASSED
+exercicios/01-tier-e-orcamento/solucao/python/test_roteador.py::test_orcamento_esgotado_recusa PASSED
+4 passed in 2.16s
+```
+
+Números idênticos aos do JS (18259 / 8680 / 3061 e US$ 4.73 com a política de orçamento).

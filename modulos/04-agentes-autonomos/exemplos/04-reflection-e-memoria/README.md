@@ -92,3 +92,65 @@ Memórias no banco: episodica=1, longa=1 · 2 chamadas ao LLM · 255 tokens de p
    similaridade as episódicas. É o desenho recomendado acima.
 3. Rode a sessão 2 com uma pergunta sem relação ("Qual a capital da França?"): nada passa do limiar e o
    agente responde sem memória, como deve ser.
+
+## Versão Python
+
+Pasta [`python/`](python/): `memoria.py` (memory store) e `main.py` (sessões 1 e 2). Tabela própria
+**`m04.memorias_py`** (a sessão 1 do JS dá `DROP` em `m04.memorias`). O `pgvector` Python
+(`register_vector(conn)`, feito em [`comum_py/llm.py`](../../comum_py/llm.py)) ensina o psycopg 3 a enviar um
+`numpy.ndarray` como `vector`, então a consulta usa `embedding <=> %(v)s` sem montar o literal `'[...]'` à mão.
+A memória longa diz "usa **Python** com Postgres" (no JS, Node.js): não muda nada no resultado, porque ela não
+passa do limiar de distância mesmo assim.
+
+### Como rodar
+
+```bash
+cd modulos/04-agentes-autonomos
+uv run python exemplos/04-reflection-e-memoria/python/main.py 1   # sessão 1: zera m04.memorias_py, critica, revisa, grava
+uv run python exemplos/04-reflection-e-memoria/python/main.py 2   # sessão 2 (outro processo): recupera por embedding
+```
+
+### Saída esperada (Python)
+
+Saída real da sessão 1 (rascunho encurtado):
+
+```
+[sessão 1] tarefa: Como devo guardar os logs de execução de um agente?
+
+[rascunho]
+A forma ideal de guardar os logs de execução de um agente depende do seu caso de uso específico (ex: LLM, robô, script de automação), mas existem princípios fundamentais de engenharia de dados que devem ser seguidos para garantir **auditoria, depuração eficiente e segurança**.
+...
+
+[crítica] aprovado=False problemas=["Texto incompleto","Falta estrutura JSON válida","tem 85 palavras (máx. 50)"]
+
+[revisada]
+- Use Postgres para armazenar logs estruturados em JSONB.
+- Defina tabelas com chaves primárias e índices para performance.
+- Implemente rotacionamento automático de arquivos temporários.
+- Adicione campos de timestamp, nível e ID do evento obrigatórios.
+- Garanta criptografia em repouso para dados sensíveis.
+
+[crítica 2] aprovado=True problemas=[]
+
+[memória gravada] Episódio "Como devo guardar os logs de execução de um agente?": o rascunho foi reprovado (Texto incompleto; Falta estrutura JSON válida; tem 85 palavras (máx. 50)). Lição: responder no máximo 50 palavras; em tópicos começando com "- "; cita Postgres.
+
+Memórias no banco: episodica=1, longa=1 · 4 chamadas ao LLM · 586 tokens de prompt · 244 de resposta · 691.2s no modelo
+```
+
+Saída real da sessão 2 (novo processo; mesma distância 0,556 do JS):
+
+```
+[sessão 2] tarefa: Onde guardo o histórico de decisões dos meus agentes?
+
+[memórias recuperadas por embedding]
+  episodica  0.556  Episódio "Como devo guardar os logs de execução de um agente...
+
+[resposta já com memória]
+- Use um banco de dados relacional como PostgreSQL para armazenar logs estruturados.
+- Crie tabelas para guardar timestamp, agente, decisão e contexto da execução.
+- Isso garante integridade dos dados e permite consultas históricas eficientes.
+
+[crítica] aprovado=True problemas=[]
+
+Memórias no banco: episodica=1, longa=1 · 2 chamadas ao LLM · 255 tokens de prompt · 70 de resposta · 287.3s no modelo
+```

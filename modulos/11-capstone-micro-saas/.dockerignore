@@ -4,3 +4,5 @@ docs
 exemplos
 exercicios
 *.md
+.venv
+app_py

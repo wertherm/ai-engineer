@@ -56,3 +56,47 @@ O que observar:
 1. Adicione CNPJ (14 dígitos, também com dígito verificador) e um teste.
 2. Mande o mesmo CPF duas vezes na mensagem e confira que vira `[CPF_1]` nas duas.
 3. Troque `logSeguro` por um logger real (pino) com um *redact hook* que chama `mascarar`.
+
+## Versão Python
+
+Arquivos em `python/`: `pii.py` (mesmos detectores, CPF por dígito verificador, cartão por Luhn, cofre e
+desmascaramento parcial) · `test_pii.py` (os 7 casos do JS com o MESMO resultado + 1 teste de Unicode) · `demo.py`.
+
+### Como rodar
+
+```bash
+cd modulos/10-seguranca-e-governanca
+uv sync
+uv run pytest exemplos/04-pii-e-mascaramento                        # 8 testes, sem LLM
+uv run python exemplos/04-pii-e-mascaramento/python/demo.py --sem-llm
+uv run python exemplos/04-pii-e-mascaramento/python/demo.py         # + 1 chamada ao LLM
+```
+
+### Saída esperada (Python)
+
+Testes (real): `8 passed in 0.07s`.
+
+Demo (real, 2026-10-17, `qwen3.5:4b`):
+
+```
+O que vai para o LLM:
+  Oi, sou a Ana (CPF [CPF_1]). Meu cartão [CARTAO_1] foi cobrado 2x. Me responda em [EMAIL_1] ou [TELEFONE_1]. Protocolo 2024-000123.
+
+PII encontrada: {'EMAIL': 1, 'CARTAO': 1, 'CPF': 1, 'TELEFONE': 1}
+
+Log seguro:
+{"ts":"2026-10-17T23:07:46.017Z","evento":"mensagem_recebida","canal":"chat","texto":"Oi, sou a Ana (CPF [CPF_1]). Meu cartão [CARTAO_1] ..."}
+
+Chamando qwen3.5:4b (pode levar alguns minutos)...
+
+Resposta do LLM (51 s), ainda mascarada:
+  Olá Ana, registrei seu protocolo 2024-000123 referente ao duplo cobrança do cartão [CARTAO_1] e já estou verificando o motivo. Entrarei em contato com você no [EMAIL_1] ou no [TELEFONE_1] para resolver essa questão.
+
+Resposta desmascarada (o que o cliente recebe):
+  Olá Ana, registrei seu protocolo 2024-000123 referente ao duplo cobrança do cartão ****1111 e já estou verificando o motivo. Entrarei em contato com você no ana.souza@exemplo.com.br ou no (11) 98765-4321 para resolver essa questão.
+```
+
+Armadilha do porte: os padrões usam `re.ASCII`. Sem essa flag, `\d` do Python casa dígitos Unicode (ex.:
+`٥٢٩٩٨٢٢٤٧٢٥`, que ainda passa no dígito verificador porque `int('٥') == 5`) e `\w` casa `é`; o JS (sem flag `u`)
+não casa nenhum dos dois. O teste `test_digitos_unicode_nao_viram_pii` trava esse comportamento igual ao do JS.
+O log usa `json.dumps(..., ensure_ascii=False, separators=(",", ":"))` para sair idêntico ao `JSON.stringify`.

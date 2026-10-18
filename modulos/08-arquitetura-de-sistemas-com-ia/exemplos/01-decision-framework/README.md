@@ -50,3 +50,39 @@ o híbrido fica ainda mais barato.
 1. Acrescente casos ambíguos ("meu pix caiu no cartão errado") e veja a regra responder `nao_sei` (duas regras casam).
 2. Rode com `SLA_MS=1500`: nenhuma rota com LLM local cumpre. Decisão de arquitetura: modelo menor, GPU, API, ou só regras.
 3. Troque os preços (`PRECOS='{"barato":{"in":3,"out":15}}'`) e veja o custo por 1k pedidos mudar a escolha.
+
+## Versão Python
+
+Mesmo experimento em [`python/main.py`](python/main.py), com o SDK `openai` para Python e o helper
+[`comum_py/llm.py`](../../comum_py/llm.py). As regex usam `re.ASCII` para o `\b` se comportar como no JS.
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exemplos/01-decision-framework/python/main.py            # 8 chamadas ao LLM: 1 a 7 min em CPU
+SLA_MS=1500 uv run python exemplos/01-decision-framework/python/main.py
+```
+
+**Saída esperada (Python)** — saída real (Ollama compartilhado com outros processos):
+
+```text
+- "Qual o saldo da minha conta?" → regra=saldo llm=saldo (36293 ms) gabarito=saldo
+- "Quero bloquear meu cartão" → regra=cartao llm=cartao (38778 ms) gabarito=cartao
+- "Como faço um pix para minha mãe?" → regra=pix llm=pix (25335 ms) gabarito=pix
+- "Estou muito insatisfeito com o atendimento de ontem" → regra=reclamacao llm=reclamacao (50886 ms) gabarito=reclamacao
+- "Perdi a carteira com tudo dentro, e agora?" → regra=nao_sei llm=cartao (40235 ms) gabarito=cartao
+- "Mandei dinheiro pela chave do celular e não caiu" → regra=nao_sei llm=pix (11729 ms) gabarito=pix
+- "Quanto ainda tenho disponível pra gastar este mês?" → regra=nao_sei llm=saldo (4987 ms) gabarito=saldo
+- "Vocês abrem no feriado?" → regra=nao_sei llm=outro (4786 ms) gabarito=outro
+
+rota    | acerto | cobertura | latência média | US$/1k pedidos
+--------|--------|-----------|----------------|---------------
+regra   | 50%    | 50%       | 0.0 ms         | 0.0000
+llm     | 100%   | 100%      | 26628.6 ms     | 0.0136
+hibrida | 100%   | 100%      | 7717.1 ms      | 0.0068
+
+SLA: acerto >= 85%, latência <= 60000 ms, custo <= US$ 0.05/1k
+Rotas que cumprem: hibrida, llm → escolhida: hibrida
+```
+
+Mesmos rótulos e o mesmo custo por 1k pedidos do JS; só as latências variam com a carga do Ollama.

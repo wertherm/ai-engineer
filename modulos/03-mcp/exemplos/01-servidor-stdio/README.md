@@ -47,3 +47,45 @@ que o LLM precisa ver para corrigir a chamada.
 1. Troque um `console.error` do `server.js` por `console.log` e rode de novo: o client quebra, porque o stdout é o canal JSON-RPC.
 2. Adicione uma tool `converter_moeda` com `inputSchema: { valor: z.number().positive(), para: z.enum(['USD', 'EUR']) }` e chame-a no client.
 3. Rode o servidor no Inspector CLI: `npx -y @modelcontextprotocol/inspector@2.11.0 --cli node exemplos/01-servidor-stdio/server.js --method prompts/list`.
+
+## Versão Python
+
+Pasta [`python/`](python/): `server.py` com `MCPServer` do SDK oficial `mcp` **2.3.0** (na 2.x o antigo `FastMCP`
+mudou de nome) e `client.py` com o `Client` de alto nível. O schema de cada tool sai das anotações de tipo
+(`a: float`, `Annotated[str, Field(pattern=...)]`) e o retorno tipado (`BaseModel`) vira `outputSchema` +
+`structured_content`. Logs do servidor vão para o `stderr` (o `stdout` é o canal JSON-RPC).
+
+### Como rodar
+
+```bash
+cd modulos/03-mcp
+uv sync                                                  # uma vez
+uv run python exemplos/01-servidor-stdio/python/client.py
+```
+
+### Saída esperada (Python)
+
+```text
+Servidor: {'name': 'ola-mcp', 'version': '1.0.0'} | protocolo: 2026-07-28
+Capabilities: prompts, resources, tools
+
+Tools:
+- somar: Soma dois números | schema: {"a": {"title": "A", "type": "number"}, "b": {"title": "B", "type": "number"}}
+- dia_da_semana: Diz o dia da semana de uma data ISO (AAAA-MM-DD) | schema: {"data": {"pattern": "^\\d{4}-\\d{2}-\\d{2}$", "title": "Data", "type": "string"}}
+
+somar(2, 40) -> structured_content: {"resultado": 42.0}
+dia_da_semana -> 2026-10-16 cai numa sexta-feira
+somar("dois", 1) -> is_error: True | Error executing tool somar: 1 validation error for somarArguments a   
+multiplicar (não existe) -> is_error: True | Unknown tool: multiplicar
+
+Resources: info://sobre | templates: saudacao://{nome}
+info://sobre -> {"empresa": "Exemplo SA", "versao": "1.0.0"}
+saudacao://Werther -> Olá, Werther! Bem-vindo ao MCP.
+
+Prompts: revisar_codigo(codigo)
+revisar_codigo -> "Revise este código e aponte bugs:\n\nlet x = 1"
+```
+
+Diferenças em relação ao JS: entre dois peers Python o protocolo negociado é o **2026-07-28** (o SDK JS 1.32.1
+fala 2025-11-25; contra ele o client Python cai sozinho para 2025-11-25); `float` faz `42` virar `42.0`; o erro de
+validação vem do pydantic; tool inexistente volta como `is_error=True` (no JS é erro `-32602`).

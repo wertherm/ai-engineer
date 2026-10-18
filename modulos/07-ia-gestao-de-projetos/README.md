@@ -2,7 +2,7 @@
 
 Como usar IA no ciclo de vida de um projeto (requisitos, priorização, cronograma, previsão, riscos, reuniões,
 status reports, governança, automação de boards e OKRs) seguindo uma regra só: **o LLM extrai e propõe,
-o código determinístico calcula, valida e decide**. Tudo em JavaScript (Node 24), com LLM local.
+o código determinístico calcula, valida e decide**. Tudo em JavaScript (Node 24) e também em Python 3.14 (subpastas `python/`), com LLM local.
 
 Estudado em 2026-10-16 com `openai` **7.34.0**, `zod` **4.6.7**, `express` **5.3.0**, `pg` **8.23.1**,
 Node **24.11.1** e o modelo `qwen3.5:4b` (Ollama). Testes com `node:test` (nativo, sem dependência).
@@ -51,6 +51,10 @@ Node **24.11.1** e o modelo `qwen3.5:4b` (Ollama). Testes com `node:test` (nativ
 - Node 24 e as dependências do módulo: `cd modulos/07-ia-gestao-de-projetos && npm install`.
 - Variáveis opcionais (defaults locais, veja `infra/.env.example`): `OPENAI_BASE_URL`, `OPENAI_API_KEY`,
   `MODELO_CHAT`, `DATABASE_URL`. Os dados do módulo ficam no schema `m07`. Porta usada: 30707 (mock do Trello).
+- Versão Python (opcional): [`uv`](https://docs.astral.sh/uv/) e Python 3.14. `uv sync` na pasta do módulo instala
+  `openai` 3.34.0, `pydantic` 2.14.1, `fastapi` 0.143.3, `uvicorn` 0.54.0, `httpx` 0.28.1, `psycopg[binary]` 3.3.6
+  e `pytest` 9.1.1 (projeto próprio em `pyproject.toml`, `uv.lock` versionado). Porta do mock Python: 30750;
+  trilha Python na tabela `m07.trilha_bot_py`.
 - Paciência com a CPU: o `qwen3.5:4b` gera ~5 tokens/s. Exemplo 01 ≈ 4 min, 04 ≈ 5 min, 05 ≈ 1 min por pedido.
 
 ## Como rodar
@@ -76,22 +80,48 @@ npm run exe01                 # exercício 01: detector de risco
 npm run exe02                 # exercício 02: checklist de governança (sai com código 1: há falhas plantadas)
 ```
 
+Versão Python (cada exemplo/solução tem uma subpasta `python/` com o equivalente):
+
+```bash
+cd modulos/07-ia-gestao-de-projetos
+uv sync
+uv run pytest                 # 28 testes (os 24 do JS + 4 de equivalência com o JS), sem LLM
+
+uv run python exemplos/01-requirements-copilot/python/main.py
+uv run python exemplos/02-priorizacao-rice-wsjf/python/main.py
+uv run python exemplos/03-cronograma-monte-carlo/python/main.py
+uv run python exemplos/04-reuniao-ata-status-report/python/main.py
+
+uv run python exemplos/05-bot-cards-aprovacao/python/mock_trello.py &   # FastAPI na porta 30750
+uv run python exemplos/05-bot-cards-aprovacao/python/bot.py
+uv run python exemplos/05-bot-cards-aprovacao/python/bot.py "Arquive o card Tema escuro no portal"
+uv run python exemplos/05-bot-cards-aprovacao/python/bot.py "Arquive o card Tema escuro no portal" --aprovador=marina
+uv run python exemplos/05-bot-cards-aprovacao/python/auditar_trilha.py
+kill %1
+
+uv run python exercicios/01-detector-risco-cronograma/solucao/python/main.py
+uv run python exercicios/02-checklist-governanca/solucao/python/main.py   # sai com código 1 de propósito
+```
+
+O código Python compartilhado fica em [`comum_py/`](comum_py/): `llm.py` (`extrair_json` com structured output via
+pydantic e `gerar_texto`), `js.py` (`js_round`/`to_fixed`, arredondamentos com a semântica do JS) e `tabela.py`.
+
 O código compartilhado de LLM fica em [`lib/llm.js`](lib/llm.js) (`extrairJson` com structured output via
 zod e `gerarTexto`).
 
 ## Status de verificação
 
-| Item | Status |
-|---|---|
-| Exemplo 01 · Requirements Copilot | ✅ executado (LLM local) + teste |
-| Exemplo 02 · Priorização RICE/WSJF/MoSCoW + OKR | ✅ executado + 4 testes |
-| Exemplo 03 · Cronograma + Monte Carlo | ✅ executado + 4 testes |
-| Exemplo 04 · Reunião → ata → .ics → status report | ✅ executado + 6 testes |
-| Exemplo 04 · Transcrição de áudio com Whisper | ⚠️ não executado localmente: sem gravação de reunião de exemplo nem TTS na máquina para gerar uma |
-| Exemplo 05 · Bot + mock Trello + aprovação + trilha no Postgres | ✅ executado (3 pedidos, auditoria e adulteração detectada) + 3 testes |
-| Exemplo 05 · `integracoes-reais.js` (Jira, Slack, Asana, Notion, Trello real) | ⚠️ não executado localmente: exige contas e tokens dos serviços |
-| Exercício 01 · Detector de risco de cronograma | ✅ executado + 4 testes |
-| Exercício 02 · Checklist de governança | ✅ executado + 1 teste |
+| Item | JS | Python |
+|---|---|---|
+| Exemplo 01 · Requirements Copilot | ✅ executado (LLM local) + teste | ✅ executado (backlog idêntico ao JS) + 2 testes |
+| Exemplo 02 · Priorização RICE/WSJF/MoSCoW + OKR | ✅ executado + 4 testes | ✅ executado (números iguais ao JS) + 4 testes |
+| Exemplo 03 · Cronograma + Monte Carlo | ✅ executado + 4 testes | ✅ executado (P50/P85/P95 bit a bit iguais) + 6 testes |
+| Exemplo 04 · Reunião → ata → .ics → status report | ✅ executado + 6 testes | ✅ executado + 7 testes |
+| Exemplo 04 · Transcrição de áudio com Whisper | ⚠️ não executado localmente: sem gravação de reunião de exemplo nem TTS na máquina para gerar uma | ⚠️ idem |
+| Exemplo 05 · Bot + mock Trello + aprovação + trilha no Postgres | ✅ executado (3 pedidos, auditoria e adulteração detectada) + 3 testes | ✅ executado (mock FastAPI, `m07.trilha_bot_py`, adulteração detectada) + 4 testes (1 confere o hash contra o JS) |
+| Exemplo 05 · `integracoes-reais.js` (Jira, Slack, Asana, Notion, Trello real) | ⚠️ não executado localmente: exige contas e tokens dos serviços | ⚠️ `integracoes_reais.py`: idem |
+| Exercício 01 · Detector de risco de cronograma | ✅ executado + 4 testes | ✅ executado (saída idêntica) + 4 testes |
+| Exercício 02 · Checklist de governança | ✅ executado + 1 teste | ✅ executado (exit 1 de propósito) + 1 teste |
 
 ## Fontes
 
@@ -105,5 +135,6 @@ zod e `gerarTexto`).
 - Trello REST: https://developer.atlassian.com/cloud/trello/rest/api-group-cards/ · Jira REST v3: https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/
 - Slack chat.postMessage: https://docs.slack.dev/reference/methods/chat.postMessage · Asana: https://developers.asana.com/reference/createtask · Notion: https://developers.notion.com/reference/post-page
 - ADR: https://adr.github.io/ · Keep a Changelog: https://keepachangelog.com/pt-BR/1.1.0/
+- Versão Python: OpenAI Python SDK https://github.com/openai/openai-python · pydantic https://docs.pydantic.dev/latest/ · FastAPI https://fastapi.tiangolo.com/ · psycopg 3 https://www.psycopg.org/psycopg3/docs/ · pytest https://docs.pytest.org/ · uv https://docs.astral.sh/uv/
 - node:test: https://nodejs.org/api/test.html · node-postgres: https://node-postgres.com/ · Express 5: https://expressjs.com/en/5x/api.html
 - Ligações no repo: [LLMOps (avaliação, custo, métricas)](../../trilhas-extras/llmops-vllm-openshift/) · [MLOps (drift, tracking)](../../trilhas-extras/mlops/)

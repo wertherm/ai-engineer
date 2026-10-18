@@ -55,6 +55,21 @@ verdade e aplicações multimodais (documentos, imagem e áudio) — tudo rodand
 | @napi-rs/canvas | 1.0.11 |
 | undici (fetch sem o corte de 300 s) | 8.12.2 |
 
+- **Versão Python** (opcional, mesmos exemplos em `python/`): `uv` e Python 3.14. Na pasta do módulo,
+  `uv sync` instala o projeto próprio do módulo ([`pyproject.toml`](pyproject.toml), versões exatas, `uv.lock`).
+  Modelos da versão Python (RapidOCR ~16 MB, faster-whisper base ~145 MB, encoding do tiktoken) são baixados
+  na 1ª execução para `.venv/cache-modelos/` — dentro do `.venv`, não em `.cache/` (o Hugging Face Hub deixa
+  `.lock` vazios). Código compartilhado em [`comum_py/`](comum_py/).
+
+| Dependência Python | Versão |
+|---|---|
+| openai · pydantic · tiktoken | 3.34.0 · 2.14.1 · 0.14.0 |
+| langchain-core · langchain-openai | 1.6.12 · 1.7.2 |
+| psycopg[binary] · pgvector | 3.3.6 · 0.5.1 |
+| fastapi · uvicorn · httpx · pytest | 0.143.3 · 0.54.0 · 0.28.1 · 9.1.1 |
+| rapidocr · onnxruntime (OCR sem tesseract) | 3.10.0 · 1.31.0 |
+| faster-whisper · av | 1.2.1 · 18.1.0 (o av 19 quebra o faster-whisper 1.2.1) |
+
 ## Como rodar
 
 ```bash
@@ -75,12 +90,29 @@ npm run exe01               # solução do exercício 01
 npm run exe02               # solução do exercício 02
 ```
 
+Versão Python (mesma pasta):
+
+```bash
+uv sync
+uv run pytest                                            # 15 testes rápidos, sem rede (integração pulada)
+INTEGRACAO=1 uv run pytest exemplos/04-api-backend-com-llm/python/test_integracao.py -s
+
+uv run python exemplos/01-prompt-chaining-e-templates/python/main.py
+uv run python exemplos/02-custo-e-cache/python/main.py              # tabela m02.cache_respostas_py
+uv run python exemplos/03-rag-langchain-observabilidade/python/main.py   # tabela m02.rag_chunks_py
+API_TOKEN=segredo-local uv run python exemplos/04-api-backend-com-llm/python/server.py   # porta 30250
+uv run python exemplos/05-documentos-ocr-e-visao/python/main.py
+uv run python exemplos/06-audio-e-bot-multimodal/python/bot.py
+uv run python exercicios/01-chain-com-validacao-e-retry/solucao/python/main.py
+uv run python exercicios/02-extrator-multimodal/solucao/python/extrator.py
+```
+
 ## Status de verificação
 
 Executado em **2026-10-16**, CPU de 8 núcleos sem GPU, com o Ollama compartilhado com outros processos
 (por isso as latências altas; as saídas reais estão nos READMEs).
 
-| Item | Status |
+| Item | Status (JS) |
 |---|---|
 | Exemplo 01 — chaining + templates + zod | ✅ executado; 3 testes de template passam |
 | Exemplo 02 — custo e cache | ✅ executado (104 → 33 tokens; 294/806 tokens do prefixo em cache; cache de respostas em 2 ms) |
@@ -92,6 +124,20 @@ Executado em **2026-10-16**, CPU de 8 núcleos sem GPU, com o Ollama compartilha
 | Exercício 02 — solução | ✅ executado (nítido → OCR 4/4; ruim → fallback para visão 3/4) |
 | Chamadas à OpenAI (Vision, `audio.transcriptions`) e ao Gemini em [doc 04](docs/04-multimodal-e-aplicacoes.md) | ⚠️ não executadas localmente (exigem chave/conta paga); o mesmo formato foi executado contra o Ollama |
 | Comandos `ffmpeg` de frames e áudio em [doc 04](docs/04-multimodal-e-aplicacoes.md) | ✅ executados num vídeo de teste gerado localmente |
+
+Versão Python, executada em **2026-10-17** (Python 3.14.7, mesma máquina e mesmo Ollama compartilhado):
+
+| Item | Status (Python) |
+|---|---|
+| Exemplo 01 — chaining + templates + pydantic | ✅ executado (saída idêntica à do JS); 3 testes pytest |
+| Exemplo 02 — custo (tiktoken + `usage`) e cache | ✅ executado (104 → 33 tokens; 294/806 em cache; HIT em 1 ms) |
+| Exemplo 03 — RAG LangChain Python + `with_retry` + logs | ✅ executado com 2 falhas 503 injetadas e recuperadas |
+| Exemplo 04 — API FastAPI `/v1` | ✅ 7 testes (LLM via `dependency_overrides`) + 1 de integração; API na porta 30250 testada com `curl` |
+| Exemplo 05 — OCR (RapidOCR) + visão | ✅ executado (OCR 7/7; visão 6/7, mesmo erro do JS) |
+| Exemplo 06 — Whisper (faster-whisper) e bot | ✅ executado (áudio, imagem e texto); TTS não portado (reusa o `pergunta.wav`) |
+| Exercício 01 — solução | ✅ 5 testes + execução real (aprovado/negado) |
+| Exercício 02 — solução | ✅ executado (nítido → OCR 4/4; ruim → fallback para visão 3/4, limiar recalibrado) |
+| Geradores `gerar-nota.js`, `gerar-recibos.js`, `gerar-audio.js` | não portados: as duas versões usam os mesmos PNGs e o mesmo WAV versionados |
 
 ## Fontes
 
@@ -105,3 +151,8 @@ Executado em **2026-10-16**, CPU de 8 núcleos sem GPU, com o Ollama compartilha
 - Fastify — testes: https://fastify.dev/docs/latest/Guides/Testing/ · Vitest — mocking: https://vitest.dev/guide/mocking
 - Zod: https://zod.dev/json-schema · tesseract.js: https://github.com/naptha/tesseract.js
 - Transformers.js: https://huggingface.co/docs/transformers.js/index
+- SDK `openai` (Python): https://github.com/openai/openai-python · pydantic: https://docs.pydantic.dev/latest/
+- tiktoken: https://github.com/openai/tiktoken · psycopg 3: https://www.psycopg.org/psycopg3/docs/ · pgvector-python: https://github.com/pgvector/pgvector-python
+- LangChain Python: https://python.langchain.com/api_reference/core/runnables/langchain_core.runnables.base.Runnable.html#langchain_core.runnables.base.Runnable.with_retry
+- FastAPI — testes e dependency overrides: https://fastapi.tiangolo.com/advanced/testing-dependencies/
+- RapidOCR: https://rapidai.github.io/RapidOCRDocs/main/model_list/ · faster-whisper: https://github.com/SYSTRAN/faster-whisper

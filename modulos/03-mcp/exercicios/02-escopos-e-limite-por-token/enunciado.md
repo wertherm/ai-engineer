@@ -41,3 +41,31 @@ OK: escopos e cotas funcionando.
 ```
 
 Solução em [`solucao/`](./solucao/) (`server.js` + `teste.js`).
+
+## Versão Python
+
+Solução em [`solucao/python/`](./solucao/python/) (`server.py` + `teste.py`, portas 30380 avulso / 30381 no teste).
+
+- `TokenVerifier` do SDK devolvendo `AccessToken(..., claims={"plano": ...})`: o plano chega ao middleware de cota
+  por `scope["user"].access_token.claims` (no JS é `extra`).
+- Escopo por tool com **um** `MCPServer` e um `ServerMiddleware` (SDK 2.x) que filtra o `tools/list` e responde ao
+  `tools/call` de tool fora do escopo como se ela não existisse; a tool confere de novo com `get_access_token()`.
+  O middleware devolve um `CallToolResult` (modelo), nunca um `dict` montado à mão (veja as armadilhas no README do módulo).
+- Token bucket como middleware ASGI encaixado logo depois do `AuthenticationMiddleware` do SDK.
+
+```bash
+cd modulos/03-mcp
+uv run python exercicios/02-escopos-e-limite-por-token/solucao/python/teste.py
+```
+
+Saída real (Python):
+
+```text
+tools/list leitor: ['consultar_preco'] | editor: ['consultar_preco', 'ajustar_preco']
+leitor chama ajustar_preco -> {"content": [{"type": "text", "text": "Unknown tool: ajustar_preco"}], "isError": true, "resultType": "complete"}
+editor ajusta CAF-001 para 45 -> {"sku": "CAF-001", "preco": 45.0}
+editor ajusta para 4.5 -> Error executing tool ajustar_preco: Variação acima de 20% exige aprovação humana
+free (3 chamadas): 200 429 429 | pro (10 chamadas): 200
+sem token -> 401 | auditoria: {"auditoria": "ajuste_preco", "cliente": "backoffice", "sku": "CAF-001", "de": 42.9, "para": 45.0}
+OK: escopos e cotas funcionando.
+```

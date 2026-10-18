@@ -5,3 +5,5 @@
 exemplos/03-lora-peft-cpu/adapter/
 exemplos/04-avaliacao-ab/resultados/
 dados/registro-modelos.mock.jsonl
+# saídas da versão Python do exemplo 01 (idênticas às do JS em dados/; regeneráveis)
+dados/python/

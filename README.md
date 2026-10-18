@@ -1,7 +1,7 @@
 # AI Engineer
 
 Repositório de estudo de **engenharia de IA aplicada**: os módulos da pós *Engenharia de IA Aplicada*
-(com docs, exemplos executáveis e exercícios com solução) e duas trilhas extras de produção (**LLMOps** com
+(com docs, exemplos executáveis e exercícios com solução, **em JavaScript/TypeScript e em Python**) e duas trilhas extras de produção (**LLMOps** com
 vLLM/OpenShift e **MLOps** com MLflow/Kubeflow). Tudo roda numa máquina Linux **sem GPU**, com um LLM local
 (Ollama), e troca para OpenAI/OpenRouter mudando só variáveis de ambiente.
 
@@ -91,7 +91,7 @@ Verificado entre 2026-10-13 e 2026-10-17, numa CPU de 8 núcleos com 15 GB de RA
 
 - **LLM local:** Ollama 0.40.5 com `qwen3.5:4b` (chat, tools e visão) e `qwen3-embedding:0.6b` · Postgres 18 + pgvector 0.8.7.
 - **JS/TS:** Node 24 · openai 7.34 · @modelcontextprotocol/sdk 1.32.1 · LangChain.js 1.x / LangGraph.js 1.5 · TensorFlow.js 4.22 · @google/adk 2.3 · Angular 22.
-- **Python:** 3.14 + uv · scikit-learn 1.9 · MLflow 3.17 · PyTorch 2.14 (CPU) + PEFT 0.21.
+- **Python:** 3.14 + uv · openai 3.3x · mcp 2.3 · LangChain/LangGraph · FastAPI · psycopg 3 · google-adk 2.12 · scikit-learn 1.9 · MLflow 3.17 · PyTorch 2.14 (CPU) + PEFT 0.21.
 - **Plataforma:** vLLM 0.31 · kind 0.33 · kubectl 1.37 · OpenShift 4.22 / OpenShift AI 3.5 (documentação).
 
 As versões exatas de cada módulo estão no `package.json` / `pyproject.toml` dele.
@@ -101,11 +101,16 @@ As versões exatas de cada módulo estão no `package.json` / `pyproject.toml` d
 ```bash
 bash infra/subir-ia.sh                     # Ollama + Postgres/pgvector (1ª vez: ~3 min e ~4 GB de modelos)
 cd modulos/01-fundamentos-ia-llms
-npm install
-npm run ex01                               # cada módulo lista os seus comandos no README
+npm install && npm run ex01                # versão JavaScript/TypeScript
+uv sync && uv run python exemplos/01-tensores/python/main.py   # versão Python do mesmo exemplo
 ```
 
-- **Python** (trilhas extras e partes dos módulos 06, 09 e 10): `uv sync` na raiz; o módulo 09 tem `pyproject.toml` próprio.
+Cada exemplo e cada solução de exercício tem as duas versões: o JS na pasta do exemplo e o Python na subpasta
+`python/`, com a saída real das duas no README. Cada módulo tem `package.json` e `pyproject.toml` próprios.
+O que roda dentro do navegador (HTML e a UI Angular do Capstone) fica só em JS; no Capstone, a mesma UI Angular
+foi testada contra a API JS e contra a API Python.
+
+- **Python:** `uv sync` na pasta de cada módulo; as trilhas extras usam o `pyproject.toml` da raiz.
 - **Trocar para a OpenAI ou o OpenRouter:** `OPENAI_BASE_URL`, `OPENAI_API_KEY` e `MODELO_CHAT` (veja [infra/.env.example](infra/.env.example)).
 - **Desligar tudo:** `bash infra/parar-ia.sh` (modelos e dados ficam nos volumes).
 
@@ -115,7 +120,7 @@ Instalação completa: [infra/instalacao.md](infra/instalacao.md).
 
 | Parte | Status |
 |---|---|
-| Módulos 01–12 | ✅ exemplos e soluções executados contra o LLM local; saídas reais nos READMEs. Cada módulo tem uma tabela de status própria |
+| Módulos 01–12 | ✅ exemplos e soluções executados contra o LLM local, **em JS e em Python**; saídas reais nos READMEs. Cada módulo tem uma tabela de status própria |
 | Trilhas extras | ✅ executadas (vLLM em CPU, kind, MLflow, Kubeflow local) |
 | Academia (lições, ferramenta, extensões) | ✅ validador e testes automatizados com simulações · ⚠️ **não executados contra um LLM real** |
 | Plataformas com conta, chave ou login (OpenAI, Gemini, OpenRouter, Firebase, Gemini CLI, Jira/Slack/Notion, Infracost, OpenShift real, deploy de CI) | ⚠️ código e passo a passo prontos; **não executados localmente**, sempre marcado no módulo |

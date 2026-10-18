@@ -56,3 +56,16 @@ O que observar:
 2. Troque o modelo por `RandomForestClassifier`: a permutação continua funcionando, a contribuição linear não
    (aí entraria o `shap.TreeExplainer`).
 3. Escolha `idx` do caso com maior P(maligno) e veja contribuições de -11 log-odds (um caso extremo, z=+12).
+
+## Versão Python
+
+Este exemplo já é em Python. Desde a versão Python do módulo, ele também roda com o `pyproject.toml` próprio
+do módulo (scikit-learn 1.9.1, pandas 3.0.6, numpy 2.5.4), a partir da pasta do módulo:
+
+```bash
+cd modulos/10-seguranca-e-governanca
+uv sync
+uv run python exemplos/01-explicabilidade/explicar.py
+```
+
+Saída esperada (Python): a mesma de cima (conferida em 2026-10-17: `roc_auc=0.9977 recall_maligno=0.981`).

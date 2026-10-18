@@ -59,3 +59,44 @@ justamente o que o [exercício 01](../../exercicios/01-readme-que-passa/) faz.
 1. Rode `node exemplos/01-auditoria-de-readme/auditar.js .` dentro de um repositório seu e corrija até passar.
 2. Copie o `template-readme.md` para um projeto real, preencha com números medidos e rode a auditoria.
 3. Endureça o critério `metricas` (ex.: exigir uma tabela "Resultados medidos") e veja quem deixa de passar.
+
+## Versão Python
+
+`python/checklist.py` (mesmos 10 critérios e pesos), `python/auditar.py` e `python/test_checklist.py` (pytest).
+Lê os mesmos `fixtures/` e o README do exercício 01 desta pasta; nada é duplicado.
+
+### Como rodar
+
+```bash
+cd modulos/12-carreira
+uv sync
+uv run python exemplos/01-auditoria-de-readme/python/auditar.py              # pastas padrão
+uv run python exemplos/01-auditoria-de-readme/python/auditar.py ../03-mcp    # qualquer pasta
+uv run pytest exemplos/01-auditoria-de-readme/
+```
+
+### Saída esperada (Python)
+
+Saída real (2026-10-17), encurtada; idêntica byte a byte à do JS (`diff` vazio):
+
+```text
+✗ trilhas-extras/llmops-vllm-openshift/projeto-final · nota 79% · NÃO PASSA
+   ...
+   faltando (obrigatório): limitacoes
+
+✗ modulos/03-mcp/exemplos/04-mcp-http-producao · nota 57% · NÃO PASSA
+   ...
+   faltando (obrigatório): metricas, limitacoes
+
+✗ trilhas-extras/mlops/exemplos/04-drift-e-monitoramento · nota 57% · NÃO PASSA
+   ...
+✗ modulos/12-carreira/exemplos/01-auditoria-de-readme/fixtures/projeto-fraco · nota 0% · NÃO PASSA
+   ...
+   faltando (obrigatório): proposito, como-rodar, saida-real, metricas, limitacoes
+
+0/4 READMEs passam no checklist (* = obrigatório).
+```
+
+Paridade conferida: os checklists JS e Python foram rodados nos 235 arquivos `.md` do repositório e
+deram a mesma nota e os mesmos 10 critérios em todos. `Math.round` virou `math.floor(x + 0.5)`: o
+`round()` do Python arredonda empates para o par (`round(92.5) == 92`), o JS para cima (93).

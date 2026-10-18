@@ -53,3 +53,29 @@ resultado: {
 
 ✅ tool nova usada e guardrail de orçamento funcionando
 ```
+
+## Versão Python
+
+[`solucao/python/agente.py`](solucao/python/agente.py) + [`solucao/python/main.py`](solucao/python/main.py):
+reaproveita `FERRAMENTAS` e `validar_args` do [exemplo 01 em Python](../../exemplos/01-agent-loop-do-zero/python/)
+(a pasta com hífen entra no `sys.path`) e soma `usage.total_tokens` reais.
+
+Como rodar: `uv run python exercicios/01-tool-nova-e-orcamento/solucao/python/main.py` (a partir da pasta do módulo).
+
+Saída real (mesmos 522 e 1082 tokens do JS):
+
+```
+== orçamento folgado ==
+[passo 1] gasto até aqui: 1 chamadas, 522 tokens
+  consultar_preco({"produto":"monitor"}) -> {"produto":"monitor","preco":900}
+[passo 2] gasto até aqui: 2 chamadas, 1082 tokens
+resultado: {'resposta': '3 monitores custam 2700 reais.', 'motivo': 'ok', 'gasto': {'chamadas': 2, 'tokens': 1082}}
+
+== orçamento apertado (1 chamada) ==
+[passo 1] gasto até aqui: 1 chamadas, 522 tokens
+  consultar_preco({"produto":"monitor"}) -> {"produto":"monitor","preco":900}
+[guardrail] orçamento estourado: {"chamadas":1,"tokens":522} (limite {"chamadas":1,"tokens":3000})
+resultado: {'resposta': None, 'motivo': 'orcamento', 'gasto': {'chamadas': 1, 'tokens': 522}}
+
+✅ tool nova usada e guardrail de orçamento funcionando
+```

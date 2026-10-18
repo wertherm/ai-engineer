@@ -64,3 +64,43 @@ tokens em **toda** chamada.
    passos encerrar o loop sem resposta.
 3. Remova `enum` do schema e peça "Quantos Teclados temos?": o handler recebe `Teclados` e devolve
    `undefined`. Schema bem desenhado previne erro que o código teria que tratar.
+
+## Versão Python
+
+Pasta [`python/`](python/): `ferramentas.py` (schemas JSON idênticos + `validar_args`), `agente.py` (o loop) e
+`main.py`. Cliente e contadores em [`comum_py/llm.py`](../../comum_py/llm.py) (SDK `openai` Python,
+`timeout=900`, `max_retries=0`, `reasoning_effort="none"`). Diferenças idiomáticas:
+
+- a mensagem do assistente volta ao histórico como `message.model_dump(exclude_none=True)` (sem `"tool_calls": null`);
+- `calcular` usa um avaliador por **AST** (`ast.parse` + só `BinOp`/`UnaryOp`/números), o equivalente seguro do
+  `Function(...)` com regex do JS; `6/3` devolve `2` (não `2.0`), como o `number` do JS.
+
+### Como rodar
+
+```bash
+cd modulos/04-agentes-autonomos
+uv sync
+uv run python exemplos/01-agent-loop-do-zero/python/main.py
+uv run python exemplos/01-agent-loop-do-zero/python/main.py "Quantos monitores e mouses temos no total?"
+```
+
+### Saída esperada (Python)
+
+Saída real (mesmos tokens do JS: o prompt e os schemas são idênticos):
+
+```
+Tarefa: Temos teclados suficientes para 3 pedidos de 12 unidades cada? Quantos sobram?
+
+── passo 1 ──
+[percepção] 2 mensagens no contexto (última: user)
+[raciocínio] 24.7s, 434+30 tokens
+[ação] consultar_estoque({"produto":"teclado"})
+[feedback] {"produto":"teclado","quantidade":40}
+
+── passo 2 ──
+[percepção] 4 mensagens no contexto (última: tool)
+[raciocínio] 9.0s, 489+25 tokens
+[fim] objetivo atingido: Sim, temos teclados suficientes para 3 pedidos de 12 unidades cada, sobrando 4 unidades.
+
+Resumo: 2 passos em 33.7s · 2 chamadas ao LLM · 923 tokens de prompt · 55 de resposta · 33.7s no modelo
+```

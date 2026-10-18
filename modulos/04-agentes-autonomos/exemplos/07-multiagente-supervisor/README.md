@@ -90,3 +90,68 @@ O histórico do barramento (`bus.historico`) é a trilha de auditoria da convers
 2. Adicione um agente **revisor** que recebe o plano antes do executor (padrão hierárquico/consenso) e só
    aprova se tiver bebida e comida.
 3. Faça o executor tentar uma ação fora de `ACOES` (ex.: `comprar_cartao`) e veja a falha por allowlist.
+
+## Versão Python
+
+Pasta [`python/`](python/): `barramento.py` (uma **`asyncio.Queue` por agente**, criada sob demanda com
+`defaultdict`), `agentes.py`, `main.py` (os quatro agentes em `asyncio.gather`) e `test_barramento.py` (executor
+sem LLM). A chamada síncrona do `openai` roda em `asyncio.to_thread`: sem isso, o agente que espera o LLM
+bloquearia o loop de eventos e os outros não andariam. `1.5 * 12` dá `18.0` em Python; o helper `num()` normaliza
+para a saída bater com o JS (`R$ 66`, não `R$ 66.0`).
+
+### Como rodar
+
+```bash
+cd modulos/04-agentes-autonomos
+uv run python exemplos/07-multiagente-supervisor/python/main.py
+uv run pytest exemplos/07-multiagente-supervisor
+```
+
+### Saída esperada (Python)
+
+Saída real (o mesmo replanejamento por orçamento do JS: R$ 180 > R$ 150, depois R$ 66):
+
+```
+Pedido: Organize um café da manhã para 12 pessoas na sexta, com orçamento de R$ 150.
+
+Mensagens:
+  [0.0s] supervisor -> analista (pedido)
+  [23.4s] analista -> supervisor (requisitos)
+  [23.4s] supervisor -> planejador (planejar)
+  [44.3s] planejador -> supervisor (plano)
+  [44.3s] supervisor -> executor (executar)
+  [44.3s] executor -> supervisor (falha)
+  [44.3s] supervisor -> planejador (replanejar)
+  [104.7s] planejador -> supervisor (plano)
+  [104.7s] supervisor -> executor (executar)
+  [105.0s] executor -> supervisor (concluido)
+  [105.0s] supervisor -> executor (encerrar)
+  [105.0s] supervisor -> planejador (encerrar)
+
+Resultado: {
+  "status": "concluido",
+  "plano": {
+    "itens": [
+      "pao",
+      "cafe"
+    ],
+    "dia": "sexta"
+  },
+  "requisitos": {
+    "pessoas": 12,
+    "dia": "sexta",
+    "orcamento": 150,
+    "feedback": "plano anterior [\"cafe\",\"suco\",\"frutas\"] falhou: custo R$ 180 > orçamento R$ 150. Corte itens."
+  },
+  "resultado": {
+    "total": 66,
+    "feitos": [
+      "cotação ok: R$ 66",
+      "sala reservada: sexta",
+      "12 convites enviados"
+    ]
+  }
+}
+
+12 mensagens trocadas · 3 chamadas ao LLM · 320 tokens de prompt · 82 de resposta · 104.7s no modelo
+```

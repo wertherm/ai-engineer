@@ -69,3 +69,38 @@ conter o texto visível, o que fere a WCAG 2.5.3 (*Label in Name*): quem usa com
 e nada acontece. O axe não reprovou: a regra dele para a 2.5.3 (`label-content-name-mismatch`) só olha
 elementos cujo texto visível é o próprio conteúdo (ex.: um botão com texto e `aria-label`), não um `<label for>` separado. Correção manual: remover o `aria-label` do input (o `<label for>` basta). Também sobrou uma lupa
 decorativa duplicada fora do botão.
+
+## Versão Python
+
+[`solucao/python/corrigir.py`](solucao/python/corrigir.py): o mesmo laço, com o juiz Python
+([`comum_py/acessibilidade.py`](../../comum_py/acessibilidade.py): axe-core 4.14.0 injetado + as mesmas checagens
+próprias) e as mesmas regras de aceite (`finish_reason != "length"`, pelo menos 3 elementos, nota não pior).
+O componente continua HTML/CSS. Saída em `solucao/python/saida/componente-corrigido.html`.
+[`solucao/python/test_juiz.py`](solucao/python/test_juiz.py) confere, sem LLM, que o juiz Python dá 0 ao original
+(com as 5 regras) e 100 à versão corrigida registrada do JS.
+
+**Como rodar** (da pasta do módulo):
+
+```bash
+uv run pytest exercicios/01-componente-acessivel                          # juiz, sem LLM
+uv run python exercicios/01-componente-acessivel/solucao/python/corrigir.py   # até 3 chamadas (MAX_TENTATIVAS)
+```
+
+**Saída esperada (Python)** (saída real):
+
+```
+[original] nota 0/100 (7 elementos)
+- [critical] button-name: Buttons must have discernible text (em: button)
+- [serious] color-contrast: Elements must meet minimum color contrast ratio thresholds (em: p)
+- [critical] image-alt: Images must have alternative text (em: img[src$="lupa.svg"], img[src$="filtro.svg"])
+- [serious] clicavel-sem-semantica: Elemento com onclick precisa ser <button> ou <a> (teclado e leitor de tela) (em: div[onclick])
+- [serious] rotulo-visivel: Campos precisam de <label> visível (placeholder não substitui rótulo) (em: input[name=?])
+
+[tentativa 1] 154s -> nota 100/100 (9 elementos)
+
+Resultado final: nota 100/100 -> saida/componente-corrigido.html
+```
+
+As mesmas violações e a mesma nota do JS, e o modelo repetiu o mesmo deslize: `<label for>` visível "Buscar produtos"
+**e** `aria-label="Campo de pesquisa de produtos"` no input (fere a WCAG 2.5.3, e o axe não pega). A revisão humana
+descrita acima vale igual para a versão Python.

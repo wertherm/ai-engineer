@@ -52,3 +52,39 @@ P: Posso trabalhar de casa quantos dias?
 
 Repare que o modelo **reformulou** a consulta da 3ª pergunta ("trabalho remoto dias permitido home office") e que a
 busca custou ~2,5× os tokens de responder direto: é essa a economia que o Agentic RAG captura.
+
+## Versão Python
+
+[`solucao/python/main.py`](solucao/python/main.py): reaproveita `corpus.py` e `buscas.py` da versão Python do
+[exemplo 04](../../exemplos/04-padroes-de-rag/) (tabela `m08.rag_docs_py`). A mensagem do assistente com
+`tool_calls` volta para o histórico com `msg.model_dump(exclude_none=True)`.
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exercicios/02-agentic-rag/solucao/python/main.py   # 5 chamadas ao LLM
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+P: Quanto é 12 vezes 8?
+   decisão: respondeu sem buscar
+   R: O resultado de 12 vezes 8 é 96.
+   citações válidas? sim
+   381 tokens · 22 s
+
+P: Qual o prazo da CCB-78?
+   decisão: busca forçada pela regra ("Qual o prazo da CCB-78?")
+   R: O prazo da CCB-78 é de 12 a 60 meses [d7].
+   citações válidas? sim
+   466 tokens · 28 s
+
+P: Posso trabalhar de casa quantos dias?
+   decisão: buscar("trabalho remoto dias permitido home office")
+   R: Você pode trabalhar de casa até 3 dias por semana, desde que tenha a aprovação do seu gestor direto [p2].
+   citações válidas? sim
+   932 tokens · 45 s
+```
+
+Mesmas decisões, mesma consulta reformulada e os mesmos tokens do JS: com `temperature=0` o modelo local é estável.

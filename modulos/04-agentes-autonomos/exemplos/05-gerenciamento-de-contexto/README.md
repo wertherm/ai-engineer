@@ -65,3 +65,38 @@ Resumo das 12 mensagens descartadas: Ana (Padaria Pão Quente) relata que o pedi
 2. Troque `ORCAMENTO` para 600: a janela passa a caber tudo e a versão A também acerta (mas com mais tokens).
 3. Passe `quadro.local.financeiro` em vez de `suporte` e pergunte sobre frete grátis: o agente não sabe, porque
    aquela política é contexto local de outro agente.
+
+## Versão Python
+
+Pasta [`python/`](python/): `contexto.py` (as mesmas funções, puras exceto `sumarizar`), `main.py` e
+`test_contexto.py` (pytest das funções puras, sem LLM). Mesmos números do JS: ~545 → ~458 tokens, janela de 10
+mensagens, 1332 tokens de prompt reais. Cuidado ao portar a estimativa: `len()` do Python conta *code points* e o
+`.length` do JS conta unidades UTF-16 (diferem só com emoji e afins); e `lista[:-0]` é vazio, como `slice(0, -0)`.
+
+### Como rodar
+
+```bash
+cd modulos/04-agentes-autonomos
+uv run python exemplos/05-gerenciamento-de-contexto/python/main.py
+uv run pytest exemplos/05-gerenciamento-de-contexto     # 4 testes, sem LLM
+```
+
+### Saída esperada (Python)
+
+Saída real:
+
+```
+Histórico completo: 22 mensagens, ~545 tokens (orçamento: 220)
+Após podar tools antigas: ~458 tokens
+Janela: mantém 10 mensagens recentes, descarta 12 antigas
+
+Resumo das 12 mensagens descartadas: Ana (Padaria Pão Quente) relata que o pedido 8812 de 40 caixas de farinha está em trânsito pela RodoSul. As entregas para as semanas 1, 2 e 3 ocorrem nas janelas 08h-10h ou 14h-16h, sujeitas a confirmação.
+
+[A · só janela] ~260 tokens estimados / 406 reais, 68s
+  resposta: Não tenho acesso às informações sobre o seu pedido específico, como o número do pedido ou a quantidade de caixas.
+
+[B · podado + resumo + stitching] ~369 tokens estimados / 552 reais, 54s
+  resposta: O seu pedido é o 8812 e continha 40 caixas de farinha.
+
+3 chamadas ao LLM · 1332 tokens de prompt · 129 de resposta · 206.6s no modelo
+```

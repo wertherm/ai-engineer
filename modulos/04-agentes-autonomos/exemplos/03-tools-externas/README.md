@@ -66,3 +66,45 @@ prompt por chamada são, em boa parte, as 4 tools reenviadas a cada passo.
    volta como feedback.
 3. No handler de `consultar_cotacao` (em `main.js`), troque `${PORTA}` por `30499` (porta sem serviço) e veja
    o `fetch failed` chegar ao modelo como `{ erro }`, sem derrubar o loop.
+
+## Versão Python
+
+Pasta [`python/`](python/):
+
+| Arquivo | Equivale a | O que muda |
+|---|---|---|
+| `api_rest.py` | `api-rest.js` | **FastAPI** servido por `uvicorn.Server` numa thread do próprio script (porta **30450**; para com `server.should_exit = True`) |
+| `mcp_automacoes.py` | `mcp-automacoes.js` | `MCPServer` do SDK `mcp` 2.3.0; o schema sai dos type hints (`Literal[...]` vira `enum`, `Field(max_length=200)`) |
+| `main.py` | `main.js` | `Client(stdio_client(...))` assíncrono; a chamada síncrona ao `openai` roda em `asyncio.to_thread`; REST via `httpx` |
+
+Tabelas próprias `m04.tarefas_py` e `m04.notificacoes_py` (o JS recria `m04.tarefas`/`m04.notificacoes` a cada
+execução; com o sufixo, as duas versões não apagam os dados uma da outra). O processo filho do MCP recebe
+`PYTHONPATH` com a pasta do módulo para importar `comum_py`.
+
+### Como rodar
+
+```bash
+cd modulos/04-agentes-autonomos
+uv run python exemplos/03-tools-externas/python/main.py
+```
+
+### Saída esperada (Python)
+
+Saída real (6 chamadas e os mesmos 5329 tokens de prompt do JS; os segundos refletem o Ollama disputado):
+
+```
+Ferramentas: criar_tarefa, atualizar_tarefa, consultar_cotacao, notificar_time
+Pedido: Crie a tarefa "Monitorar dólar" e consulte a cotação do USD. Se passar de 5,30, ajuste a tarefa para prioridade alta e notifique o time financeiro. Por fim conclua a tarefa com a cotação como resultado.
+[1] (19s) criar_tarefa({"titulo":"Monitorar dólar"}) -> {"id":1,"status":"aberta"}
+[2] (17s) consultar_cotacao({"moeda":"USD"}) -> {"moeda":"USD","brl":5.42,"fonte":"api-local"}
+[3] (22s) atualizar_tarefa({"id":1,"prioridade":"alta"}) -> {"id":1,"titulo":"Monitorar dólar","status":"aberta","prioridade":"alta","resultado":null}
+[4] (155s) notificar_time({"time":"financeiro","mensagem":"A cotação do USD subiu para 5,42, ultrapassando o limite de 5,30. Ação necessária."}) -> {"mcp":true,"isError":false,"texto":"{\"ok\":true,\"id\":1,\"time\":\"financeiro\"}"}
+[5] (130s) atualizar_tarefa({"id":1,"status":"concluida","resultado":"5,42"}) -> {"id":1,"titulo":"Monitorar dólar","status":"concluida","prioridade":"alta","resultado":"5,42"}
+
+[6] resposta final (251s): A tarefa foi concluída com prioridade alta e o resultado da cotação de 5,42.
+
+Estado final no banco:
+  id=1 | titulo=Monitorar dólar | status=concluida | prioridade=alta | resultado=5,42
+  id=1 | time=financeiro | mensagem=A cotação do USD subiu para 5,42, ultrapassando o limite de 5,30. Ação necessária.
+6 chamadas ao LLM · 5329 tokens de prompt · 374 de resposta · 593.3s no modelo
+```

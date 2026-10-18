@@ -114,3 +114,86 @@ Repare no que ainda precisa de revisão humana mesmo com o prompt endurecido: o 
 chegou depois de reinícios). Na 1ª versão da solução (`max_tokens` 420, timeline reescrita pelo LLM) o texto
 saiu cortado no meio e afirmava "nenhum dado foi perdido" sem evidência. Por isso a timeline agora é anexada
 pelo código, o prompt manda escrever "a confirmar" e o `finish_reason == "length"` é checado.
+
+## Versão Python
+
+[`solucao/python/solucao.py`](solucao/python/solucao.py): mesmo fluxo e os **mesmos** runbooks de `solucao/runbooks/`.
+pgvector via psycopg 3 + `pgvector.psycopg.register_vector` (embeddings como `numpy.ndarray`), tabelas
+**`m06.runbooks_py`** e **`m06.postmortems_py`**, namespace `m06py-runbook`, post-mortem em `solucao/python/saida/`.
+Aprovação interativa com `input()` (sem `--auto-aprovar`). `solucao/python/test_runbooks.py` testa parser, allowlist
+(o runbook 04 com `delete` é bloqueado) e namespace, sem cluster nem LLM.
+
+```bash
+cd modulos/06-ia-devops
+uv run python exercicios/02-runbook-rag-e-postmortem/solucao/python/solucao.py --auto-aprovar
+uv run python exercicios/02-runbook-rag-e-postmortem/solucao/python/solucao.py      # pergunta [s/N]
+uv run pytest exercicios/02-runbook-rag-e-postmortem
+```
+
+Saída real (Python, 1ª execução: ainda não havia post-mortem anterior em `m06.postmortems_py`):
+
+```
+Runbooks indexados: 4
+[14:43:10] ALERTA KubePodCrashLooping em m06py-runbook/relatorios: container relatorios reiniciando repetidamente; último término com exit code 137
+   candidato 0.711 · 01-pod-oomkilled.md
+   candidato 0.624 · 02-imagem-nao-encontrada.md
+   candidato 0.478 · 03-latencia-alta.md
+[14:43:12] runbook escolhido: 01-pod-oomkilled.md (score 0.711)
+   $ kubectl -n m06py-runbook get pods -l app=relatorios --no-headers
+     relatorios-5dbbc698d4-9pwvh   1/1   Running   1 (3s ago)   5s
+   $ kubectl -n m06py-runbook get deploy relatorios -o jsonpath={.spec.template.spec.containers[0].resources}
+     {"limits":{"memory":"32Mi"},"requests":{"memory":"16Mi"}}
+[14:43:12] verificação confirmou: lastState.terminated.reason=OOMKilled
+[14:43:12] dry-run ok: deployment.apps/relatorios resource requirements updated (server dry run)
+[14:43:12] aprovado por aprovação simulada (--auto-aprovar)
+[14:43:13] MITIGAÇÃO executada: kubectl -n m06py-runbook set resources deploy/relatorios --limits=memory=128Mi --requests=memory=64Mi → deployment.apps/relatorios resource requirements updated
+[14:43:14] validação "rollout status": ok (deployment "relatorios" successfully rolled out)
+[14:43:34] pós-mitigação (20 s depois): container rodando · log: "relatorio pronto"
+
+--- post-mortem (141s) → solucao/python/saida/postmortem.md ---
+# Post-mortem BLAMELESS: Crash Loop do Serviço de Relatórios
+
+## Resumo
+O serviço `relatorios` no namespace `m06py-runbook` entrou em um ciclo de reinício contínuo (CrashLoopBackOff) devido ao término forçado por falta de memória (OOMKilled). O sistema automatizado detectou o erro, identificou o runbook correspondente e executou uma mitigação automática ajustando os limites de memória do container para 128Mi. A validação confirmou a recuperação imediata do serviço.
+
+## Impacto
+*   **Disponibilidade:** O serviço ficou indisponível por aproximadamente 20 segundos, interrompendo o fluxo de geração de relatórios até a aplicação da correção.
+*   **Recuperação:** A mitigação foi bem-sucedida e automática, restaurando a funcionalidade do serviço sem intervenção manual direta na infraestrutura.
+
+## Causa raiz
+A causa raiz é a configuração inadequada dos limites de memória (`memory limits`) para o container `relatorios`, que não suportava o pico de consumo de recursos necessário para gerar os relatórios, resultando em *Out Of Memory* (OOM) e reinício forçado pelo Kubernetes.
+
+## O que funcionou
+1.  **Detecção Automática:** O sistema monitoramento identificou rapidamente o `exit code 137` e o motivo `OOMKilled`.
+2.  **Execução de Runbook:** O processo automatizado selecionou e executou corretamente o runbook `01-pod-oomkilled.md`.
+3.  **Mitigação Rápida:** A aplicação dos novos limites de memória (128Mi/64Mi) foi concluída em menos de um minuto, restaurando a operação do serviço.
+
+## Ações de acompanhamento
+| Ação | Dono Sugerido |
+| :--- | :--- |
+| Revisar e ajustar os requisitos de recursos (CPU/Memory) para o workload `relatorios` com base no perfil de uso real. | Engenheiro de Plataforma / Owner do Serviço |
+| Implementar alertas proativos baseados em métricas de uso de memória antes que o container seja OOMKilled. | Engenheiro de Observabilidade |
+
+## Lições aprendidas
+*   **Processos Automatizados:** A execução automática de runbooks para mitigação de falhas de recursos demonstrou ser eficaz e rápida, reduzindo o tempo de resolução (MTTR).
+*   **Configuração de Recursos:** É essencial definir limites de memória conservadores mas realistas durante a criação de workloads; valores excessivamente baixos podem causar instabilidade mesmo com automação.
+*   **Monitoramento:** A detecção do `exit code 137` foi o gatilho crítico que permitiu a resposta automática, validando a eficácia dos alertas de crash loop.
+
+## Timeline (gerada pelo agente)
+
+- 14:43:10 ALERTA KubePodCrashLooping em m06py-runbook/relatorios: container relatorios reiniciando repetidamente; último término com exit code 137
+- 14:43:12 runbook escolhido: 01-pod-oomkilled.md (score 0.711)
+- 14:43:12 verificação confirmou: lastState.terminated.reason=OOMKilled
+- 14:43:12 dry-run ok: deployment.apps/relatorios resource requirements updated (server dry run)
+- 14:43:12 aprovado por aprovação simulada (--auto-aprovar)
+- 14:43:13 MITIGAÇÃO executada: kubectl -n m06py-runbook set resources deploy/relatorios --limits=memory=128Mi --requests=memory=64Mi → deployment.apps/relatorios resource requirements updated
+- 14:43:14 validação "rollout status": ok (deployment "relatorios" successfully rolled out)
+- 14:43:34 pós-mitigação (20 s depois): container rodando · log: "relatorio pronto"
+---
+Post-mortem indexado em m06.postmortems_py.
+1 chamadas ao LLM · 424 tokens de prompt · 616 de resposta · 141.2s no modelo
+```
+
+Mesmos scores do JS (0.711 / 0.624 / 0.478: mesmo modelo de embedding, mesmo texto indexado) e mesma mitigação. E o
+mesmo cuidado na revisão humana: o post-mortem afirma "indisponível por aproximadamente 20 segundos", número que **não**
+está medido (os 20 s são a espera da validação). O "a confirmar" pedido no prompt não foi respeitado aqui.

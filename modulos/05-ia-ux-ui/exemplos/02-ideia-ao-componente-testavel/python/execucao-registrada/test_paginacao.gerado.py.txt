@@ -1,0 +1,53 @@
+import pytest
+from re import search as regex_search
+
+@pytest.fixture
+def renderizar():
+    def _renderizar(data):
+        paginaAtual = data.get("paginaAtual", 1)
+        totalPaginas = data.get("totalPaginas", 1)
+        
+        if not isinstance(paginaAtual, int) or not isinstance(totalPaginas, int):
+            raise Exception("Página e total de páginas devem ser inteiros")
+        
+        if paginaAtual < 1 or paginaAtual > totalPaginas or totalPaginas < 1:
+            raise Exception(f"RangeError: Página {paginaAtual} inválida para {totalPaginas} páginas")
+
+        html = f"""<nav aria-label="Paginação">
+    <ul>
+        {''.join([f'<li><a href="?pagina={i}">{i}</a></li>' for i in range(1, totalPaginas + 1)])}
+    </ul>
+    <button disabled={paginaAtual == 1}>Anterior</button>
+    <button disabled={paginaAtual == totalPaginas}>Próxima</button>
+</nav>"""
+        return html
+
+    return _renderizar
+
+def test_render_paginacao_valida():
+    html = renderizar({"paginaAtual": 2, "totalPaginas": 3})
+    assert "<nav aria-label=\"Paginação\">" in html
+    assert "<ul>" in html
+    assert '<li><a href="?pagina=1">1</a></li>' in html
+    assert '<li><a href="?pagina=2">2</a></li>' in html
+    assert '<li><a href="?pagina=3">3</a></li>' in html
+    assert '<button disabled="true">Anterior</button>' in html
+    assert '<button disabled="true">Próxima</button>' in html
+    assert 'aria-current="page"' in html
+
+def test_render_paginacao_primeira_pagina():
+    html = renderizar({"paginaAtual": 1, "totalPaginas": 5})
+    assert '<button disabled="true">Anterior</button>' in html
+    assert '<button disabled="false">Próxima</button>' in html
+    assert 'aria-current="page"' in html
+
+def test_render_paginacao_ultima_pagina():
+    html = renderizar({"paginaAtual": 5, "totalPaginas": 5})
+    assert '<button disabled="true">Anterior</button>' in html
+    assert '<button disabled="true">Próxima</button>' in html
+    assert 'aria-current="page"' in html
+
+def test_render_paginacao_invalida():
+    with pytest.raises(Exception) as exc_info:
+        renderizar({"paginaAtual": 5, "totalPaginas": 3})
+    assert "RangeError" in str(exc_info.value)

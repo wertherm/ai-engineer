@@ -70,3 +70,38 @@ Leituras honestas desta execução:
 1. Adicione ao `C-few-shot` um terceiro exemplo de `duvida` parecido com "Como faço para..." e rode de novo.
 2. Aumente o gabarito para 10 tickets (inclua casos ambíguos, ex.: "o PDF exportado sai sem acentos") e veja o placar mudar.
 3. Rode com outro modelo sem mudar código: `MODELO_CHAT=<outro modelo do ollama> npm run ex04`.
+
+## Versão Python
+
+Mesmos 4 tickets, mesmos 3 prompts e o mesmo critério, com o SDK `openai` em Python
+([`comum_py/llm.py`](../../comum_py/llm.py): `timeout=900`, `max_retries=0`, `reasoning_effort="none"`, `temperature=0`).
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`; 12 chamadas ao LLM, ~1 min nesta máquina):
+
+```bash
+uv run python exemplos/04-prompt-engineering/python/main.py
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+=== Prompt A-vago ===
+ERR esperado=bug/true | saída: Isso é uma situação crítica e extremamente frustrante, especialmente com a perda de vendas [cortado]
+ERR esperado=feature/false | saída: Essa é uma **sugestão de melhoria válida e muito comum**, especialmente para ferramentas d [cortado]
+...
+=== Prompt B-instrucao ===
+OK  esperado=bug/true | saída: {"tipo":"bug","urgente":true}
+...
+=== Prompt C-few-shot ===
+...
+ERR esperado=duvida/false | saída: {"tipo":"feature","urgente":false}
+OK  esperado=bug/false | saída: {"tipo":"bug","urgente":false}
+
+=== Resumo ===
+        prompt |    JSON válido |        acertos | tokens entrada |   tokens saída |      tempo (s)
+        A-vago |            0/4 |            0/4 |            128 |            160 |           26.7
+   B-instrucao |            4/4 |            4/4 |            337 |             45 |           13.9
+    C-few-shot |            4/4 |            3/4 |            609 |             44 |           17.1
+```
+
+Mesmo placar do JS (A 0/4, B 4/4, C 3/4): o resultado depende do prompt e do modelo, não da linguagem.

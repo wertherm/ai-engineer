@@ -56,3 +56,39 @@ Para conferir o que ficou no banco: `docker compose -f infra/compose.yaml exec p
 2. Mude `max_tokens` da requisição da parte C de 20 para 21: a chave muda e o cache dá MISS. Tudo que muda a
    resposta precisa estar na chave — e só isso.
 3. Use `ttlHoras = 0` em `comCache` e veja toda chamada virar MISS.
+
+## Versão Python
+
+[`python/main.py`](python/main.py) faz as mesmas três medições e acrescenta a contagem **local** de tokens
+com `tiktoken` (encoding `o200k_base`) antes de chamar. [`python/cache_respostas.py`](python/cache_respostas.py)
+usa `psycopg` 3 e uma tabela própria, `m02.cache_respostas_py`: a chave é o SHA-256 de
+`json.dumps(requisicao, sort_keys=True)`, que não coincide com o `JSON.stringify` do JS.
+
+### Como rodar
+
+```bash
+cd modulos/02-apis-ia-generativa
+uv run python exemplos/02-custo-e-cache/python/main.py
+```
+
+### Saída esperada (Python)
+
+Saída real (~3,5 min):
+
+```
+A) Prompt prolixo vs enxuto (tiktoken local vs usage real com max_tokens=1)
+   prolixo  tiktoken= 88 · entrada=104 (cache=0) saida=1 custo=US$ 0.000043
+   enxuto   tiktoken= 20 · entrada=33 (cache=0) saida=1 custo=US$ 0.000015
+
+B) Reuso de contexto (mesmo system prompt, perguntas diferentes)
+   Prazo de troca da categoria 3? → 97903 ms · entrada=806 (cache=0) saida=15 custo=US$ 0.000346
+   Prazo de troca da categoria 9? → 78863 ms · entrada=806 (cache=294) saida=15 custo=US$ 0.000258
+
+C) Cache de respostas (Postgres, m02.cache_respostas_py)
+   chamada 1: MISS 32188 ms · tokens cobrados=27 · "Brasília"
+   chamada 2: HIT  1 ms · tokens cobrados=0 · "Brasília"
+```
+
+Repare na diferença `tiktoken=88` × `entrada=104`: o tiktoken conta com o tokenizador da OpenAI, e o qwen
+usa outro (e o servidor ainda soma os tokens do template de chat). Contagem local serve para **estimar**
+(orçamento, corte de contexto); a fatura vem do `usage`.

@@ -1,7 +1,7 @@
 [project]
 name = "modulo-09-fine-tuning"
 version = "0.1.0"
-description = "Módulo 9: LoRA/PEFT real em CPU (torch CPU + transformers + peft + datasets)"
+description = "Módulo 9: LoRA/PEFT real em CPU (torch CPU + transformers + peft + datasets) e a versão Python dos exemplos JS"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "torch==2.14.1",
@@ -10,6 +10,13 @@ dependencies = [
     "datasets==5.1.0",
     "accelerate==1.15.0",
     "safetensors==0.8.0",
+    # versão Python dos exemplos JS (01, 02, 04, 05 e exercício 02)
+    "openai==3.33.0",
+    "tiktoken==0.14.0",
+    "psycopg[binary]==3.3.6",
+    "fastapi==0.143.3",
+    "uvicorn==0.54.0",
+    "pytest==9.1.1",
 ]
 
 # Projeto próprio do módulo (não é workspace da raiz): o torch vem do índice de CPU do PyTorch
@@ -24,3 +31,8 @@ torch = { index = "pytorch-cpu" }
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.pytest.ini_options]
+# raiz do módulo no sys.path: os testes importam `comum_py` sem instalar nada
+pythonpath = ["."]
+testpaths = ["exemplos", "exercicios"]

@@ -51,3 +51,7 @@ adapter salvo em exemplos/03-lora-peft-cpu/adapter: 3.7 MB (o modelo base tem ~2
 1. `--r 2` e `--r 32`: compare % treinável, tamanho do adapter e loss de validação.
 2. Tire o mascaramento do prompt em `tokenizar` (use `labels = input_ids`) e veja a loss inicial e a acurácia no exemplo 04.
 3. Inclua `"gate_proj", "up_proj", "down_proj"` em `target_modules` (LoRA também na MLP).
+
+## Versão Python
+
+Já era Python (`treinar_lora.py`, com `comum/modelo_local.py`): não há versão JS para portar. Comandos e saída real acima.

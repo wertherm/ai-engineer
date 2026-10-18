@@ -77,3 +77,62 @@ Testes do adaptador:
 1. Faça o pesquisador **não resumir**: troque o `FunctionTool` para devolver os trechos e use `outputKey` só no redator, ou peça ao pesquisador "copie os trechos literalmente". Compare a resposta sobre os dias de home office.
 2. Troque o nó `verificar` por um `LlmAgent` "revisor" que recebe evidências e resposta e diz se cada frase está sustentada — e meça quanto tempo (e quantos tokens) isso adiciona.
 3. Use o `MCPToolset` do ADK (`@google/adk` → `MCPToolset` com `StreamableHTTPConnectionParams`) apontando para `http://127.0.0.1:31180/mcp` com o header `Authorization: Bearer sk-acme-demo` no lugar do `FunctionTool`: o pesquisador passa a usar o Micro-SaaS **pelo MCP**, como um agente externo.
+
+## Versão Python
+
+[`python/main.py`](python/main.py) com o **ADK Python** (`google-adk` 2.12.0): o mesmo `Workflow`
+`START -> pesquisador -> redator -> verificar`, `LlmAgent` com `output_key`, instruções com `{pergunta}` e
+`{evidencias}` lidos do estado da sessão, e o nó final em código.
+
+A grande diferença: o ADK Python **já traz o conector LiteLLM**, então não há adaptador próprio (o
+`ollama-llm.js` e o teste dele não têm equivalente — **não se aplica**). Cada agente recebe
+`LiteLlm(model="ollama_chat/qwen3.5:4b", api_base="http://localhost:11434", reasoning_effort="none", temperature=0, max_tokens=...)`:
+`ollama_chat/` é a API nativa do Ollama, a recomendada na doc do ADK para tools, e o LiteLLM traduz
+`reasoning_effort="none"` para `think: false`. A tool é uma função Python comum embrulhada em `FunctionTool`:
+o ADK gera a declaração pela assinatura e pela docstring (no JS, schema zod). A fachada `servico.buscar` é a
+mesma da API Python, então isolamento por tenant, PII e auditoria (canal `adk`, em `m11.auditoria_py`) valem aqui também.
+
+### Como rodar
+
+```bash
+cd modulos/11-capstone-micro-saas
+uv sync
+uv run python exemplos/04-orquestracao-adk/python/main.py
+uv run python exemplos/04-orquestracao-adk/python/main.py padaria "Posso tirar férias em dezembro e dividir em quantas partes?"
+MODELO_PESQUISADOR=qwen3.5:4b MODELO_REDATOR=qwen3.5:4b uv run python exemplos/04-orquestracao-adk/python/main.py
+```
+
+### Saída esperada (Python)
+
+Saída real (2026-10-18; Ollama sem fila):
+
+```
+Tenant: Acme Software
+Pergunta: Quantos dias por semana posso trabalhar de casa e quanto recebo de auxílio para isso?
+
+  24.5s [pesquisador] chama buscar_politicas({"consulta": "auxílio home office"})
+   0.8s [pesquisador] tool devolveu home-office.md, home-office.md, home-office.md
+  16.5s [pesquisador] - A empresa paga um auxílio home office de R$ 150,00 por mês, junto com o salário, para custear internet e energia [home-office.md]
+  10.5s [redator] A empresa oferece um auxílio de R$ 150,00 por mês para custear despesas como internet e energia [home-office.md]. Não foi encontrada informação sobre a quantidade de dias por semana que o colaborador pode trabalhar de casa.
+   0.0s [verificar] {"verificado":true,"citados":["home-office.md"],"lidos":["home-office.md"]}
+
+estado final: ["pergunta","evidencias","resposta"] · total 52.3s
+```
+
+A mesma lição da versão JS: o trecho "3 dias remotos e 2 presenciais" veio na busca, mas o pesquisador
+resumiu só um fato; o redator, instruído a admitir lacunas, respondeu incompleto e honesto. Com a padaria:
+
+```
+  22.1s [pesquisador] chama buscar_politicas({"consulta": "férias dezembro divisão"})
+   0.8s [pesquisador] tool devolveu ferias.md, ferias.md, ferias.md
+  15.6s [pesquisador] - Não são concedidas férias em dezembro [ferias.md]
+          - As férias podem ser divididas em no máximo 2 períodos [ferias.md]
+  14.7s [redator] Não é possível tirar férias em dezembro, pois não são concedidas nesse mês [ferias.md]. Quanto à divisão das férias, elas podem ser feitas em no máximo dois períodos [ferias.md].
+   0.0s [verificar] {"verificado":true,"citados":["ferias.md","ferias.md"],"lidos":["ferias.md"]}
+```
+
+Detalhes do ADK Python 2.12: o `Workflow` aceita uma função comum como nó (o parâmetro `node_input` recebe
+a saída do nó anterior); o evento da saída desse nó vem com `author` do Workflow, por isso o nome do nó é lido
+de `ev.node_info.path` (`politicas_adk@1/verificar@1`). O único aviso impresso é
+`[EXPERIMENTAL] feature FeatureName.JSON_SCHEMA_FOR_FUNC_DECL is enabled`, silenciado com `warnings.filterwarnings`.
+Com Gemini de verdade (`model="gemini-2.5-flash"` + `GOOGLE_API_KEY`): não executado localmente (exige conta Google).

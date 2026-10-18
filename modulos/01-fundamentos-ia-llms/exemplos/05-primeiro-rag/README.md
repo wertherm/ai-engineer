@@ -69,3 +69,42 @@ Repare: a pergunta diz "almoço", o texto diz "refeição", e mesmo assim o trec
 1. Pergunte algo que não está no corpus ("Qual o plano de saúde?") e veja se o modelo obedece o "não sei".
 2. Troque `K = 3` por `K = 1` e pergunte algo que precisa de dois parágrafos (prazo **e** limite).
 3. Consulte o banco direto: `psql postgres://ia:ia@localhost:5433/ia -c "SELECT fonte, left(conteudo,50) FROM m01.chunks WHERE colecao='paragrafo'"`.
+
+## Versão Python
+
+Mesmo corpus e mesmo chunking, com `psycopg` 3 + `pgvector` (Python) em
+[`comum_py/rag.py`](../../comum_py/rag.py). Mesmo schema `m01`, mas tabela própria **`m01.chunks_py`** (índice
+`chunks_py_embedding_hnsw`): o JS e o Python podem rodar juntos sem um apagar a coleção do outro.
+
+**Como rodar** (da pasta do módulo, depois de `uv sync`):
+
+```bash
+uv run python exemplos/05-primeiro-rag/python/indexar.py
+uv run python exemplos/05-primeiro-rag/python/perguntar.py --sem-rag
+uv run pytest exemplos/05-primeiro-rag/python   # teste do chunking (sem banco)
+```
+
+**Saída esperada (Python)** — saída real:
+
+```text
+documentos: 6 | chunks indexados: 17 | tempo: 5.2s
+fonte              dims  início
+01-ferias.md       1024  Política de férias da Café Byte: Cada pessoa colaboradora te
+01-ferias.md       1024  Política de férias da Café Byte: O pedido de férias é feito 
+01-ferias.md       1024  Política de férias da Café Byte: Durante dezembro a loja onl
+```
+
+```text
+Pergunta: Até quando posso pedir reembolso de um almoço de viagem e qual o limite?
+
+Top-3 trechos (similaridade de cosseno):
+  [1] 0.706 03-reembolso.md — Reembolso de despesas: O limite de refeição em viagem é de R$ 90 por dia. Valore...
+  [2] 0.606 03-reembolso.md — Reembolso de despesas: O reembolso cai na conta em até 10 dias úteis após a apro...
+  [3] 0.480 03-reembolso.md — Reembolso de despesas: Despesas de trabalho (transporte para cliente, refeição e...
+
+Resposta COM RAG (11.1s, 253 tokens de entrada):
+Você pode solicitar o reembolso do almoço de viagem até 60 dias após a data da despesa [2], respeitando um limite máximo de R$ 90 por dia [1].
+
+Resposta SEM RAG (o modelo não conhece a Café Byte):
+O reembolso para despesas de viagens (incluindo almoços) é geralmente permitido até ao final do exercício fiscal, ...
+```

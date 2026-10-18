@@ -1,0 +1,32 @@
+[project]
+name = "modulo-05-ia-ux-ui"
+version = "1.0.0"
+description = "Módulo 05 (versão Python): Text-to-UI auditado, componente testável, app com MCP + MCP Apps e proxy de IA"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "openai==3.35.0",
+    "mcp==2.3.0",
+    "fastapi==0.143.3",
+    "uvicorn==0.54.0",
+    "httpx2==2.13.1",
+    "playwright==1.64.0",
+    "psycopg[binary]==3.3.6",
+    "pgvector==0.5.1",
+    "pydantic==2.14.1",
+    "pytest==9.1.1",
+]
+
+# Projeto próprio do módulo (não é workspace da raiz). É "pacote" só para instalar `comum_py`
+# em modo editável: qualquer script em exemplos/*/python/ faz `from comum_py import ...`.
+[build-system]
+requires = ["uv_build==0.13.1"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "comum_py"
+module-root = ""
+
+[tool.pytest.ini_options]
+testpaths = ["exemplos", "exercicios"]
+pythonpath = ["."]
+addopts = "-q --import-mode=importlib"

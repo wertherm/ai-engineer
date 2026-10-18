@@ -1,0 +1,23 @@
+[project]
+name = "modulo-07-ia-gestao-de-projetos"
+version = "0.1.0"
+description = "Módulo 07 · IA para Gestão de Projetos (versão Python): requisitos, priorização, Monte Carlo, atas, bot de cards e governança"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "openai==3.34.0",
+    "pydantic==2.14.1",
+    "fastapi==0.143.3",
+    "uvicorn==0.54.0",
+    "httpx==0.28.1",
+    "psycopg[binary]==3.3.6",
+    "pytest==9.1.1",
+]
+
+# Projeto próprio do módulo (não é workspace da raiz): rodar tudo a partir desta pasta com `uv run`.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["exemplos", "exercicios"]
+pythonpath = ["."]
+addopts = "-q"

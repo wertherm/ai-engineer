@@ -70,3 +70,45 @@ O pipeline fez exatamente o seu trabalho, e a saída mostra por quê ele existe:
    para ver o relatório por controle (base de relatório de compliance).
 2. Peça ao LLM o fix do `main.tf` também e re-escaneie (dica: `aws_s3_bucket_versioning` e `aws_s3_bucket_server_side_encryption_configuration`).
 3. Rode `trivy image nginx:1.31.6-alpine` (baixa o banco de CVEs) e peça ao LLM um resumo de remediação das CVEs com fix disponível.
+
+## Versão Python
+
+[`python/main.py`](python/main.py): mesmos passos (Trivy `config` e `fs --scanners secret` por `subprocess`, 2 chamadas
+ao LLM, `yaml.safe_load_all` + `kubectl apply --dry-run=client --validate=strict` e `--dry-run=server`, re-scan e
+veredito determinístico) sobre os **mesmos** `alvos/`. Saída em `python/saida/` (ignorada pelo git). O cache do Trivy
+fica no default dele, `~/.cache/trivy` (fora do repo; o banco de checks já baixado é reaproveitado).
+
+### Como rodar
+
+```bash
+cd modulos/06-ia-devops
+uv run python exemplos/06-seguranca-scan-e-ai-fix/python/main.py     # 2 chamadas ao LLM
+```
+
+### Saída esperada (Python)
+
+```
+== 1. trivy config alvos/ ==
+   Dockerfile       HIGH=1 MEDIUM=1 LOW=1
+   deployment.yaml  HIGH=3 MEDIUM=5 LOW=12
+   main.tf          HIGH=6 MEDIUM=1 LOW=1
+
+== 2. trivy fs --scanners secret ==
+   CRITICAL github-pat em app.env:2 → GITHUB_TOKEN=****************************************
+
+== 3. LLM explica e corrige deployment.yaml ==
+   explicação: O risco real é que um atacante pode se elevar a privilégios de root, executar comandos destrutivos e comprometer todo o sistema. A combinação de configurações inseguras permite que vulnerabilidades sejam exploradas para obter controle total sobre os dados e serviços. Sem correções imediatas, qualquer falha de segurança poderá resultar em perda de dados, interrupção do serviço ou violação da conformidade.
+   fix proposto em 173s → exemplos/06-seguranca-scan-e-ai-fix/python/saida/deployment.corrigido.yaml
+   dry-run client: ✓ · dry-run server: ✗ Error from server (BadRequest): error when creating "STDIN": Deployment in version "v1" cannot be handled as a Deployment: strict decoding error: unknown field "spec.template.spec.securityContext.readOnlyRootFilesystem"
+
+== 4. re-scan ==
+   antes : HIGH=3 MEDIUM=5 LOW=12
+   depois: MEDIUM=1 LOW=3
+   restantes: KSV-0020, KSV-0021, KSV-0110, KSV-0125 · novos introduzidos pelo fix: KSV-0125
+
+Veredito: fix REJEITADO → não vai para o PR (devolver ao LLM ou corrigir à mão)
+2 chamadas ao LLM · 562 tokens de prompt · 377 de resposta · 262.5s no modelo
+```
+
+Mesmo resultado do JS, achado por achado (com `temperature=0` o modelo devolveu o mesmo fix): o dry-run server
+rejeitou o `readOnlyRootFilesystem` no lugar errado e o re-scan acusou o `KSV-0125` novo. Veredito: REJEITADO.
