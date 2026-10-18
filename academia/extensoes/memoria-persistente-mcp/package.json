@@ -1,0 +1,17 @@
+{
+  "name": "extensao-memoria-persistente-mcp",
+  "private": true,
+  "type": "module",
+  "description": "Extensão da Academia · memória persistente via MCP (servidor de referência)",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "servidor": "node referencia/servidor.mjs",
+    "test": "node --test \"referencia/*.test.mjs\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "4.6.7"
+  }
+}

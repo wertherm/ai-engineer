@@ -3,6 +3,51 @@
 Mudanças relevantes no currículo e no sistema de acompanhamento. Formato: data, o que mudou, por quê. Mudanças nos
 módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) seguem o histórico do Git.
 
+## 2026-10-18 · Extensões práticas (memória, harness, engenharia reversa, RAG avançado e time de agentes)
+
+**Adicionado** (em [`extensoes/`](extensoes/README.md))
+
+- **Memória persistente via MCP:** núcleo sem dependências (escopo, segredos recusados, upsert com histórico, TTL, busca com limite), servidor MCP (stdio) e testes,
+  mais a revisão do `mcp-remember-jps` (10 achados com linha).
+- **Harness de agentes:** registro de ferramentas com risco, aprovação humana, timeout, limite de saída e auditoria; modelo de `AGENTS.md`, 7 personas, 3 avaliadores e 4 skills;
+  revisão do servidor de ferramentas do `jps-agents` (8 achados, entre eles `console.log` no stdout de um servidor stdio e SSRF no `http_get`).
+- **Engenharia reversa assistida por IA:** protocolo de 8 passos, prompt de somente leitura para agente de código, modelo de relatório e exemplo resolvido.
+- **RAG avançado:** CRAG, Self-RAG, GraphRAG, híbrido e reranking (quando usar e quando não), com o fluxo corretivo do CRAG testado.
+- **Time de agentes:** orquestrador (delegação, avaliação em cadeia, criação de tarefas, orçamento, escalonamento, auditoria, lições pendentes de aprovação), agentes e
+  avaliadores de LLM, ferramentas de projeto (`ler_arquivo`, `listar_arquivos`, `git_diff`, `rodar_testes`), CLI com perfil do dono, `--entrada`, `--raiz`, lições pendentes em disco
+  (`licoes listar|aprovar|rejeitar`), configuração de exemplo e 7 projetos práticos para o dia a dia (3 rodam com a CLI de hoje).
+- Instruções de uso e resumo de funcionalidades nos READMEs da raiz e da Academia.
+
+**Alterado**
+
+- O verificador da Lição 1 aceita o script de medição em qualquer linguagem (`medir.mjs`, `medir.py`, `medir.ts`...) e varre **todos** os `medir.*` da pasta em busca de segredos.
+- ROADMAP: etapas 7, 8, 10, 11, 12 e 13 passam a apontar as extensões; a lacuna de skills e coding agents (etapa 13) fica parcialmente coberta.
+- `comum.mjs`: detecção de segredos ampliada (Stripe, Basic, `github_pat_`, npm, GitLab, JWT, variáveis de ambiente de senha ou token com valor, senha em prosa) com quantificadores limitados,
+  `mascararSegredos`/`mascararProfundo`, `temControle`/`paraTerminal`/`neutralizarControles`. A detecção continua sendo **melhor esforço**.
+
+**Endurecido após duas revisões independentes (código e conteúdo)**
+
+- **Avaliação:** o LLM-juiz não aprova mais com `{"aprovado":true}`: precisa responder sobre cada critério com evidência e dar nota; critério de execução ("os testes passam") só vale com uma
+  execução registrada pelo harness; o orquestrador não aprova tarefa sem avaliador (escala ou pergunta ao humano).
+- **Entregas e segredos:** entrega com credencial reprova a tentativa; saída de ferramentas, feedback, auditoria e relatório são mascarados; texto com controles/bidi é neutralizado ou recusado.
+- **Orçamento e delegação validados** (sem `Infinity`/typos); `delegacoes`, limite de filhas, tempo por chamada, execução concorrente recusada; falha de qualquer função injetada não derruba a execução.
+- **Registro de ferramentas:** esquema só com o que é validado de verdade, cópia congelada da ferramenta e dos argumentos, `__proto__`/`NaN`/`BigInt` tratados, resumo seguro para quem aprova,
+  auditoria que bloqueia o irreversível quando falha, ferramenta travada não acumula execuções.
+- **Memória:** leitura incremental para vários processos (testado com processos de verdade), `compactar()` com trava, validação do formato do arquivo, teto de tamanho, controles recusados,
+  `save_memory` marcada como destrutiva.
+- **RAG corretivo:** limiar mínimo sempre > 0, notas não finitas valem 0, ids repetidos, limites de trechos e de reescritas.
+- **Cliente HTTP do modelo:** sem seguir redirecionamentos, recusa chave real por `http://` para host remoto, `--confirmo-envio-externo` para `--entrada`/`--raiz`.
+- Documentação: o que não roda hoje (projetos P5 e P6), linha de base e falsos negativos, avisos sobre `save_memory` por MCP e sobre lições sem expiração.
+
+**Origem e privacidade:** o ponto de partida foram `mcp-remember-jps` e `jps-agents`, repositórios do mantenedor (este último não é público). Nada de arquivos de ambiente, endereços, identificadores de
+contêiner, chaves ou nomes de projetos privados foi copiado; veja [extensoes/README.md](extensoes/README.md#de-onde-veio-o-material-e-o-que-não-veio) (inclui um pedido de confirmação ao mantenedor sobre os snapshots).
+
+**Pendente**
+
+- Executar o time e a Lição 1 contra um LLM real e registrar modelo, limiares e ajustes de prompt.
+- `--veredito` (o seu veredito final virar lição candidata), ferramenta de busca para o projeto P5, papel `tutor` para o P6 e o verificador de comandos de README do P2.
+- Lições 2 a 16 e laboratório de GraphRAG.
+
 ## 2026-10-17 · Criação da Academia
 
 **Adicionado**

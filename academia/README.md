@@ -27,10 +27,32 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 | [SINCRONIZACAO.md](SINCRONIZACAO.md) | como iniciar, encerrar e retomar sessões, em qualquer assistente de IA |
 | [PROGRESS.md](PROGRESS.md) | visão geral dos alunos (gerada) |
 | [alunos/](alunos/) | uma pasta independente por aluno: perfil, sessões, entregas e `retomada.md` |
+| [extensoes/](extensoes/README.md) | prática avançada: memória por MCP, harness de agentes, engenharia reversa, RAG avançado e o **time de agentes** (com projetos para o dia a dia) |
 | [templates/](templates/) | lição, relatório de sessão, relatório de laboratório, perfil |
 | [ferramentas/](ferramentas/) | `academia.mjs`: valida, gera o progresso e cria sessões (Node, sem dependências) |
 | [CHANGELOG.md](CHANGELOG.md) | mudanças no currículo e no sistema |
 | [`../AI_CONTEXT.md`](../AI_CONTEXT.md) | regras para o assistente de IA |
+
+## O que está implementado
+
+| Área | O que existe | Como é verificado |
+|---|---|---|
+| **Trilha** | roadmap de 16 etapas em 5 fases, 24 competências, ligado ao material dos módulos; lacunas listadas | `validar` confere roadmap × competências × lições |
+| **Lições** | Missão 0 e Lição 1 completas (14 seções, quiz com gabarito separado, laboratório com verificador automático, rubrica, dicas graduais); lições 2 a 16 em `roteiro` | testes + `validar` |
+| **Projeto evolutivo** | especificação do Assistente Técnico, com um marco e um critério de aceite por etapa | — |
+| **Acompanhamento** | uma sessão por arquivo; XP por atividade comprovada; 4 níveis (exigem XP **e** checkpoints); 20 conquistas; revisão espaçada; `retomada.md` e `PROGRESS.md` gerados; dois alunos independentes | testes de regras e teste de mutação das regras críticas |
+| **Ferramenta** | `academia.mjs`: `validar`, `progresso`, `sessao`, `kit`, `novo-aluno` | testes automatizados |
+| **Extensões** | memória persistente por MCP, harness de agentes (registro de ferramentas, personas, avaliadores, skills), engenharia reversa, RAG avançado (fluxo corretivo), time de agentes (orquestrador, agentes de LLM, CLI, 7 projetos práticos) | testes com funções e servidores simulados |
+| **Segurança** | varredura de segredos, evidência confinada à pasta do aluno, credenciais mascaradas em toda saída, lições só entram na memória com aprovação | testes |
+| **Limites conhecidos** | nenhum laboratório foi executado contra um LLM real ainda; lições 2 a 16 não foram escritas; GraphRAG só conceitual | declarados nos documentos |
+
+## Como interagir com o conteúdo
+
+- **Você (pessoa) + um assistente de IA em uma conversa:** gere o kit (`kit <aluno>`), cole numa conversa nova, estude a lição, peça o relatório no fim e
+  registre com `sessao`, `progresso` e `validar --aluno`. Passo a passo e prompts: [SINCRONIZACAO.md](SINCRONIZACAO.md).
+- **Um agente com acesso ao repositório** (Claude Code, Codex, Cursor...): ele lê `AI_CONTEXT.md`, o `retomada.md` do aluno e a lição; conduz a sessão e roda os mesmos comandos.
+- **Só ler e rodar:** os módulos em [`../modulos/`](../modulos/) têm README, exemplos executáveis e exercícios com solução; a Academia só dá a ordem e o registro.
+- **Usar o time de agentes no seu dia a dia:** [extensão Time de agentes](extensoes/time-de-agentes/README.md) e os [projetos práticos](extensoes/time-de-agentes/projetos-praticos.md).
 
 ## Como os princípios pedagógicos viram mecanismos
 

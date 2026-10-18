@@ -289,7 +289,7 @@ fazer para manter uma conversa?
 
 ### Medidor de tokens e contexto
 
-Escreva **você mesmo** o script `medir.mjs` (JavaScript, Node 22+, sem dependências) que faz **12 chamadas** a um
+Escreva **você mesmo** o script `medir.*` (a referência é `medir.mjs`, em JavaScript com Node 22+ e sem dependências; `medir.py`, `medir.ts` etc. também valem) que faz **12 chamadas** a um
 endpoint de chat, registra o que o servidor reporta e calcula as métricas abaixo. As chamadas e os textos são
 fixos para que os resultados sejam comparáveis; use as constantes de [`kit/textos.mjs`](kit/textos.mjs).
 Custo aproximado: cerca de 3 mil tokens de entrada e poucas centenas de saída. Com o Ollama do repositório em CPU
@@ -309,7 +309,7 @@ latência de cada chamada; nunca grave a chave de API. As constantes (`TEXTO_PT`
 `MAX_TOKENS_*` e as mensagens do experimento 4) vêm de [`kit/textos.mjs`](kit/textos.mjs). A partir da pasta da
 entrega, o import é
 `import { TEXTO_PT /* ... */ } from '../../../../licoes/01-tokens-contexto-inferencia/kit/textos.mjs'`.
-Entregue também o seu `medir.mjs` na pasta: o verificador exige o arquivo.
+Entregue também o seu script de medição na pasta (`medir.mjs`, `medir.py`, `medir.ts`...: pode ser em qualquer linguagem; o verificador exige um arquivo `medir.*`).
 
 **O que o verificador é (e o que não é).** `verificar.mjs` confere se o relatório é **coerente**: formato, números
 derivados recalculados a partir das suas próprias chamadas, parâmetros das chamadas iguais aos do kit e valores
@@ -325,7 +325,7 @@ node academia/alunos/<aluno>/entregas/etapa-01/medir.mjs academia/alunos/<aluno>
 node academia/licoes/01-tokens-contexto-inferencia/verificar.mjs academia/alunos/<aluno>/entregas/etapa-01
 ```
 
-`medir.mjs` grava `relatorio.json` com o formato abaixo (valores ilustrativos):
+O seu script grava `relatorio.json` com o formato abaixo (valores ilustrativos):
 
 ```json
 {
@@ -370,13 +370,13 @@ O comando `verificar.mjs` confere os critérios abaixo. Todos precisam passar pa
 
 | ID | Critério (objetivo) |
 |---|---|
-| CA1 | `relatorio.json` válido: `versao` 1, ambiente (URL sem credenciais e modelo), ≥ 12 chamadas, cada uma com `id`, `prompt_tokens` > 0, `completion_tokens`, `total_tokens = prompt + completion`, `finish_reason`, `latencia_ms` e `max_tokens`; e o arquivo `medir.mjs` na pasta da entrega |
+| CA1 | `relatorio.json` válido: `versao` 1, ambiente (URL sem credenciais e modelo), ≥ 12 chamadas, cada uma com `id`, `prompt_tokens` > 0, `completion_tokens`, `total_tokens = prompt + completion`, `finish_reason`, `latencia_ms` e `max_tokens`; e um script `medir.*` na pasta da entrega |
 | CA2 | `chars_pt`/`chars_en` iguais aos do kit; `razao_tokens_pt_en` confere com o `prompt_tokens` das duas chamadas registradas; as duas chamadas usam `MAX_TOKENS_MEDICAO` |
 | CA3 | 4 pontos de crescimento com os `chars` do kit (`REPETICOES`), `prompt_tokens` não decrescente; inclinação marginal (primeiro e último ponto) e custo fixo conferem com os dados; inclinação plausível (entre 0,05 e 1,5 token por caractere) |
 | CA4 | Uma chamada com `finish_reason = "length"`, `completion_tokens` entre 1 e `max_tokens`, `max_tokens = MAX_TOKENS_TRUNCAMENTO` |
 | CA5 | Chamadas de memória com `MAX_TOKENS_CURTO` e `resposta` registrada; sem histórico o modelo não lembra o fato (o campo confere com a resposta); o histórico reenviado aumenta o `prompt_tokens` e a diferença confere |
 | CA6 | As chamadas curta e longa usam `MAX_TOKENS_CURTO` e `MAX_TOKENS_LONGO`; a longa gera mais tokens de saída; `ms_por_token_saida` confere |
-| CA7 | Nenhuma chave, token ou segredo em `relatorio.json`, `relatorio.md` ou `medir.mjs` |
+| CA7 | Nenhuma chave, token ou segredo em `relatorio.json`, `relatorio.md` ou no script `medir.*` |
 | CA8 | `relatorio.md` com as seções Resultados (≥ 120 letras ou números), Explicação (≥ 320) e Surpresas e limites (≥ 120), escritas por você (os comentários do modelo não contam) |
 
 **XP desta lição.**

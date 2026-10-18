@@ -1,0 +1,45 @@
+{
+  "perfil": "./perfil-do-dono.md",
+  "memoria": { "arquivo": "./memoria-do-time.jsonl", "escopoGlobal": "global" },
+  "agentes": {
+    "manager": "../harness-de-agentes/modelo/personas/manager.md",
+    "backend": "../harness-de-agentes/modelo/personas/backend.md",
+    "frontend": "../harness-de-agentes/modelo/personas/frontend.md",
+    "uxui": "../harness-de-agentes/modelo/personas/ux-ui.md",
+    "testes": "../harness-de-agentes/modelo/personas/testes.md",
+    "diagramas": "../harness-de-agentes/modelo/personas/diagramas.md",
+    "documentos": "../harness-de-agentes/modelo/personas/documentos.md"
+  },
+  "avaliadores": [
+    { "nome": "qa", "persona": "../harness-de-agentes/modelo/avaliadores/qa.md", "limiar": 0.8, "aplicaA": ["backend", "frontend", "testes"] },
+    { "nome": "seguranca", "persona": "../harness-de-agentes/modelo/avaliadores/seguranca.md", "limiar": 0.9, "aplicaA": ["backend", "frontend"] },
+    { "nome": "editor", "persona": "../harness-de-agentes/modelo/avaliadores/editor.md", "limiar": 0.8, "aplicaA": ["manager", "documentos", "diagramas", "uxui"] }
+  ],
+  "roteador": {
+    "padrao": "manager",
+    "palavras": {
+      "backend": ["api", "endpoint", "banco", "servidor", "migracao", "autenticacao"],
+      "frontend": ["tela", "componente", "interface", "formulario", "pagina"],
+      "uxui": ["fluxo", "usabilidade", "design", "acessibilidade", "wireframe"],
+      "testes": ["teste", "testes", "cobertura", "regressao", "reproduzir"],
+      "diagramas": ["diagrama", "arquitetura", "sequencia", "mermaid"],
+      "documentos": ["readme", "documentar", "documentacao", "adr", "changelog"]
+    }
+  },
+  "delegacoes": {
+    "manager": ["backend", "frontend", "uxui", "testes", "diagramas", "documentos"],
+    "backend": ["testes", "documentos"],
+    "frontend": ["testes", "documentos"]
+  },
+  "ferramentas": {
+    "comandoTestes": ["node", "--test"],
+    "timeoutMs": 120000,
+    "papeis": {
+      "backend": ["ler_arquivo", "listar_arquivos", "git_diff"],
+      "frontend": ["ler_arquivo", "listar_arquivos", "git_diff"],
+      "testes": ["ler_arquivo", "listar_arquivos", "git_diff", "rodar_testes"],
+      "documentos": ["ler_arquivo", "listar_arquivos", "git_diff"]
+    }
+  },
+  "orcamento": { "maxTarefas": 15, "maxProfundidade": 3, "maxTentativas": 3, "maxChamadas": 60 }
+}
