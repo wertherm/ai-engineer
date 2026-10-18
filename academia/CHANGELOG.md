@@ -3,6 +3,34 @@
 Mudanças relevantes no currículo e no sistema de acompanhamento. Formato: data, o que mudou, por quê. Mudanças nos
 módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) seguem o histórico do Git.
 
+## 2026-10-18 · Extensões práticas (memória, harness, engenharia reversa, RAG avançado e time de agentes)
+
+**Adicionado** (em [`extensoes/`](extensoes/README.md))
+
+- **Memória persistente via MCP:** núcleo sem dependências (escopo, segredos recusados, upsert com histórico, TTL, busca com limite), servidor MCP (stdio) e testes,
+  mais a revisão do `mcp-remember-jps` (10 achados com linha).
+- **Harness de agentes:** registro de ferramentas com risco, aprovação humana, timeout, limite de saída e auditoria; modelo de `AGENTS.md`, 7 personas, 3 avaliadores e 4 skills;
+  revisão do servidor de ferramentas do `jps-agents` (8 achados, entre eles `console.log` no stdout de um servidor stdio e SSRF no `http_get`).
+- **Engenharia reversa assistida por IA:** protocolo de 8 passos, prompt de somente leitura para agente de código, modelo de relatório e exemplo resolvido.
+- **RAG avançado:** CRAG, Self-RAG, GraphRAG, híbrido e reranking (quando usar e quando não), com o fluxo corretivo do CRAG testado.
+- **Time de agentes:** orquestrador (delegação, avaliação em cadeia, criação de tarefas, orçamento, escalonamento, auditoria, lições pendentes de aprovação), agentes e
+  avaliadores de LLM, CLI com perfil do dono, configuração de exemplo e 7 projetos práticos para o dia a dia.
+- Instruções de uso e resumo de funcionalidades nos READMEs da raiz e da Academia.
+
+**Alterado**
+
+- O verificador da Lição 1 aceita o script de medição em qualquer linguagem (`medir.mjs`, `medir.py`, `medir.ts`...).
+- ROADMAP: etapas 7, 8, 10, 11, 12 e 13 passam a apontar as extensões; a lacuna de skills e coding agents (etapa 13) fica parcialmente coberta.
+- `comum.mjs`: `mascararSegredos`.
+
+**Origem e privacidade:** o ponto de partida foram `tzdesing/mcp-remember-jps` (público) e `tzdesing/jps-agents` (privado). Nada de arquivos de ambiente, endereços, identificadores de
+contêiner, chaves ou nomes de projetos privados foi copiado; veja [extensoes/README.md](extensoes/README.md#de-onde-veio-o-material-e-o-que-não-veio).
+
+**Pendente**
+
+- Executar o time e a Lição 1 contra um LLM real e registrar modelo, limiares e ajustes de prompt.
+- Lições 2 a 16 e laboratório de GraphRAG.
+
 ## 2026-10-17 · Criação da Academia
 
 **Adicionado**

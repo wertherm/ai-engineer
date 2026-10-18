@@ -6,7 +6,7 @@
 // O sistema de XP é, em última instância, um acordo de honestidade; veja academia/GAMIFICACAO.md.
 //
 //   node academia/licoes/01-tokens-contexto-inferencia/verificar.mjs academia/alunos/<aluno>/entregas/etapa-01
-import { readFile, stat } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { acharSegredos, ehPrincipal } from '../../ferramentas/comum.mjs';
 import {
@@ -58,7 +58,7 @@ export async function verificar(pasta) {
     return { resultados, avisos };
   }
 
-  // CA1 · estrutura, ambiente, chamadas e medir.mjs.
+  // CA1 · estrutura, ambiente, chamadas e script de medição.
   const p1 = [];
   if (r.versao !== 1) p1.push('`versao` deve ser 1');
   const amb = ehObjeto(r.ambiente) ? r.ambiente : {};
@@ -83,12 +83,13 @@ export async function verificar(pasta) {
     if (!(typeof c.latencia_ms === 'number' && c.latencia_ms > 0)) p1.push(`${c.id}: latencia_ms deve ser um número > 0`);
     if (!ehInteiro(c.max_tokens, 1)) p1.push(`${c.id}: max_tokens deve ser inteiro > 0`);
   }
+  // O script de medição pode estar em qualquer linguagem: medir.mjs, medir.py, medir.ts...
+  let scriptDeMedicao = null;
   try {
-    await stat(path.join(pasta, 'medir.mjs'));
-  } catch {
-    p1.push(`entregue também o seu medir.mjs em ${pasta}`);
-  }
-  criterio('CA1', 'Relatório válido: ambiente, ≥ 12 chamadas com contagens coerentes e medir.mjs', p1);
+    scriptDeMedicao = (await readdir(pasta)).find((f) => /^medir\.[a-z0-9]+$/i.test(f)) ?? null;
+  } catch { /* pasta ilegível: o relatório.json já teria falhado acima */ }
+  if (!scriptDeMedicao) p1.push(`entregue também o seu script de medição (medir.mjs, medir.py, medir.ts...) em ${pasta}`);
+  criterio('CA1', 'Relatório válido: ambiente, ≥ 12 chamadas com contagens coerentes e o script de medição', p1);
 
   const exp = ehObjeto(r.experimentos) ? r.experimentos : {};
   const chamada = (id) => porId.get(id);
@@ -203,12 +204,12 @@ export async function verificar(pasta) {
   const p7 = [];
   const lerOpcional = async (arq) => { try { return await readFile(path.join(pasta, arq), 'utf8'); } catch { return null; } };
   const md = await lerOpcional('relatorio.md');
-  const codigo = await lerOpcional('medir.mjs');
-  for (const [arq, texto] of [['relatorio.json', textoJson], ['relatorio.md', md], ['medir.mjs', codigo]]) {
+  const codigo = scriptDeMedicao ? await lerOpcional(scriptDeMedicao) : null;
+  for (const [arq, texto] of [['relatorio.json', textoJson], ['relatorio.md', md], [scriptDeMedicao ?? 'medir', codigo]]) {
     if (texto === null) continue;
     for (const s of acharSegredos(texto.replace(/\r\n?/g, '\n'))) p7.push(`${arq}:${s.linha}: possível segredo (${s.nome}); remova e troque a credencial`);
   }
-  criterio('CA7', 'Nenhuma chave, token ou segredo em relatorio.json, relatorio.md e medir.mjs', p7);
+  criterio('CA7', 'Nenhuma chave, token ou segredo em relatorio.json, relatorio.md e no script de medição', p7);
 
   // CA8 · relatório do aluno.
   const p8 = [];
@@ -243,7 +244,7 @@ function imprimir({ resultados, avisos }, pasta) {
 if (ehPrincipal(import.meta.url)) {
   const pasta = process.argv[2];
   if (!pasta) {
-    console.error('uso: node verificar.mjs <pasta-da-entrega>   (precisa de relatorio.json, relatorio.md e medir.mjs)');
+    console.error('uso: node verificar.mjs <pasta-da-entrega>   (precisa de relatorio.json, relatorio.md e o script medir.*)');
     process.exit(2);
   }
   const res = await verificar(path.resolve(pasta));

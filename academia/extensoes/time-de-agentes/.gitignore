@@ -1,0 +1,4 @@
+# Estado local do time (memória, relatórios e o seu perfil): revise antes de versionar. Para versionar de propósito: git add -f <arquivo>
+memoria-do-time.jsonl
+execucoes/
+perfil-do-dono.md

@@ -59,3 +59,10 @@ export function limparSaida(texto, { chave = '' } = {}) {
   t = t.replace(/(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{32,}(?![A-Za-z0-9_-])/g, '***'); // sequências longas parecem tokens
   return t;
 }
+
+/** Substitui por *** tudo que casa com um padrão de segredo (para gravar relatórios de execução sem credenciais). */
+export function mascararSegredos(texto) {
+  let t = String(texto);
+  for (const { re } of SEGREDOS) t = t.replace(new RegExp(re.source, `${re.flags.replace('g', '')}g`), '***');
+  return t;
+}

@@ -83,13 +83,13 @@ after(async () => {
 const lerRelatorio = async () => JSON.parse(await readFile(path.join(pasta, 'relatorio.json'), 'utf8'));
 
 /** Copia a entrega, aplica a alteração (no objeto do relatório e/ou nos textos) e verifica. */
-async function comAlteracao(alterar, nome, { md = RELATORIO_MD, semMedir = false, jsonBruto } = {}) {
+async function comAlteracao(alterar, nome, { md = RELATORIO_MD, semMedir = false, jsonBruto, medirNome = 'medir.mjs' } = {}) {
   const copia = await mkdtemp(path.join(tmpdir(), `licao01-${nome}-`));
   const r = await lerRelatorio();
   const alterado = alterar ? alterar(r) : undefined;
   await writeFile(path.join(copia, 'relatorio.json'), jsonBruto ?? JSON.stringify(alterado ?? r));
   if (md !== null) await writeFile(path.join(copia, 'relatorio.md'), md);
-  if (!semMedir) await copyFile(path.join(aqui, 'referencia', 'medir.mjs'), path.join(copia, 'medir.mjs'));
+  if (!semMedir) await copyFile(path.join(aqui, 'referencia', 'medir.mjs'), path.join(copia, medirNome));
   try {
     return await verificar(copia);
   } finally {
@@ -249,6 +249,11 @@ describe('o verificador não aceita relatório inventado', () => {
     assert.deepEqual(falhas(await comAlteracao(null, 'ca1f', { jsonBruto: '[1,2]' })), ['CA1']);
     assert.deepEqual(falhas(await comAlteracao(null, 'ca1g', { jsonBruto: '{ não é json' })), ['CA1']);
     assert.ok(falhas(await comAlteracao((r) => { r.chamadas[0].latencia_ms = 0; return r; }, 'ca1h')).includes('CA1'));
+  });
+
+  it('o script de medição pode estar em outra linguagem (medir.py, medir.ts)', async () => {
+    for (const nome of ['medir.py', 'medir.ts', 'MEDIR.JS']) assert.deepEqual(falhas(await comAlteracao(null, 'lang', { medirNome: nome })), [], nome);
+    assert.ok(falhas(await comAlteracao(null, 'lang2', { medirNome: 'medicao.py' })).includes('CA1'), 'o nome precisa começar com medir.');
   });
 
   it('CA8 reprova o template cru, seções ausentes e comentários do modelo que contam como texto', async () => {

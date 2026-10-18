@@ -159,6 +159,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [LLMOps · doc 05 (avaliação)](../trilhas-extras/llmops-vllm-openshift/docs/05-avaliacao.md).
 - **A criar:** métrica de **fidelidade** (a afirmação está sustentada pelo trecho?), com checagem lexical e LLM como
   juiz, e a limitação de cada uma; política de **abstenção** com limiar medido; conjunto de avaliação com perguntas sem resposta.
+- **Extensão prática:** [RAG avançado](extensoes/rag-avancado/README.md) (fluxo corretivo com abstenção testado; CRAG, Self-RAG e GraphRAG explicados).
 - **Entrega no projeto:** `avaliar` gera relatório com hit@k, MRR, fidelidade e taxa de abstenção correta (≥ 20 perguntas, ≥ 5 sem resposta).
 - **Conclusão:** quiz + laboratório (relatório reproduzível) + explicação.
 
@@ -172,6 +173,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [M10 · exemplo 05 (custos e orçamento)](../modulos/10-seguranca-e-governanca/exemplos/05-custos-e-orcamento/).
 - **A criar:** **reranking** (o repositório não cobre): reranker por LLM ou por modelo dedicado, medido contra o
   baseline da etapa 7; tabela custo × qualidade.
+- **Extensão prática:** [RAG avançado](extensoes/rag-avancado/README.md) (quando usar híbrido, reranking e RAG corretivo, e como medir).
 - **Entrega no projeto:** recuperação híbrida (lexical + vetorial) com reranking opcional e relatório de custo por pergunta.
 - **Conclusão:** quiz + laboratório (a mudança é aceita ou rejeitada **pelos números** da etapa 7) + explicação. **Fecha a fase: CP2.**
 
@@ -200,6 +202,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [M08 · exemplo 02](../modulos/08-arquitetura-de-sistemas-com-ia/exemplos/02-single-agent-simulado/).
 - **A criar:** loop de agente com estado explícito e orçamentos (passos, tokens, tempo); condição de parada e
   registro do motivo da parada.
+- **Extensão prática:** [memória persistente via MCP](extensoes/memoria-persistente-mcp/README.md) (memória entre sessões, com escopo e sem segredos) e o [time de agentes](extensoes/time-de-agentes/README.md) (orçamentos, escalonamento e auditoria em uso real).
 - **Entrega no projeto:** `agente` que usa as ferramentas da etapa 9 com limites configuráveis.
 - **Conclusão:** quiz + laboratório (o agente para por orçamento em um caso de loop forçado) + explicação.
 
@@ -214,6 +217,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [M03 · doc 04 (segurança)](../modulos/03-mcp/docs/04-seguranca-e-governanca.md).
 - **A criar:** classificação das ferramentas por risco (leitura, escrita reversível, irreversível), permissões mínimas
   e testes adversariais (injeção em documento recuperado).
+- **Extensão prática:** [harness de agentes](extensoes/harness-de-agentes/README.md) (registro de ferramentas com risco, aprovação, timeout e auditoria; estudo de caso de SSRF em `http_get`).
 - **Entrega no projeto:** ferramenta de escrita protegida por aprovação humana + suíte de testes de injeção.
 - **Conclusão:** quiz + laboratório (os ataques do conjunto de teste são bloqueados) + explicação. **Fecha a fase: CP3.**
 
@@ -226,6 +230,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
 - **Material no repositório:** [módulo 03 inteiro](../modulos/03-mcp/) (docs 01–04, exemplos 01–05, exercícios 01–02) ·
   [M11 · entrega 2 (API e MCP)](../modulos/11-capstone-micro-saas/exemplos/02-entrega-2-api-e-mcp/).
 - **A criar:** só a ponte com o projeto evolutivo; o conteúdo de MCP já existe.
+- **Extensão prática:** [memória persistente via MCP](extensoes/memoria-persistente-mcp/README.md) (servidor de memória de referência e revisão de um servidor real).
 - **Entrega no projeto:** as ferramentas de busca do projeto expostas como servidor MCP, testadas com o Inspector ou um cliente próprio.
 - **Conclusão:** quiz + laboratório (cliente MCP lista e chama as ferramentas) + explicação.
 
@@ -236,9 +241,11 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
 - **Material no repositório:** [M03 · doc 02 (clients e IDEs)](../modulos/03-mcp/docs/02-mcp-em-javascript.md) ·
   [M05 · doc 02 (agentes e CLI)](../modulos/05-ia-ux-ui/docs/02-agentes-e-cli-no-front-end.md) ·
   [M04 · exemplo 05 (contexto)](../modulos/04-agentes-autonomos/exemplos/05-gerenciamento-de-contexto/).
-- **A criar:** **lacuna principal**: arquivos de instrução para agentes (`AGENTS.md`), *skills* (formato e boas
-  práticas), escopo e permissões de um coding agent, revisão crítica do código gerado. Conteúdo específico de
-  fornecedor, com data de verificação.
+- **Extensão prática (cobre parte da lacuna):** [harness de agentes](extensoes/harness-de-agentes/README.md) (`AGENTS.md`, personas, skills e avaliadores prontos para adaptar),
+  [engenharia reversa](extensoes/engenharia-reversa/README.md) (entender e auditar código herdado com um agente, com evidência) e o
+  [time de agentes](extensoes/time-de-agentes/README.md).
+- **A criar:** a lição completa desta etapa (quiz, laboratório com verificador e rubrica) sobre arquivos de instrução para agentes,
+  *skills*, escopo e permissões de um coding agent e revisão crítica do código gerado. Conteúdo específico de fornecedor, com data de verificação.
 - **Entrega no projeto:** arquivo de contexto do projeto + uma skill própria + uma funcionalidade implementada com
   coding agent, com relatório de revisão (o que foi aceito, corrigido e rejeitado).
 - **Conclusão:** quiz + laboratório (revisão documentada, testes passando) + explicação.
@@ -294,7 +301,11 @@ quando houver valor pedagógico.
 | Fine-tuning e LoRA | 7 | [módulo 09](../modulos/09-dados-e-fine-tuning/) |
 | LangGraph | 10 | [M04 · exemplo 06](../modulos/04-agentes-autonomos/exemplos/06-langgraph-hitl-guardrails/) · [M04 · exercício 02](../modulos/04-agentes-autonomos/exercicios/02-linear-para-langgraph/) |
 | Sistemas multiagente | 10 | [M04 · exemplo 07](../modulos/04-agentes-autonomos/exemplos/07-multiagente-supervisor/) · [M08 · exemplo 03](../modulos/08-arquitetura-de-sistemas-com-ia/exemplos/03-multiagente-com-fila/) |
-| CRAG e GraphRAG | 8 | **lacuna**: não há material no repositório |
+| CRAG, Self-RAG e GraphRAG | 8 | [extensão RAG avançado](extensoes/rag-avancado/README.md) (guia + fluxo corretivo testado; GraphRAG só conceitual, sem laboratório) |
+| Memória persistente via MCP | 10 | [extensão](extensoes/memoria-persistente-mcp/README.md) |
+| Harness de agentes, personas e skills | 11 | [extensão](extensoes/harness-de-agentes/README.md) |
+| Engenharia reversa assistida por IA | 13 | [extensão](extensoes/engenharia-reversa/README.md) |
+| Time de agentes que delega, avalia e aprende | 10 | [extensão](extensoes/time-de-agentes/README.md) · [projetos práticos](extensoes/time-de-agentes/projetos-praticos.md) |
 | MLOps (tracking, registry, drift) | 14 | [trilha MLOps](../trilhas-extras/mlops/) |
 | UX/UI, DevOps, Gestão de Projetos e Carreira com IA | qualquer | módulos [05](../modulos/05-ia-ux-ui/), [06](../modulos/06-ia-devops/), [07](../modulos/07-ia-gestao-de-projetos/), [12](../modulos/12-carreira/) |
 
@@ -305,4 +316,4 @@ modelos locais como extensão.
 
 Tópicos do roadmap que o repositório ainda não cobre e que as lições da Academia devem criar: TypeScript (etapa 2),
 parsing de PDF/HTML (etapa 4), métrica de fidelidade e abstenção medida (etapa 7), reranking (etapa 8), skills e
-coding agents (etapa 13), CRAG e GraphRAG (extensões).
+coding agents (etapa 13, parcialmente coberta pelas [extensões](extensoes/README.md)), GraphRAG com laboratório (extensões).

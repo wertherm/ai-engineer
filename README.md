@@ -32,6 +32,28 @@ lições que ensinam e avaliam (quiz com correção comentada, laboratório com 
 versionados que qualquer assistente de IA consegue retomar. Os módulos continuam sendo o material de estudo.
 Comece pela [Missão 0](academia/licoes/00-missao-0-diagnostico/README.md) e veja o [roadmap](academia/ROADMAP.md).
 
+### Como interagir com o conteúdo (passo a passo)
+
+Pré-requisitos: **Node 22 ou superior** (o repositório usa o 24), Git e, para rodar um LLM local, Docker (Ollama + Postgres/pgvector; Python com `uv` só nas
+trilhas extras). Sem Docker, aponte para qualquer endpoint compatível com a API de chat: `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`.
+
+```bash
+git clone https://github.com/wertherm/ai-engineer.git && cd ai-engineer
+node academia/ferramentas/academia.mjs validar        # confere que está tudo consistente na sua máquina
+```
+
+| Quero... | Faça isto |
+|---|---|
+| **Estudar e rodar os exemplos dos módulos** | veja [Como rodar](#como-rodar): `bash infra/subir-ia.sh`, depois `npm run exNN` dentro de cada módulo. Cada módulo tem um README com mapa, comandos e status de verificação |
+| **Seguir a trilha guiada com um assistente de IA** (ChatGPT, Claude, Codex, Cursor...) | 1) faça a [Missão 0](academia/licoes/00-missao-0-diagnostico/README.md); 2) gere o texto da conversa: `node academia/ferramentas/academia.mjs kit <seu-aluno> > kit.txt` e cole numa conversa nova; 3) estude a lição com o assistente (um agente que enxerga o repositório pode ler os arquivos direto); 4) no fim, peça o relatório da sessão e registre: `sessao <aluno>`, `validar --aluno <aluno>`, `progresso <aluno>`. Detalhes: [SINCRONIZACAO](academia/SINCRONIZACAO.md) |
+| **Retomar depois de uma pausa** ou trocar de assistente | abra `academia/alunos/<aluno>/retomada.md` ou gere o `kit` de novo: nada depende do histórico de uma conversa |
+| **Usar o time de agentes no meu dia a dia** | [extensão Time de agentes](academia/extensoes/time-de-agentes/README.md): copie a configuração, defina o endpoint do modelo e delegue uma tarefa com `node referencia/cli.mjs`. Projetos para começar: [projetos práticos](academia/extensoes/time-de-agentes/projetos-praticos.md) |
+| **Aprofundar** (memória por MCP, harness, engenharia reversa, RAG avançado) | [extensões da Academia](academia/extensoes/README.md) |
+| **Contribuir ou conferir** | `node --test "academia/**/*.test.mjs"` e `node academia/ferramentas/academia.mjs validar`; abra um pull request (não faça commit direto na branch padrão) |
+
+Alunos cadastrados: `werther` e `responsavel` (renomeie a pasta do segundo para o seu identificador; novo aluno: `node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"`).
+O mapa completo do que a Academia oferece está no [README da Academia](academia/README.md#o-que-está-implementado).
+
 ## Trilha
 
 ### Módulos da pós
