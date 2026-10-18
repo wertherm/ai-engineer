@@ -57,7 +57,10 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
 ## Como ler cada etapa
 
 - **Material no repositório**: docs, exemplos e exercícios existentes que cobrem o assunto. Estude-os; não
-  reescreva.
+  reescreva. Cada exemplo e cada solução de exercício dos módulos existe em **JavaScript e em Python** (a versão Python
+  fica na subpasta `python/` do exemplo, com a saída real no mesmo README): o aluno escolhe a linguagem. Os
+  laboratórios da Academia também podem ser feitos em qualquer linguagem quando o verificador só confere arquivos de
+  resultado (como o da Lição 1, que aceita `medir.mjs`, `medir.py`, `medir.ts`...).
 - **A criar**: lacunas que as lições da Academia preenchem.
 - **Entrega no projeto**: o incremento do [projeto evolutivo](projeto/README.md) que comprova a etapa.
 - **Conclusão**: o mínimo para marcar a etapa como `concluida` no relatório de sessão: `E<NN>-quiz` e `E<NN>-lab`

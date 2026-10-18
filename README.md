@@ -34,7 +34,7 @@ Comece pela [Missão 0](academia/licoes/00-missao-0-diagnostico/README.md) e vej
 
 ### Como interagir com o conteúdo (passo a passo)
 
-Pré-requisitos: **Node 22.19 ou superior** para a Academia e as extensões (o repositório usa o 24 e alguns módulos o exigem), Git e, para rodar um LLM local, Docker (Ollama + Postgres/pgvector). Python com `uv` só nas trilhas extras e em partes dos módulos 06, 09 e 10. Os comandos abaixo são de **bash**; no PowerShell, defina variáveis com `$env:NOME="valor"`. Sem Docker, aponte para qualquer endpoint compatível com a API de chat: `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`.
+Pré-requisitos: **Node 22.19 ou superior** para a Academia e as extensões (o repositório usa o 24 e alguns módulos o exigem), Git e, para rodar um LLM local, Docker (Ollama + Postgres/pgvector). Python 3.14 com `uv` só se você for rodar as versões Python dos módulos (cada exemplo e exercício tem JS e Python) ou as trilhas extras; a Academia e as extensões não precisam de Python. Os comandos abaixo são de **bash**; no PowerShell, defina variáveis com `$env:NOME="valor"`. Sem Docker, aponte para qualquer endpoint compatível com a API de chat: `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`.
 
 ```bash
 git clone https://github.com/wertherm/ai-engineer.git && cd ai-engineer
@@ -43,7 +43,7 @@ node academia/ferramentas/academia.mjs validar        # confere que está tudo c
 
 | Quero... | Faça isto |
 |---|---|
-| **Estudar e rodar os exemplos dos módulos** | veja [Como rodar](#como-rodar): `bash infra/subir-ia.sh`, depois `npm run exNN` dentro de cada módulo. Cada módulo tem um README com mapa, comandos e status de verificação |
+| **Estudar e rodar os exemplos dos módulos** | veja [Como rodar](#como-rodar): `bash infra/subir-ia.sh`, depois `npm run exNN` (JavaScript) ou `uv run python exemplos/<exemplo>/python/main.py` (Python) dentro de cada módulo. Cada módulo tem um README com mapa, comandos e status de verificação |
 | **Seguir a trilha guiada com um assistente de IA** (ChatGPT, Claude, Codex, Cursor...) | 1) faça a [Missão 0](academia/licoes/00-missao-0-diagnostico/README.md); 2) gere o texto da conversa: `node academia/ferramentas/academia.mjs kit <seu-aluno> > kit.txt` e cole numa conversa nova; 3) estude a lição com o assistente (um agente que enxerga o repositório pode ler os arquivos direto, mas precisa ser instruído a ler `AGENTS.md`/`AI_CONTEXT.md`); 4) no fim, peça o relatório da sessão e registre: `sessao <aluno>` (cria o arquivo; cole o relatório nele), `progresso <aluno>` (recusa gravar se houver erro e diz qual) e `validar --aluno <aluno>`. Detalhes: [SINCRONIZACAO](academia/SINCRONIZACAO.md) |
 | **Retomar depois de uma pausa** ou trocar de assistente | abra `academia/alunos/<aluno>/retomada.md` ou gere o `kit` de novo: nada depende do histórico de uma conversa |
 | **Usar o time de agentes no meu dia a dia** | [extensão Time de agentes](academia/extensoes/time-de-agentes/README.md): `cd academia/extensoes/time-de-agentes`, copie a configuração, defina o endpoint do modelo e delegue uma tarefa com `node referencia/cli.mjs`. Para revisar uma mudança sua, passe o diff com `--entrada` e a pasta do projeto com `--raiz`. **Atenção:** ainda não foi executado contra um LLM real (veja o aviso da extensão). Projetos para começar: [projetos práticos](academia/extensoes/time-de-agentes/projetos-praticos.md) |
