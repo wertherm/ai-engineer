@@ -3,6 +3,14 @@
 Mudanças relevantes no currículo e no sistema de acompanhamento. Formato: data, o que mudou, por quê. Mudanças nos
 módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) seguem o histórico do Git.
 
+## 2026-10-19 · Guia rápido
+
+**Adicionado**
+
+- [`GUIA-RAPIDO.md`](GUIA-RAPIDO.md): o fluxo de estudo em uma página (preparar uma vez, ciclo de sessão
+  abrir → estudar → registrar → salvar, e a ordem das etapas), com link no "Comece aqui" e no README da raiz.
+  Por quê: o README da Academia é completo, mas longo para quem só quer começar.
+
 ## 2026-10-18 · Extensões práticas (memória, harness, engenharia reversa, RAG avançado e time de agentes)
 
 **Adicionado** (em [`extensoes/`](extensoes/README.md))
