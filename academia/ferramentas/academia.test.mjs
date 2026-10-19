@@ -708,6 +708,8 @@ describe('arquivos gerados e comandos', () => {
 describe('kit de colagem', () => {
   it('traz instruções, dados da sessão, regras, retomada e lição sem gabarito', () => {
     const copia = copiarRepo();
+    // o teste parte de um aluno sem sessões, independente do progresso real registrado no repositório
+    fs.rmSync(path.join(copia, 'academia', 'alunos', 'werther', 'sessoes'), { recursive: true, force: true });
     const { config } = carregarConfig(copia);
     const kit = montarKit(copia, config, 'werther', { hoje: '2026-10-18' });
     assert.match(kit, /sessao: 1\b/);

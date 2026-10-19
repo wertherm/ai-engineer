@@ -9,6 +9,8 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 
 ## Comece aqui
 
+> Primeira vez? Leia o [Guia rápido](GUIA-RAPIDO.md): o fluxo de uma sessão de estudo em uma página.
+
 1. Escolha o seu `<aluno>` (a pasta em [`alunos/`](alunos/)). Novo aluno: `node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"`.
 2. Faça a [Missão 0 · Diagnóstico](licoes/00-missao-0-diagnostico/README.md): perfil, ambiente e diagnóstico.
 3. Siga para a [Lição 1 · Tokens, contexto, inferência e limites](licoes/01-tokens-contexto-inferencia/README.md).

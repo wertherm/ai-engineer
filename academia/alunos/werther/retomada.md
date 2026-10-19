@@ -1,19 +1,36 @@
 <!-- Gerado por `node academia/ferramentas/academia.mjs progresso`. Não edite: a fonte são os arquivos de sessoes/. -->
 # Retomada · Werther
 
-**Nível:** Aprendiz · **XP:** 0 · **Etapa atual:** Missão 0 · Diagnóstico
+**Nível:** Aprendiz · **XP:** 40 · **Etapa atual:** Etapa 1 · Tokens, contexto, inferência e limites dos LLMs
 
-**Próxima sessão:** s01 (dados para o relatório: `aluno: werther`, `sessao: 1`)
+**Próxima sessão:** s02 (dados para o relatório: `aluno: werther`, `sessao: 2`)
 
-Para Construtor: faltam 150 XP e checkpoint CP1.
+Para Construtor: faltam 110 XP e checkpoint CP1.
 
 ## Onde parei
 
-Nenhuma sessão registrada ainda. Comece pela [Missão 0](../../licoes/00-missao-0-diagnostico/README.md).
+- Última sessão: **2026-10-19** (s01), etapa 0, status `concluida`.
+- Lição: [Etapa 1 · Tokens, contexto, inferência e limites dos LLMs](../../licoes/01-tokens-contexto-inferencia/README.md)
+- Resumo: Missão 0 completa. O ambiente foi verificado por script: Ollama local com `qwen3.5:4b` e todos os itens `[ok]`. O perfil
 
 ## Próxima missão
 
-Fazer a Missão 0: perfil, ambiente e diagnóstico.
+Abrir a Lição 1 e responder o quiz antes de ler a microlição.
+
+## Último feedback
+
+> - **Bem:** respostas próprias e honestas, com "não sei" onde cabia, e uma dúvida específica (RAG). O ambiente está
+>   descrito o bastante para ser reproduzido sem perguntas.
+> - **Calibragem:** nota média de 0,69 contra autoavaliação de 1,69 (distância média de 1,0), sempre para cima. A maior
+>   diferença está em Agentes e Ecossistema, onde o uso diário de ferramentas dá familiaridade com os termos, mas não
+>   com o mecanismo. Ação: fazer o quiz de cada etapa **antes** de ler o material.
+> - **Equívocos a desfazer cedo:** API de chat sem estado (a aplicação reenvia `messages`, etapa 1); RAG não é
+>   fine-tuning e deve se abster sem evidência (etapas 6 e 7); function calling não é legado, quem executa é o código da
+>   aplicação e o MCP se apoia nele (etapas 9 e 12); embedding é vetor e não busca por palavra-chave (etapa 5).
+> - **Anotações da revisão:** corretas, mas curtas (só o enunciado). Nas próximas, escreva também uma consequência
+>   prática de cada correção: é isso que fixa o conceito.
+> - **Ritmo:** realista e com horário. O plano para pausas ("um dia ou outro") vale. Na volta, o `retomada.md` traz um
+>   aquecimento.
 
 ## Pendências
 
@@ -35,7 +52,7 @@ Etapas concluídas: `░░░░░░░░░░░░░░░░` 0/16
 | 4 | 12–14 | `░░░░░░░░░░` 0/3 |
 | 5 | 15–16 | `░░░░░░░░░░` 0/2 |
 
-XP até Construtor: `░░░░░░░░░░░░░░░░` 0/150
+XP até Construtor: `████░░░░░░░░░░░░` 40/150
 
 ## Competências
 
@@ -76,9 +93,9 @@ XP até Construtor: `░░░░░░░░░░░░░░░░` 0/150
 | CP4 (após a etapa 14) | pendente |
 | CP5 (após a etapa 16) | pendente |
 
-Conquistas: 0/20
+Conquistas: 1/20
 
-- [ ] **Bússola** — Ambiente da Missão 0 verificado
+- [x] **Bússola** — Ambiente da Missão 0 verificado
 - [ ] **Contador de Tokens** — Entende tokens, contexto e inferência
 - [ ] **Integrador** — Chama LLMs por API com erros tratados e provedor trocável
 - [ ] **Especificador** — Prompts versionados e saídas validadas por schema
@@ -101,5 +118,7 @@ Conquistas: 0/20
 
 ## Histórico recente
 
-Sem sessões.
+| Sessão | Data | Etapa | Status | XP ganho |
+|---|---|---|---|---|
+| [s01](sessoes/2026-10-19-s01.md) | 2026-10-19 | 0 | concluida | 40 |
 
