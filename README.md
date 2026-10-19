@@ -19,6 +19,8 @@ ai-engineer/
 └── infra/               Ollama + Postgres/pgvector (compose) · vLLM · guia de instalação
 ```
 
+**Quer estudar com acompanhamento (lições, XP, progresso)?** Comece pelo [Guia rápido da Academia](academia/GUIA-RAPIDO.md).
+
 **Procurando algo?** Comece pelo [mapa da ementa](ementa/mapa.md) (tópico ou tecnologia → pasta) ou pela
 [referência](referencia/): [cheatsheet](referencia/cheatsheet.md), [glossário](referencia/glossario.md),
 [armadilhas reais](referencia/armadilhas-comuns.md), [boas práticas](referencia/boas-praticas.md),
