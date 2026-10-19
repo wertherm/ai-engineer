@@ -13,7 +13,7 @@ alfabética: não há ranking.
 | Aluno | Nível | Etapa atual | Etapas concluídas | XP |
 |---|---|---|---|---|
 | [Responsável pelo projeto](alunos/responsavel/) | Aprendiz | Missão 0 · Diagnóstico | `░░░░░░░░░░` 0/16 | — |
-| [Werther](alunos/werther/) | Aprendiz | Missão 0 · Diagnóstico | `░░░░░░░░░░` 0/16 | — |
+| [Werther](alunos/werther/) | Aprendiz | Etapa 1 · Tokens, contexto, inferência e limites dos LLMs | `░░░░░░░░░░` 0/16 | — |
 
 ## Por etapa
 
@@ -21,8 +21,8 @@ alfabética: não há ranking.
 
 | Etapa | Título | Responsável pelo projeto | Werther |
 |---|---|---|---|
-| 0 | Missão 0 · Diagnóstico | ▶ | ▶ |
-| 1 | Tokens, contexto, inferência e limites dos LLMs | · | · |
+| 0 | Missão 0 · Diagnóstico | ▶ | ✅ |
+| 1 | Tokens, contexto, inferência e limites dos LLMs | · | ▶ |
 | 2 | APIs, TypeScript, erros e integração com modelos | · | · |
 | 3 | Prompt engineering, saídas estruturadas e testes | · | · |
 | 4 | Ingestão, parsing, chunking e metadados | · | · |
