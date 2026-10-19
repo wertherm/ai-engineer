@@ -56,6 +56,26 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 - **Só ler e rodar:** os módulos em [`../modulos/`](../modulos/) têm README, exemplos executáveis e exercícios com solução; a Academia só dá a ordem e o registro.
 - **Usar o time de agentes no seu dia a dia:** [extensão Time de agentes](extensoes/time-de-agentes/README.md) e os [projetos práticos](extensoes/time-de-agentes/projetos-praticos.md).
 
+## Próximos passos
+
+Atualizado em 2026-10-18, depois dos PRs #2 (extensões) e #3 (versão Python de todos os exemplos e exercícios dos módulos). Em ordem de prioridade:
+
+1. **Começar a estudar.** Os dois alunos estão em 0/16, sem XP, na [Missão 0](licoes/00-missao-0-diagnostico/README.md). Todo o acompanhamento só foi exercitado com simulações:
+   cada aluno abre a sua sessão (`sessao <aluno>`), faz a Missão 0 e depois a [Lição 1](licoes/01-tokens-contexto-inferencia/README.md).
+2. **Primeira execução com um LLM real.** Nenhuma lição ou extensão rodou contra um modelo de verdade; prompts, limiares do juiz e `maxTokens` são palpites. Suba o Ollama do repositório
+   (`bash infra/subir-ia.sh`), rode a solução de referência da Lição 1 e registre no [CHANGELOG](CHANGELOG.md) o modelo, as versões e o que precisou de ajuste.
+3. **Usar o time numa mudança sua** (projeto P1, com `--entrada` e `--raiz`) e anotar a concordância com o veredito do time: é a fase F1 da [extensão](extensoes/time-de-agentes/README.md#6-fases-de-evolução).
+4. **Escrever as lições 2 a 16.** Só a Missão 0 e a Lição 1 estão prontas. Como todo exemplo dos módulos agora existe em JavaScript e em Python, decida se cada laboratório aceita as duas linguagens
+   (os verificadores que só conferem arquivos de resultado, como o da Lição 1, já aceitam).
+5. **Cobrir as lacunas do repositório:** parsing de PDF/HTML (etapa 4), fidelidade e abstenção medidas (7), reranking (8) e um laboratório de GraphRAG; lista completa no [ROADMAP](ROADMAP.md#lacunas-conhecidas-do-repositório).
+6. **Decidir o destino das ferramentas em Node.** O repositório ficou bilíngue, mas a Academia (`academia.mjs`, verificadores) e as extensões são Node sem dependências. Opções: manter, ou portar para Python
+   (começando pelo núcleo de memória e pelo registro de ferramentas, que são pequenos e têm testes que viram `pytest`). Decisão do Werther e do responsável pelo projeto.
+7. **Completar o time de agentes:** `--veredito` (o seu veredito final virar lição candidata), ferramenta de busca para o P5, papel `tutor` para o P6, verificador de comandos de README para o P2 e um
+   conjunto de tarefas de ouro (fase F5) para medir cada mudança de prompt ou limiar.
+8. **CI mínimo.** Não existe `.github/`. Um workflow que rode `validar` e `node --test "academia/**/*.test.mjs"` em cada PR evita regressões silenciosas (os testes Python dos módulos dependem de `uv` e,
+   alguns, de serviços locais: ficam fora do primeiro corte).
+9. **Decisões em aberto:** o formato de sessão em JSON (lição como prompt e comando `aplicar`) discutido antes do PR #2 não foi implementado; registre uma decisão (ADR) ou descarte.
+
 ## Como os princípios pedagógicos viram mecanismos
 
 | Princípio | Onde está |

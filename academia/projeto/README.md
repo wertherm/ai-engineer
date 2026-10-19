@@ -37,7 +37,7 @@ contenha dados pessoais ou segredos.
 
 | Camada | Referência | Alternativas |
 |---|---|---|
-| Linguagem | JavaScript no começo; TypeScript a partir da etapa 2 | Python |
+| Linguagem | JavaScript no começo; TypeScript a partir da etapa 2 | Python (todo exemplo dos módulos tem a versão em `python/` para consultar) |
 | Modelo de chat e embeddings | endpoint compatível com a API de chat (Ollama local do repositório) | OpenAI, OpenRouter, vLLM |
 | Armazenamento vetorial | memória/arquivo nas etapas 4–5; Postgres + pgvector ([infra](../../infra/instalacao.md)) depois | qualquer banco vetorial |
 | Testes | `node --test` | vitest, pytest |
