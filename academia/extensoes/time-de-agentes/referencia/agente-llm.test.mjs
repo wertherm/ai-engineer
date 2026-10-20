@@ -37,7 +37,9 @@ describe('extrairJson', () => {
     const t0 = Date.now();
     assert.throws(() => extrairJson('{'.repeat(150_000)), /JSON válido/);
     assert.throws(() => extrairJson(`${'{ '.repeat(100_000)}`), /JSON válido/);
-    assert.ok(Date.now() - t0 < 1500, `levou ${Date.now() - t0} ms`);
+    // ~250 ms sozinho; o teto é folgado porque a suíte completa roda arquivos em paralelo (com 1,5 s falhou uma vez sob carga).
+    // Sem o limite de candidatos o custo seria quadrático (dezenas de segundos), então 10 s ainda distingue os dois casos.
+    assert.ok(Date.now() - t0 < 10_000, `levou ${Date.now() - t0} ms`);
     assert.deepEqual(extrairJson(`${'{ '.repeat(30)} {"ok":true}`), { ok: true });
   });
 });
