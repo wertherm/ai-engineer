@@ -49,7 +49,7 @@ perguntas de revisão. Pausa não custa nada.
 ## 3 · A ordem do que estudar
 
 ```
-Missão 0 (diagnóstico) → Lição 1 (tokens) → Etapa 2 → … → Etapa 16 (capstone)
+Missão 0 (diagnóstico) → Lição 1 (tokens) → Lição 2 (APIs e erros) → Etapa 3 → … → Etapa 16 (capstone)
 ```
 
 O status de cada etapa está no [ROADMAP](ROADMAP.md): `pronta` tem a lição completa (quiz, laboratório e XP);

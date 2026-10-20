@@ -288,10 +288,10 @@ describe('XP e evidências', () => {
   it('etapas sem lição pronta no ROADMAP não rendem XP', () => {
     const raiz = montarRaiz();
     const dir = aluno(raiz, 'ana');
-    sessao(dir, { aluno: 'ana', etapa: 2, atividades: [['E02-quiz', 'quiz', 1, 'aprovado', evid(dir), 10]] });
+    sessao(dir, { aluno: 'ana', etapa: 3, atividades: [['E03-quiz', 'quiz', 1, 'aprovado', evid(dir), 10]] });
     const { config } = carregarConfig(raiz);
     const r = analisarAluno(raiz, 'ana', config);
-    assert.match(juntas(r), /etapa 2 ainda não tem lição pronta/);
+    assert.match(juntas(r), /etapa 3 ainda não tem lição pronta/);
     assert.equal(r.estado.xp, 0);
   });
 
@@ -726,6 +726,12 @@ describe('kit de colagem', () => {
 
   it('na etapa sem lição pronta, o kit traz o plano do ROADMAP e o template; nas revisões, só as perguntas', () => {
     const copia = copiarRepo();
+    // a etapa 2 já tem lição; para testar o caso "sem lição" na cópia, ela volta a ser roteiro (a pasta da lição não é lida pelo kit nesse caso)
+    const roadmap = path.join(copia, 'academia', 'ROADMAP.md');
+    const rm = fs.readFileSync(roadmap, 'utf8');
+    const linhaDaLicao2 = '| [Lição 2](licoes/02-apis-erros-e-integracao/README.md) | pronta |';
+    assert.ok(rm.includes(linhaDaLicao2));
+    fs.writeFileSync(roadmap, rm.replace(linhaDaLicao2, '| — | roteiro |'));
     const dir = path.join(copia, 'academia', 'alunos', 'werther');
     const preenchido = 'Texto do aluno com mais de vinte letras para valer como preenchido.';
     fs.writeFileSync(path.join(dir, 'perfil.md'), `---\nslug: werther\nnome: Werther\ncompartilhar_xp: nao\nritmo: 3 horas por semana\n---\n\n## Objetivo com o curso\n\n${preenchido}\n\n## Ponto de partida\n\n${preenchido}\n\n## Preferências de estudo\n\n${preenchido}\n\n## Ambiente\n\n${preenchido}\n`);

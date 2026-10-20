@@ -54,7 +54,7 @@ node academia/ferramentas/academia.mjs validar        # confere que está tudo c
 
 Alunos cadastrados: `werther` e `responsavel` (um espaço reservado). Para ter a sua pasta com o seu nome, crie-a com `node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"` e apague `academia/alunos/responsavel` se não for usar.
 
-> **Status:** a Academia, a Lição 1 e as extensões são testadas com funções e servidores **simulados**; **nenhum laboratório foi executado contra um LLM real ainda**. A primeira execução real deve registrar o modelo e os ajustes (cada documento diz isso no seu aviso).
+> **Status:** a Academia, as Lições 1 e 2 e as extensões são testadas com funções e servidores **simulados**; **nenhum laboratório foi executado contra um LLM real ainda**. A primeira execução real deve registrar o modelo e os ajustes (cada documento diz isso no seu aviso).
 
 O mapa completo do que a Academia oferece está no [README da Academia](academia/README.md#o-que-está-implementado).
 

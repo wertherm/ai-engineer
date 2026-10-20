@@ -40,13 +40,13 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 | Área | O que existe | Como é verificado |
 |---|---|---|
 | **Trilha** | roadmap de 16 etapas em 5 fases, 24 competências, ligado ao material dos módulos; lacunas listadas | `validar` confere roadmap × competências × lições |
-| **Lições** | Missão 0 e Lição 1 completas (15 seções, quiz com gabarito separado, laboratório com verificador automático, rubrica, dicas graduais); lições 2 a 16 em `roteiro` | testes + `validar` |
+| **Lições** | Missão 0 e Lições 1 e 2 completas (15 seções, quiz com gabarito separado, laboratório com verificador automático, rubrica, dicas graduais, aplicação e reforço); lições 3 a 16 em `roteiro` | testes + `validar` |
 | **Projeto evolutivo** | especificação do Assistente Técnico, com um marco e um critério de aceite por etapa | — |
 | **Acompanhamento** | uma sessão por arquivo; XP por atividade comprovada; 4 níveis (exigem XP **e** checkpoints); 20 conquistas; revisão espaçada; `retomada.md` e `PROGRESS.md` gerados; dois alunos independentes | testes de regras e teste de mutação das regras críticas |
 | **Ferramenta** | `academia.mjs`: `validar`, `progresso`, `sessao`, `kit`, `novo-aluno` | testes automatizados |
 | **Extensões** | memória persistente por MCP, harness de agentes (registro de ferramentas, personas, avaliadores, skills), engenharia reversa, RAG avançado (fluxo corretivo), time de agentes (orquestrador, agentes de LLM, CLI, 7 projetos práticos) | testes com funções e servidores simulados |
 | **Segurança** | varredura de segredos, evidência confinada à pasta do aluno, credenciais mascaradas em toda saída, lições só entram na memória com aprovação | testes |
-| **Limites conhecidos** | só a checagem de ambiente da Missão 0 falou com um LLM real (Ollama local); o laboratório da Lição 1 e as extensões só rodaram com simulações; lições 2 a 16 não foram escritas; GraphRAG só conceitual | declarados nos documentos |
+| **Limites conhecidos** | só a checagem de ambiente da Missão 0 falou com um LLM real (Ollama local); os laboratórios das Lições 1 e 2 e as extensões só rodaram com simulações (a Lição 2 testa o seu cliente contra um servidor falso, que não imita tudo de um provedor real); lições 3 a 16 não foram escritas; GraphRAG só conceitual | declarados nos documentos |
 
 ## Como interagir com o conteúdo
 
@@ -65,8 +65,8 @@ Atualizado em 2026-10-19, depois dos PRs #2 (extensões), #3 (versão Python dos
 2. **Executar de verdade o que ainda só rodou simulado.** A checagem de ambiente da Missão 0 já falou com o Ollama local (`qwen3.5:4b`, na máquina do Werther), mas o laboratório da Lição 1 e as extensões
    (juiz, time, CRAG) só rodaram contra modelos falsos; prompts, limiares do juiz e `maxTokens` são palpites. Rode o laboratório da Lição 1 contra o Ollama e registre no [CHANGELOG](CHANGELOG.md) o modelo, as versões e o que precisou de ajuste.
 3. **Usar o time numa mudança sua** (projeto P1, com `--entrada` e `--raiz`) e anotar a concordância com o veredito do time: é a fase F1 da [extensão](extensoes/time-de-agentes/README.md#6-fases-de-evolução).
-4. **Escrever as lições 2 a 16.** Só a Missão 0 e a Lição 1 estão prontas. Como todo exemplo dos módulos agora existe em JavaScript e em Python, decida se cada laboratório aceita as duas linguagens
-   (os verificadores que só conferem arquivos de resultado, como o da Lição 1, já aceitam).
+4. **Escrever as lições 3 a 16.** Estão prontas a Missão 0 e as Lições 1 e 2. Como todo exemplo dos módulos agora existe em JavaScript e em Python, decida se cada laboratório aceita as duas linguagens
+   (a Lição 1 confere arquivos de resultado e a Lição 2 **executa** o programa do aluno em TypeScript, JavaScript ou Python; as duas já aceitam).
 5. **Cobrir as lacunas do repositório:** parsing de PDF/HTML (etapa 4), fidelidade e abstenção medidas (7), reranking (8) e um laboratório de GraphRAG; lista completa no [ROADMAP](ROADMAP.md#lacunas-conhecidas-do-repositório).
 6. **Decidir o destino das ferramentas em Node.** O repositório ficou bilíngue, mas a Academia (`academia.mjs`, verificadores) e as extensões são Node sem dependências. Opções: manter, ou portar para Python
    (começando pelo núcleo de memória e pelo registro de ferramentas, que são pequenos e têm testes que viram `pytest`). Decisão do Werther e do responsável pelo projeto.
