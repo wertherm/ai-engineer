@@ -16,7 +16,7 @@ Antes da etapa 1: a [Missão 0 · Diagnóstico](licoes/00-missao-0-diagnostico/R
 | Etapa | Fase | Título | Lição | Status |
 |---|---|---|---|---|
 | 1 | 1 | Tokens, contexto, inferência e limites dos LLMs | [Lição 1](licoes/01-tokens-contexto-inferencia/README.md) | pronta |
-| 2 | 1 | APIs, TypeScript, erros e integração com modelos | — | roteiro |
+| 2 | 1 | APIs, TypeScript, erros e integração com modelos | [Lição 2](licoes/02-apis-erros-e-integracao/README.md) | pronta |
 | 3 | 1 | Prompt engineering, saídas estruturadas e testes | — | roteiro |
 | 4 | 2 | Ingestão, parsing, chunking e metadados | — | roteiro |
 | 5 | 2 | Embeddings, busca vetorial e recuperação | — | roteiro |
@@ -95,9 +95,9 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [M01 · exemplo 06 (Ollama e OpenRouter)](../modulos/01-fundamentos-ia-llms/exemplos/06-openrouter-e-ollama/) ·
   [M02 · exemplo 04 (API back-end com LLM)](../modulos/02-apis-ia-generativa/exemplos/04-api-backend-com-llm/) ·
   [M02 · exercício 01 (validação e retry)](../modulos/02-apis-ia-generativa/exercicios/01-chain-com-validacao-e-retry/).
-- **A criar:** **TypeScript** (o repositório usa JavaScript): tipar requisição, resposta e erros; taxonomia de falhas
-  (rede, timeout, limite de taxa, conteúdo truncado); execução de `.ts` no Node 24 (a documentação do recurso de
-  *type stripping* deve ser reverificada na época da lição).
+- **A criar:** a [Lição 2](licoes/02-apis-erros-e-integracao/README.md): **TypeScript** (o repositório usa JavaScript): tipar requisição, resposta e erros; taxonomia de falhas
+  (rede, timeout, limite de taxa, cota, conteúdo truncado); execução de `.ts` no Node (*type stripping*, reverificado em 2026-10-20); laboratório que
+  executa o cliente do aluno, em qualquer linguagem, contra um servidor falso que falha de propósito.
 - **Entrega no projeto:** `src/llm/cliente.ts` com timeout, retry com backoff, erros tipados e configuração por ambiente.
 - **Conclusão:** quiz + laboratório com testes que simulam falhas (servidor falso) + explicação.
 
@@ -317,6 +317,6 @@ modelos locais como extensão.
 
 ## Lacunas conhecidas do repositório
 
-Tópicos do roadmap que o repositório ainda não cobre e que as lições da Academia devem criar: TypeScript (etapa 2),
+Tópicos do roadmap que o repositório ainda não cobre e que as lições da Academia devem criar (o TypeScript, antes aqui, entrou na [Lição 2](licoes/02-apis-erros-e-integracao/README.md)):
 parsing de PDF/HTML (etapa 4), métrica de fidelidade e abstenção medida (etapa 7), reranking (etapa 8), skills e
 coding agents (etapa 13, parcialmente coberta pelas [extensões](extensoes/README.md)), GraphRAG com laboratório (extensões).
