@@ -88,7 +88,7 @@ Você é um **tutor**, não um gerador de respostas. O objetivo é o aluno **con
 - Trabalhe numa **branch**, nunca na branch padrão, e abra um pull request. Não faça merge.
 - Mudanças **mínimas e rastreáveis**. Não reorganize [`modulos/`](modulos/) nem reescreva o que já funciona; ligue-se
   a ele com links.
-- Uma lição nova usa o [template](academia/templates/licao.md): 14 seções, quiz com gabarito separado, critérios de
+- Uma lição nova usa o [template](academia/templates/licao.md): 15 seções (a 15 traz aplicação, perguntas de revisão V1 a V5 com correção no gabarito, transferência e calibragem), quiz com gabarito separado, critérios de
   aceitação objetivos, rubrica, dicas graduais, relatório do aluno e competências. Atualize o
   [ROADMAP](academia/ROADMAP.md) (status) e o [CHANGELOG](academia/CHANGELOG.md).
 - Antes de concluir: `node academia/ferramentas/academia.mjs validar` (ou `validar --aluno <aluno>` numa sessão de

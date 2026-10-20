@@ -497,3 +497,57 @@ prefill/decode e KV cache ([LLMOps · doc 02](../../../trilhas-extras/llmops-vll
 **Limitação desta versão:** o laboratório e o verificador foram testados contra um servidor falso compatível com a
 API de chat (`licao.test.mjs`). Não foram executados contra um LLM real no ambiente em que a lição foi escrita; a
 primeira execução real deve registrar o modelo e eventuais ajustes nesta seção.
+
+## 15. Aplicação, reforço e desafios
+
+### 15.1 Onde isso aparece no trabalho
+
+- **Chatbot de suporte com histórico.** Quem decide quantos turnos manter na conversa (janela deslizante ou resumo) está decidindo custo e esquecimento: o histórico é reenviado
+  a cada turno (seção 4.2). *Sinal de alerta:* a conta da API cresce mais depressa que o número de usuários, ou o assistente "esquece" o começo da conversa.
+- **Extração de dados em JSON.** Um pipeline que pede JSON a um modelo e corta a saída com um `max_tokens` baixo recebe `finish_reason: "length"` e um JSON pela metade (seção 4.3).
+  *Sinal de alerta:* `JSON.parse` falha de vez em quando, e só nos documentos longos.
+- **Trocar ou atualizar o modelo.** O mesmo prompt vira outra quantidade de tokens num tokenizer diferente (Q2), então limites de janela, custo e limite de taxa em tokens por minuto mudam sem que uma
+  linha de código mude. *Sinal de alerta:* erros de limite ou a fatura sobem logo depois de uma troca de modelo "sem impacto".
+- **Erros comuns:** estimar tokens por palavras ou por `caracteres ÷ 4` e tratar como exato; esquecer de reservar espaço para a saída; confiar em `temperature = 0` para testes de igualdade
+  exata; reenviar um documento inteiro a cada turno; supor que a API "lembra" a conversa; ler o `usage` de uma chamada e generalizar para outro modelo.
+
+### 15.2 Reforço (revisão espaçada)
+
+Responda de memória, sem consultar a lição. A correção comentada está no [gabarito](gabarito.md) (seções "V1" a "V5"); abra-a só depois de responder.
+
+**V1.** Uma aplicação tem uma mensagem `system` de 100 tokens (reenviada em todo turno) e, em cada turno, uma pergunta de 50 e uma resposta de 150 tokens, reenviando o histórico completo.
+Quantos tokens de **entrada** são enviados no turno 4, e quantos no total, somando os 4 turnos?
+
+**V2.** O trecho abaixo funciona nos testes com textos curtos e falha em produção com textos longos. Aponte o defeito e diga **como detectá-lo antes de tentar interpretar a resposta**.
+
+```js
+const r = await chat({ messages, max_tokens: 50 });
+const dados = JSON.parse(r.choices[0].message.content);
+```
+
+**V3.** Você trocou o modelo da sua aplicação por outro, sem mudar o prompt, e o `prompt_tokens` das mesmas chamadas subiu cerca de 30%. Liste três coisas que podem quebrar ou encarecer e, para cada uma, o que você olharia para perceber.
+
+**V4.** Explique com as suas palavras, para alguém que programa mas nunca usou um LLM, por que gerar uma resposta longa é lento mesmo com um prompt curto, e qual consequência prática isso tem na escolha de `max_tokens`.
+
+**V5.** Você precisa enviar um relatório de 120 páginas a um modelo cuja janela anunciada é de 32.000 tokens, sem usar RAG. Descreva, em passos, como estimaria se cabe e o que ainda poderia dar errado mesmo que caiba.
+
+### 15.3 Desafio de transferência
+
+Meça outros tipos de conteúdo com o seu `medir.*` (experimento `crescimento`): um arquivo de **código-fonte** seu (cerca de 40 linhas) e uma **tabela em Markdown**, com o mesmo `max_tokens`.
+Compare a inclinação marginal (tokens por caractere) e o custo fixo com os do texto em português e diga **quando a regra "caracteres ÷ 4" erra mais**. É uma variação do experimento 2, **sem XP**.
+Critérios: (1) pelo menos dois tipos de conteúdo novos; (2) tabela com a inclinação e o custo fixo de cada um; (3) uma frase sobre o caso em que a estimativa mais falha; (4) comandos para reproduzir.
+Depois, **ensine a um colega**, em 5 minutos, por que o custo de uma conversa cresce com o quadrado dos turnos, e anote onde a pessoa se perdeu.
+
+### 15.4 Ponte com o projeto e com a prática
+
+- **Projeto evolutivo:** esta lição entrega o marco 1 (o medidor de tokens e de contexto); a conta de reserva de saída e de orçamento volta no cliente da etapa 2 e na observabilidade da etapa 14.
+- **Time de agentes:** a CLI limita a `--entrada` a 60.000 caracteres. Use o seu medidor para estimar quantos tokens isso pode custar no seu modelo e se cabe na janela **configurada no servidor**
+  (veja o item 4 da seção 4.2) antes de passar um diff grande para o [projeto P1](../../extensoes/time-de-agentes/projetos-praticos.md).
+- **Aprofundar:** [M01 · doc 03](../../../modulos/01-fundamentos-ia-llms/docs/03-llms-e-prompt-engineering.md), o [exemplo 02 da trilha LLMOps](../../../trilhas-extras/llmops-vllm-openshift/exemplos/02-tokens-e-sampling/)
+  e a versão Python do cliente de LLM do módulo 1 ([`comum_py/llm.py`](../../../modulos/01-fundamentos-ia-llms/comum_py/llm.py)).
+
+### 15.5 Calibragem
+
+Antes de rodar o laboratório, anote três previsões: a razão PT/EN de tokens, o custo fixo por chamada (em tokens) e em que turno uma conversa de 100 + 200 tokens por turno estoura uma janela de 8.000.
+Depois do verificador, confronte com o que mediu e escreva uma frase por previsão ("previ X, medi Y, errei porque..."). Registre isso na seção **Surpresas e limites** do `relatorio.md`, junto
+com a confiança que você marcou em cada questão do quiz. Se a confiança alta tiver acertos baixos, refaça o quiz antes de abrir a lição 2.

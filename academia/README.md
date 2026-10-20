@@ -22,7 +22,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 | Arquivo ou pasta | Para quê |
 |---|---|
 | [ROADMAP.md](ROADMAP.md) | as 16 etapas, dependências, material existente do repositório e lacunas |
-| [licoes/](licoes/) | Missão 0 e lições (14 seções cada) com quiz, desafio, critérios, rubrica e dicas |
+| [licoes/](licoes/) | Missão 0 e lições (15 seções cada) com quiz, desafio, critérios, rubrica e dicas |
 | [projeto/](projeto/) | o projeto evolutivo (Assistente Técnico) e o marco de cada etapa |
 | [GAMIFICACAO.md](GAMIFICACAO.md) | XP, níveis, checkpoints, conquistas, revisão espaçada, retomada, ranking opcional |
 | [competencias.md](competencias.md) | as 24 competências e os níveis de domínio |
@@ -40,7 +40,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 | Área | O que existe | Como é verificado |
 |---|---|---|
 | **Trilha** | roadmap de 16 etapas em 5 fases, 24 competências, ligado ao material dos módulos; lacunas listadas | `validar` confere roadmap × competências × lições |
-| **Lições** | Missão 0 e Lição 1 completas (14 seções, quiz com gabarito separado, laboratório com verificador automático, rubrica, dicas graduais); lições 2 a 16 em `roteiro` | testes + `validar` |
+| **Lições** | Missão 0 e Lição 1 completas (15 seções, quiz com gabarito separado, laboratório com verificador automático, rubrica, dicas graduais); lições 2 a 16 em `roteiro` | testes + `validar` |
 | **Projeto evolutivo** | especificação do Assistente Técnico, com um marco e um critério de aceite por etapa | — |
 | **Acompanhamento** | uma sessão por arquivo; XP por atividade comprovada; 4 níveis (exigem XP **e** checkpoints); 20 conquistas; revisão espaçada; `retomada.md` e `PROGRESS.md` gerados; dois alunos independentes | testes de regras e teste de mutação das regras críticas |
 | **Ferramenta** | `academia.mjs`: `validar`, `progresso`, `sessao`, `kit`, `novo-aluno` | testes automatizados |
@@ -82,7 +82,8 @@ Atualizado em 2026-10-18, depois dos PRs #2 (extensões) e #3 (versão Python de
 |---|---|
 | Microlições com objetivos explícitos | seções 2 e 4 de cada [lição](templates/licao.md) |
 | Quizzes curtos com correção comentada, sem spoiler | seção 7 + `gabarito.md` separado, aberto só depois de responder |
-| Recuperação ativa e revisão espaçada | revisões sugeridas no `retomada.md` ([intervalos em sessões](GAMIFICACAO.md#revisão-espaçada)) |
+| Recuperação ativa e revisão espaçada | revisões sugeridas no `retomada.md` ([intervalos em sessões](GAMIFICACAO.md#revisão-espaçada)), com perguntas V1 a V5 próprias por lição (bloco 15.2) |
+| Aplicação, transferência e calibragem | seção 15 de cada lição: onde aparece no trabalho, desafio de transferência, ponte com o projeto e a prática, previsão antes de medir |
 | Laboratórios com critérios objetivos | seção 9 + `verificar.mjs` quando possível |
 | Projeto incremental que reaproveita o código | [projeto/](projeto/) |
 | Feedback individual e checkpoints de domínio | relatório de sessão + [checkpoints](GAMIFICACAO.md#checkpoints-de-domínio) |
@@ -110,7 +111,7 @@ provedor, só com variáveis de ambiente (`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `
 
 ## Como adicionar uma lição
 
-1. Copie [templates/licao.md](templates/licao.md) para `licoes/NN-slug/README.md` e escreva as 14 seções; crie o
+1. Copie [templates/licao.md](templates/licao.md) para `licoes/NN-slug/README.md` e escreva as 15 seções; crie o
    `gabarito.md` ao lado. O plano da etapa já está no [ROADMAP](ROADMAP.md).
 2. Se o laboratório tem verificação automática, inclua `verificar.mjs` e um teste (veja a Lição 1).
 3. Marque a etapa como `pronta` no ROADMAP e registre no [CHANGELOG](CHANGELOG.md).

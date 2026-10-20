@@ -226,3 +226,36 @@ registradas normalmente.
 
 **Última revisão:** 2026-10-17. Esta missão não depende de links externos. Reverifique se o Ollama e o modelo padrão do
 repositório mudarem ([infra/instalacao.md](../../../infra/instalacao.md)).
+
+## 15. Aplicação, reforço e desafios
+
+### 15.1 Onde isso aparece no trabalho
+
+- **Entrar numa equipe ou num projeto de IA:** cada pessoa chega de um ponto diferente. Um diagnóstico curto, respondido de memória, mostra
+  onde reforçar antes de gastar horas no que já se sabe. É o mesmo raciocínio de medir antes de otimizar.
+- **Checar o ambiente por script:** a primeira hora de um projeto novo costuma ir embora em "na minha máquina funciona". Um comando que confere versão,
+  endpoint e uma chamada real (como o `checar-ambiente.mjs`) transforma isso em evidência que outra pessoa repete.
+- **Declarar o que você não sabe:** responder "não sei" no diagnóstico é o hábito que depois vira abstenção num sistema de RAG (etapas 6 e 7).
+- **Sinal de alerta:** autoavaliação sempre acima da nota. Quem se superestima sem perceber pula etapas que ainda não domina.
+
+### 15.2 Reforço (revisão espaçada)
+
+A missão não gera revisões espaçadas (ela não conclui uma competência). O reforço é refazer o diagnóstico: ao fechar cada fase (nos checkpoints), responda de novo as
+perguntas da fase, sem consultar o primeiro `diagnostico.md`, e compare as duas versões lado a lado.
+
+### 15.3 Desafio de transferência
+
+Suba o ambiente com **outro** modelo ou provedor (sem XP) e rode o `checar-ambiente.mjs` de novo; anote o que mudou e o que precisou de variável de ambiente
+(`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`). Depois **ensine a um colega**, em 5 minutos, como subir o ambiente do zero, e anote onde a pessoa se perdeu: isso
+é o que falta no seu `ambiente.md`.
+
+### 15.4 Ponte com o projeto e com a prática
+
+A missão não entrega um marco do [projeto evolutivo](../../projeto/README.md), mas o `ambiente.md` é o rascunho do "como rodar do zero" que o projeto exige na etapa 15. Para
+quem vai usar o time de agentes, o mesmo ambiente (endpoint de modelo local ou de provedor) é o que a [extensão](../../extensoes/time-de-agentes/README.md) espera nas variáveis de
+ambiente. Os módulos do repositório têm versões em JavaScript e em Python (veja o [README da raiz](../../../README.md)).
+
+### 15.5 Calibragem
+
+A autoavaliação do diagnóstico **é** a calibragem: compare a sua nota (0 a 3) com a nota do gabarito pergunta a pergunta. Se a distância média passar de 1 ponto, ou se ela for
+sempre para cima, a ação combinada é fazer o quiz de cada etapa **antes** de ler o material. Registre a distância média no relatório da sessão.

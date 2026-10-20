@@ -32,7 +32,7 @@ Antes da etapa 1: a [Missão 0 · Diagnóstico](licoes/00-missao-0-diagnostico/R
 | 15 | 5 | Integração, testes end-to-end e execução reproduzível | — | roteiro |
 | 16 | 5 | Capstone, demonstração técnica e avaliação final | — | roteiro |
 
-- **pronta**: a lição completa (as 14 seções do [template](templates/licao.md)) está em `licoes/`.
+- **pronta**: a lição completa (as 15 seções do [template](templates/licao.md)) está em `licoes/`.
 - **roteiro**: o plano da etapa está abaixo; a lição é escrita com o [template](templates/licao.md) quando o aluno chegar lá
   (ou antes, em um PR). Enquanto isso, o material existente do repositório já permite estudar a etapa.
 

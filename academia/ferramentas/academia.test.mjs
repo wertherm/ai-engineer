@@ -745,6 +745,87 @@ describe('kit de colagem', () => {
   });
 });
 
+describe('seção 15 das lições (aplicação, reforço e desafios)', () => {
+  const LICAO1 = 'academia/licoes/01-tokens-contexto-inferencia';
+  /** Copia o repositório, aplica a alteração a um arquivo e devolve só as mensagens de erro da validação. */
+  function errosCom(rel, alterar) {
+    const copia = copiarRepo();
+    const arq = path.join(copia, rel);
+    fs.writeFileSync(arq, alterar(fs.readFileSync(arq, 'utf8').replace(/\r\n/g, '\n')));
+    return validarTudo(copia).erros.map((e) => `${e.arquivo}: ${e.mensagem}`).join('\n');
+  }
+
+  it('o conteúdo real tem os cinco blocos na ordem, V1 a V5 na lição 1 e a correção de cada uma no gabarito', () => {
+    const licao = fs.readFileSync(path.join(RAIZ_REAL, LICAO1, 'README.md'), 'utf8');
+    const blocos = [...licao.matchAll(/^### 15\.(\d) (.*)$/gm)].map((m) => `${m[1]} ${m[2].trim()}`);
+    assert.deepEqual(blocos, ['1 Onde isso aparece no trabalho', '2 Reforço (revisão espaçada)', '3 Desafio de transferência', '4 Ponte com o projeto e com a prática', '5 Calibragem']);
+    const gabarito = fs.readFileSync(path.join(RAIZ_REAL, LICAO1, 'gabarito.md'), 'utf8');
+    for (let n = 1; n <= 5; n++) assert.match(gabarito, new RegExp(`^## V${n} ·`, 'm'));
+  });
+
+  it('bloco ausente, fora de ordem ou com título diferente é erro; bloco a mais também', () => {
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.3 Desafio de transferência', '### 15.3 Outro título')), /a seção 15 deve ter "### 15\.3 Desafio de transferência"/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.5 Calibragem', '### 15.5 Calibragem\n\ntexto\n\n### 15.6 Extra')), /blocos além do 15\.5/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.2 Reforço (revisão espaçada)', '### 15.2 Reforço (revisão espaçada)').replace(/### 15\.4[^\n]*\n/, '')), /15\.4 Ponte/);
+  });
+
+  it('seção 15 inteira ausente e seção 16 a mais são erros', () => {
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.slice(0, t.indexOf('## 15.'))), /seção 15 deve ser "## 15\. Aplicação, reforço e desafios"/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => `${t}\n## 16. Sobra\n\ntexto\n`), /seções além da 15ª/);
+  });
+
+  it('exige V1 a V5 em sequência no início da linha: faltando uma, repetida ou fora de ordem reprova', () => {
+    const sem = (n) => (t) => t.replace(new RegExp(`^\\*\\*V${n}\\.\\*\\*`, 'm'), `V${n}.`);
+    assert.match(errosCom(`${LICAO1}/README.md`, sem(3)), /perguntas de revisão \*\*V1\.\*\* a \*\*V5\.\*\*/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('**V4.**', '**V5.**')), /perguntas de revisão/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace(/\*\*V5\.\*\*/, '**V6.**')), /perguntas de revisão/);
+  });
+
+  it('as perguntas V só valem dentro do bloco 15.2 (V1 a V5 em outro bloco não contam)', () => {
+    const msg = errosCom(`${LICAO1}/README.md`, (t) => {
+      const v = t.match(/\*\*V1\.\*\*[\s\S]*?(?=### 15\.3)/)[0];
+      return t.replace(v, '').replace('### 15.4', `${v}\n### 15.4`);
+    });
+    assert.match(msg, /perguntas de revisão/);
+  });
+
+  it('o gabarito precisa comentar cada V presente na lição', () => {
+    const msg = errosCom(`${LICAO1}/gabarito.md`, (t) => t.replace(/^## V3 ·/m, '## Terceira ·'));
+    assert.match(msg, /gabarito\.md: falta a correção da pergunta de revisão V3/);
+    assert.ok(!/V1|V2|V4|V5/.test(msg.replace(/V3/g, '')), 'só a V3 foi apontada');
+  });
+
+  it('títulos "## 15." dentro de um bloco de código não contam como seção', () => {
+    const msg = errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.1 Onde isso aparece no trabalho', '### 15.1 Onde isso aparece no trabalho\n\n```md\n## 16. Isto está num bloco de código\n### 15.9 Idem\n```\n'));
+    assert.equal(msg, '', msg);
+  });
+
+  it('o template também precisa dos cinco blocos; a Missão 0 não exige V1 a V5 (não conclui competência)', () => {
+    assert.match(errosCom('academia/templates/licao.md', (t) => t.replace('### 15.1 Onde isso aparece no trabalho', '### 15.1 Sem título certo')), /templates\/licao\.md: a seção 15 deve ter "### 15\.1/);
+    const missao = errosCom('academia/licoes/00-missao-0-diagnostico/README.md', (t) => t.replace('### 15.3 Desafio de transferência', '### 15.3 Errado'));
+    assert.match(missao, /00-missao-0-diagnostico\/README\.md: a seção 15 deve ter "### 15\.3/);
+    assert.ok(!/perguntas de revisão/.test(missao));
+  });
+
+  it('o kit de uma revisão traz as perguntas V1 a V5 da lição (e nunca a correção do gabarito)', () => {
+    const copia = copiarRepo();
+    const dir = path.join(copia, 'academia', 'alunos', 'werther');
+    const preenchido = 'Texto do aluno com mais de vinte letras para valer como preenchido.';
+    fs.writeFileSync(path.join(dir, 'perfil.md'), `---\nslug: werther\nnome: Werther\ncompartilhar_xp: nao\nritmo: 3 horas por semana\n---\n\n## Objetivo com o curso\n\n${preenchido}\n\n## Ponto de partida\n\n${preenchido}\n\n## Preferências de estudo\n\n${preenchido}\n\n## Ambiente\n\n${preenchido}\n`);
+    const { config } = carregarConfig(copia);
+    const ev = (rel) => evid(dir, rel);
+    sessao(dir, { aluno: 'werther', numero: 1, etapa: 0, status: 'concluida', atividades: [['E00-quiz', 'quiz', 1, 'aprovado', ev('entregas/etapa-00/diagnostico.md'), 10], ['E00-lab', 'laboratorio', 1, 'aprovado', ev('entregas/etapa-00/ambiente.md'), 30]] });
+    sessao(dir, { aluno: 'werther', numero: 2, data: '2026-10-19', etapa: 1, status: 'concluida', atividades: [['E01-quiz', 'quiz', 1, 'aprovado', ev('entregas/etapa-01/quiz.md'), 10], ['E01-lab', 'laboratorio', 1, 'aprovado', ev('entregas/etapa-01/relatorio.md'), 30]] });
+    sessao(dir, { aluno: 'werther', numero: 3, data: '2026-10-20', etapa: 2 });
+    const kit = montarKit(copia, config, 'werther', { hoje: '2026-10-21' });
+    const revisao = kit.slice(kit.indexOf('REVISÃO SUGERIDA'));
+    assert.match(revisao, /### 15\.2 Reforço/);
+    for (let n = 1; n <= 5; n++) assert.match(revisao, new RegExp(`\\*\\*V${n}\\.\\*\\*`));
+    assert.ok(!/### 15\.3 Desafio/.test(revisao), 'o bloco termina antes do 15.3');
+    assert.ok(!revisao.includes('turno 4 = 750'), 'a correção de V1 nunca vai no kit');
+  });
+});
+
 describe('validação de links, segredos e utilitários de Markdown', () => {
   it('detecta arquivo e âncora inexistentes e ignora links externos e blocos de código', () => {
     const raiz = montarRaiz();

@@ -22,8 +22,14 @@ const TITULOS_LICAO = [
   'Identificação e pré-requisitos', 'Objetivos de aprendizagem', 'Duração estimada', 'Microlição',
   'Material complementar', 'Exemplos práticos', 'Quiz de fixação', 'Desafio hands-on', 'Critérios de aceitação',
   'Rubrica de avaliação', 'Dicas graduais', 'Modelo de relatório do aluno', 'Competências registradas',
-  'Referências e última revisão',
+  'Referências e última revisão', 'Aplicação, reforço e desafios',
 ];
+// A seção 15 tem cinco blocos fixos. O 15.2 traz as perguntas de revisão V1..V5 (a correção fica no gabarito.md).
+const SUBTITULOS_15 = [
+  'Onde isso aparece no trabalho', 'Reforço (revisão espaçada)', 'Desafio de transferência',
+  'Ponte com o projeto e com a prática', 'Calibragem',
+];
+const MIN_PERGUNTAS_REVISAO = 5;
 const STATUS_ETAPA = ['em-andamento', 'pausada', 'concluida'];
 const RESULTADOS = ['aprovado', 'parcial', 'reprovado'];
 const TIPO_POR_SUFIXO = { quiz: 'quiz', lab: 'laboratorio', explicacao: 'explicacao' };
@@ -820,10 +826,29 @@ export function validarLicoes(raiz, config) {
       const doCatalogo = config.competencias.filter((c) => c.etapa === etapaEsperada).map((c) => c.id).sort();
       if (declaradas.join() !== doCatalogo.join()) e(`competencias (${declaradas.join(', ')}) diferem do catálogo para a etapa (${doCatalogo.join(', ')})`);
     }
-    const titulos = [...corpo.matchAll(/^## (\d+)\.\s+(.*?)\s*$/gm)].map((m) => [Number(m[1]), m[2]]);
+    const semCodigo = corpo.replace(/^```[\s\S]*?^```/gm, '');
+    const titulos = [...semCodigo.matchAll(/^## (\d+)\.\s+(.*?)\s*$/gm)].map((m) => [Number(m[1]), m[2]]);
     TITULOS_LICAO.forEach((t, i) => {
       if (!titulos[i] || titulos[i][0] !== i + 1 || titulos[i][1] !== t) e(`seção ${i + 1} deve ser "## ${i + 1}. ${t}"`);
     });
+    if (titulos.length > TITULOS_LICAO.length) e(`a lição tem seções além da ${TITULOS_LICAO.length}ª`);
+    // Seção 15: cinco blocos na ordem; a partir da etapa 1, também as perguntas de revisão V1..V5.
+    const ini15 = semCodigo.search(/^## 15\./m);
+    const sec15 = ini15 < 0 ? '' : semCodigo.slice(ini15).split(/^## (?!15\.)/m)[0];
+    const subs = [...sec15.matchAll(/^### 15\.(\d+)\s+(.*?)\s*$/gm)].map((m) => [Number(m[1]), m[2]]);
+    SUBTITULOS_15.forEach((t, i) => {
+      if (!subs[i] || subs[i][0] !== i + 1 || subs[i][1] !== t) e(`a seção 15 deve ter "### 15.${i + 1} ${t}"`);
+    });
+    if (subs.length > SUBTITULOS_15.length) e(`a seção 15 tem blocos além do 15.${SUBTITULOS_15.length}`);
+    let nRevisao = 0;
+    if (etapaEsperada !== null && etapaEsperada > 0) {
+      const bloco152 = sec15.split(/^### 15\.3\b/m)[0].split(/^### 15\.2\b/m)[1] ?? '';
+      const perguntas = [...bloco152.matchAll(/^\*\*V(\d+)\.\*\*/gm)].map((m) => Number(m[1]));
+      if (perguntas.length < MIN_PERGUNTAS_REVISAO || perguntas.some((n, i) => n !== i + 1)) {
+        e(`o bloco 15.2 precisa das perguntas de revisão **V1.** a **V${MIN_PERGUNTAS_REVISAO}.** (numeradas em sequência, no início da linha)`);
+      } else nRevisao = perguntas.length;
+    }
+    return nRevisao;
   };
 
   const tmpl = path.join(raiz, 'academia', 'templates', 'licao.md');
@@ -838,8 +863,15 @@ export function validarLicoes(raiz, config) {
     if (!m) { erros.push({ arquivo: `academia/licoes/${nome}`, mensagem: 'a pasta da lição deve começar com NN-' }); continue; }
     if (!fs.existsSync(path.join(dirLicoes, nome, 'README.md'))) { erros.push({ arquivo: rel, mensagem: 'lição sem README.md' }); continue; }
     existentes.add(Number(m[1]));
-    confere(path.join(dirLicoes, nome, 'README.md'), rel, Number(m[1]));
-    if (!fs.existsSync(path.join(dirLicoes, nome, 'gabarito.md'))) erros.push({ arquivo: `academia/licoes/${nome}`, mensagem: 'falta gabarito.md (o gabarito do quiz fica separado)' });
+    const nRevisao = confere(path.join(dirLicoes, nome, 'README.md'), rel, Number(m[1]));
+    const gab = path.join(dirLicoes, nome, 'gabarito.md');
+    if (!fs.existsSync(gab)) erros.push({ arquivo: `academia/licoes/${nome}`, mensagem: 'falta gabarito.md (o gabarito do quiz fica separado)' });
+    else if (nRevisao) {
+      const comentadas = new Set([...lerTexto(gab).matchAll(/^## V(\d+)\b/gm)].map((x) => Number(x[1])));
+      for (let n = 1; n <= nRevisao; n++) {
+        if (!comentadas.has(n)) erros.push({ arquivo: `academia/licoes/${nome}/gabarito.md`, mensagem: `falta a correção da pergunta de revisão V${n} ("## V${n} · ...")` });
+      }
+    }
   }
   for (const e of config.etapas) {
     const rel = 'academia/ROADMAP.md';
@@ -943,6 +975,11 @@ const secao7 = (texto) => {
   const m = texto.match(/^## 7\.[^\n]*\n[\s\S]*?(?=^## 8\.)/m);
   return m ? m[0].trim() : null;
 };
+/** Perguntas de uma revisão espaçada: o bloco 15.2 (V1..V5) da lição; sem ele, o quiz da seção 7. */
+const perguntasDeRevisao = (texto) => {
+  const m = texto.match(/^### 15\.2[^\n]*\n[\s\S]*?(?=^### 15\.3)/m);
+  return m ? m[0].trim() : secao7(texto);
+};
 
 /** Texto único para colar numa conversa com um assistente que não enxerga o repositório. */
 export function montarKit(raiz, config, slugAluno, { hoje = new Date().toLocaleDateString('sv-SE') } = {}) {
@@ -986,7 +1023,7 @@ export function montarKit(raiz, config, slugAluno, { hoje = new Date().toLocaleD
   for (const r of estado.revisoesSugeridas.slice(0, 3)) {
     const lic = config.etapas[r.etapa - 1];
     if (lic?.status !== 'pronta' || !lic.licao) continue;
-    const q = secao7(lerRel(`academia/${lic.licao}`));
+    const q = perguntasDeRevisao(lerRel(`academia/${lic.licao}`));
     if (q) bloco(`REVISÃO SUGERIDA: etapa ${r.etapa}, revisão ${r.numero} (id R${String(r.etapa).padStart(2, '0')}-${r.numero}); use estas perguntas`, q);
   }
   return partes.join('\n');
