@@ -801,6 +801,11 @@ describe('seção 15 das lições (aplicação, reforço e desafios)', () => {
     assert.ok(!/V1|V2|V4|V5/.test(msg.replace(/V3/g, '')), 'só a V3 foi apontada');
   });
 
+  it('um "## V3" que só aparece dentro de um bloco de código no gabarito não conta como correção', () => {
+    const msg = errosCom(`${LICAO1}/gabarito.md`, (t) => t.replace(/^## V3 ·.*$/m, '```md\n## V3 · só num bloco de código\n```'));
+    assert.match(msg, /gabarito\.md: falta a correção da pergunta de revisão V3/);
+  });
+
   it('títulos "## 15." dentro de um bloco de código não contam como seção', () => {
     const msg = errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.1 Onde isso aparece no trabalho', '### 15.1 Onde isso aparece no trabalho\n\n```md\n## 16. Isto está num bloco de código\n### 15.9 Idem\n```\n'));
     assert.equal(msg, '', msg);

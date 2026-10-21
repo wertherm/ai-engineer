@@ -43,5 +43,6 @@ console.log(oQueFazer(doServidor)); // imprime "usar o texto: undefined": o comp
 
 // Experimentos:
 //  a) acrescente 'truncado' a TipoDeErro. `node` roda igual; `tsc --noEmit` reclama em `impossivel(r.erro.tipo)`.
-//  b) troque 'rede' por 'redee' em um dos objetos de `exemplos`: `node` roda; `tsc` reclama.
+//  b) troque 'limite_de_taxa' por 'limite_de_taxaa' em um dos objetos de `exemplos`: o `tsc` reclama na hora (e sugere o nome certo); o `node` imprime a primeira linha e
+//     só quebra quando chega nesse objeto, em `impossivel(...)`: sem o compilador, o erro de digitação só aparece quando o caso acontece.
 //  c) por isso o cliente da lição confere a forma da resposta com código (typeof, JSON.parse em try/catch) além de declarar tipos.

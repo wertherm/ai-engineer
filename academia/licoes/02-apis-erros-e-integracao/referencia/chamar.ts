@@ -5,7 +5,8 @@
 // Só usa sintaxe "apagável" (sem enum, sem namespace com código, sem parameter properties): o Node apenas remove os tipos e executa,
 // sem conferi-los. Para conferir os tipos, use o tsc (veja kit/tsconfig.json e a seção 4.5).
 // Contrato (variáveis de ambiente, formato do JSON de saída, os nove tipos de erro): kit/contrato.mjs e a seção 8 da lição.
-import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Tipos: o erro é uma UNIÃO de nomes fechados; quem trata a falha é obrigado, pelo compilador, a pensar em cada caso.
@@ -138,8 +139,10 @@ function erroDeHttp(status: number, corpo: string, cabecalhos: Headers, chave: s
   let codigo = '';
   let mensagem = corpo;
   try {
-    const e = (JSON.parse(corpo) as { error?: { code?: unknown; type?: unknown; message?: unknown } }).error;
-    codigo = `${typeof e?.code === 'string' ? e.code : ''} ${typeof e?.type === 'string' ? e.type : ''}`;
+    const e = (JSON.parse(corpo) as { error?: { code?: unknown; type?: unknown; message?: unknown; details?: { error_code?: unknown } } }).error;
+    // OpenAI: `code` e `type`; Anthropic: o 429 de teto de gasto tem o mesmo `type` de um limite de taxa e só `details.error_code` o distingue
+    const detalhe = typeof e?.details?.error_code === 'string' ? e.details.error_code : '';
+    codigo = `${typeof e?.code === 'string' ? e.code : ''} ${typeof e?.type === 'string' ? e.type : ''} ${detalhe}`;
     if (typeof e?.message === 'string') mensagem = e.message;
   } catch { /* corpo que não é JSON: usa o texto cru, cortado */ }
   const texto = `HTTP ${status}: ${mascarar(mensagem, chave)}`;
@@ -147,7 +150,7 @@ function erroDeHttp(status: number, corpo: string, cabecalhos: Headers, chave: s
   if (status === 401 || status === 403) return new ErroLLM('autenticacao', texto, { status });
   if (status === 429) return PADRAO_DE_COTA.test(codigo) ? new ErroLLM('cota_esgotada', texto, { status }) : new ErroLLM('limite_de_taxa', texto, { status, esperaSugeridaMs: espera });
   if (status === 408 || status >= 500) return new ErroLLM('servidor', texto, { status, esperaSugeridaMs: espera });
-  return new ErroLLM('requisicao_invalida', texto, { status }); // 4xx e redirecionamentos (não seguimos: a chave iria junto)
+  return new ErroLLM('requisicao_invalida', texto, { status }); // 4xx e redirecionamentos (não os seguimos: o destino é decidido por quem respondeu, não por você)
 }
 
 async function umaTentativa(prompt: string, cfg: Configuracao): Promise<Sucesso> {
@@ -251,6 +254,15 @@ async function principal(argv: string[], env: Ambiente): Promise<number> {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/** Verdadeiro se este arquivo é o programa que o Node está executando (compara os caminhos REAIS: symlinks e junctions não enganam). */
+function ehPrincipal(): boolean {
+  try {
+    return realpathSync(process.argv[1] ?? '') === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (ehPrincipal()) {
   process.exitCode = await principal(process.argv.slice(2), process.env);
 }

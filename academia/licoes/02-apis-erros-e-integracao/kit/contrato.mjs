@@ -8,7 +8,7 @@
 //     OPENAI_API_KEY    vai no cabeçalho Authorization: Bearer <chave> e NUNCA aparece na saída
 //     MODELO_CHAT       nome do modelo
 //
-// O que ele imprime: UMA linha JSON no stdout (logs vão para o stderr) e termina com código 0 se deu certo, 1 se falhou
+// O que ele imprime: UMA linha JSON no stdout, em UTF-8 (prefira o JSON com escapes ASCII, como o padrão de json.dumps; logs vão para o stderr) e termina com código 0 se deu certo, 1 se falhou
 // (2 para erro de configuração ou de uso, sem JSON). Formato:
 //     sucesso: {"ok":true,"texto":"...","finish_reason":"stop","usage":{"prompt_tokens":..,"completion_tokens":..,"total_tokens":..},"tentativas":N}
 //     falha  : {"ok":false,"erro":{"tipo":"<um de TIPOS_DE_ERRO>","repetivel":true|false,"status":<número ou null>,"mensagem":"..."},"tentativas":N}
@@ -41,6 +41,3 @@ export const PADROES = {
   BACKOFF_TETO_MS: '8000',
   ESPERA_MAX_MS: '60000', // se o Retry-After pedir mais que isto, desista em vez de esperar
 };
-
-/** Códigos de erro de 429 que indicam cota, crédito ou gasto (não adianta esperar). Os provedores usam nomes parecidos; confira o seu. */
-export const CODIGOS_DE_COTA = ['insufficient_quota', 'credit_balance_exhausted', 'billing_hard_limit_reached', 'organization_spend_limit_exceeded', 'project_spend_limit_exceeded', 'organization_usage_limit_exceeded'];

@@ -55,8 +55,20 @@ describe('acharSegredos', () => {
       'possível segredo (senha em texto); remova e troque a credencial',
       're: /[?&](?:key|password)=[A-Za-z0-9._~-]{8,200}/i',
       'se a senha 12345678 aparecer sem separador, não acusamos (limite conhecido)',
+      // código que LÊ a configuração (Python e JavaScript): constantes em MAIÚSCULAS com chamada ou acesso ao ambiente não são segredos
+      'API_KEY = os.environ["OPENAI_API_KEY"]',
+      'OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")',
+      'MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "64"))',
+      'const MAX_TOKENS = Number(process.env.MAX_TOKENS ?? 64);',
+      'const API_KEY = env.OPENAI_API_KEY;',
     ];
     for (const t of limpos) assert.deepEqual(acharSegredos(t), [], t);
+  });
+
+  it('valor literal continua sendo segredo mesmo com parênteses (entre aspas) e sem chamar nada (sem aspas)', () => {
+    assert.ok(acharSegredos('API_KEY = "abc(def)ghi12345"').length > 0);
+    assert.ok(acharSegredos('DB_PASSWORD=Sup3rS3cr3t!').length > 0);
+    assert.ok(acharSegredos('SECRET_KEY: xyz789abc123').length > 0);
   });
 
   it('informa a linha correta e aceita CRLF', () => {

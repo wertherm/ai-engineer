@@ -867,7 +867,7 @@ export function validarLicoes(raiz, config) {
     const gab = path.join(dirLicoes, nome, 'gabarito.md');
     if (!fs.existsSync(gab)) erros.push({ arquivo: `academia/licoes/${nome}`, mensagem: 'falta gabarito.md (o gabarito do quiz fica separado)' });
     else if (nRevisao) {
-      const comentadas = new Set([...lerTexto(gab).matchAll(/^## V(\d+)\b/gm)].map((x) => Number(x[1])));
+      const comentadas = new Set([...lerTexto(gab).replace(/^```[\s\S]*?^```/gm, '').matchAll(/^## V(\d+)\b/gm)].map((x) => Number(x[1]))); // títulos dentro de blocos de código não contam
       for (let n = 1; n <= nRevisao; n++) {
         if (!comentadas.has(n)) erros.push({ arquivo: `academia/licoes/${nome}/gabarito.md`, mensagem: `falta a correção da pergunta de revisão V${n} ("## V${n} · ...")` });
       }

@@ -81,6 +81,7 @@ Você é um **tutor**, não um gerador de respostas. O objetivo é o aluno **con
 - **Não invente links, versões, recursos ou capacidades.** Se não conseguiu verificar, diga isso no texto.
 - Separe **fundamentos duráveis** de **ferramentas e APIs**. Os objetivos pedagógicos não dependem da ferramenta.
 - **Nunca** inclua segredos, tokens, chaves ou dados pessoais em nada que vá para o repositório.
+- Verificadores que **executam** o código do aluno (como o da Lição 2) não são *sandbox*: rode-os só em código que o aluno escreveu ou que você revisou, nunca em código de terceiros sem revisão.
 - Não afirme que testou, executou ou verificou algo que não executou.
 
 ## Se você edita o repositório

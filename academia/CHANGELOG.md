@@ -13,8 +13,8 @@ módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) segu
 - **[Lição 2 · APIs, TypeScript, erros e integração com modelos](licoes/02-apis-erros-e-integracao/README.md)** (etapa 2, `pronta`; competências C04 e C05): microlição (taxonomia de nove tipos de erro, retry com backoff e jitter,
   `Retry-After`, timeout total, TypeScript no Node), quiz de 10 questões e gabarito, rubrica, dicas graduais, seção 15 completa.
   - **Laboratório "cliente de LLM robusto"**: o aluno escreve `chamar.ts`, `.mjs`, `.js` ou `.py` e o verificador **executa** o programa contra um [servidor falso](licoes/02-apis-erros-e-integracao/kit/servidor-falso.mjs)
-    com 18 cenários de falha (429 de taxa e de cota, 5xx, conexão derrubada, corpo em conta-gotas, `Retry-After` gigante, 401 que repete a chave, provedor que recusa `max_tokens`...), conferindo o que o servidor viu (tentativas, esperas, corpo) e o que o programa disse. `--so CA5` verifica só um critério.
-  - Soluções de referência em **TypeScript** e em **Python** (só biblioteca padrão), três exemplos executáveis e `licao.test.mjs` com **teste de mutação do verificador** (19 defeitos injetados, cada um reprovando o critério esperado).
+    com 19 cenários de falha (429 de taxa e de cota, 5xx, conexão derrubada, corpo em conta-gotas, `Retry-After` gigante, 401 que repete a chave, provedor que recusa `max_tokens`...), conferindo o que o servidor viu (tentativas, esperas, corpo) e o que o programa disse. `--so CA5` verifica só um critério.
+  - Soluções de referência em **TypeScript** e em **Python** (só biblioteca padrão), três exemplos executáveis e `licao.test.mjs` com **teste de mutação do verificador** (20 defeitos injetados, cada um reprovando o critério esperado, mais os casos de programas corretos que não podem ser reprovados).
 
 **Alterado**
 

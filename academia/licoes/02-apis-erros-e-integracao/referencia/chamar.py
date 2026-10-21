@@ -138,7 +138,9 @@ def _erro_de_http(status, corpo, cabecalho_retry_after, chave):
     codigo, mensagem = "", corpo
     try:
         e = json.loads(corpo).get("error") or {}
-        codigo = f"{e.get('code') if isinstance(e.get('code'), str) else ''} {e.get('type') if isinstance(e.get('type'), str) else ''}"
+        detalhes = e.get("details") if isinstance(e.get("details"), dict) else {}
+        # OpenAI: `code` e `type`; Anthropic: o 429 de teto de gasto tem o mesmo `type` de um limite de taxa e só `details.error_code` o distingue
+        codigo = f"{e.get('code') if isinstance(e.get('code'), str) else ''} {e.get('type') if isinstance(e.get('type'), str) else ''} {detalhes.get('error_code') if isinstance(detalhes.get('error_code'), str) else ''}"
         if isinstance(e.get("message"), str):
             mensagem = e["message"]
     except (ValueError, AttributeError):
@@ -153,7 +155,7 @@ def _erro_de_http(status, corpo, cabecalho_retry_after, chave):
         return ErroLLM("limite_de_taxa", texto, status=status, espera_sugerida_ms=espera)
     if status == 408 or status >= 500:
         return ErroLLM("servidor", texto, status=status, espera_sugerida_ms=espera)
-    return ErroLLM("requisicao_invalida", texto, status=status)  # 4xx e redirecionamentos (não seguimos: a chave iria junto)
+    return ErroLLM("requisicao_invalida", texto, status=status)  # 4xx e redirecionamentos (não os seguimos: o destino é decidido por quem respondeu, não por você)
 
 
 def _uma_tentativa(prompt, cfg):

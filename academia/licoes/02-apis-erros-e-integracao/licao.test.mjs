@@ -4,7 +4,8 @@
 //
 //   node --test academia/licoes/02-apis-erros-e-integracao/licao.test.mjs
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
+import { symlinkSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -13,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { NOMES_DOS_TIPOS, PADROES, REPETIVEIS, TIPOS_DE_ERRO } from './kit/contrato.mjs';
 import { CENARIOS, iniciarServidor, portaFechada } from './kit/servidor-falso.mjs';
-import { verificar } from './verificar.mjs';
+import { dividirComando, verificar } from './verificar.mjs';
 
 const exec = promisify(execFile);
 const aqui = path.dirname(fileURLToPath(import.meta.url));
@@ -22,8 +23,10 @@ after(async () => { for (const d of temporarias) await rm(d, { recursive: true, 
 
 const PARAGRAFO = 'Texto de teste com conteúdo suficiente para ocupar a seção do relatório do aluno. ';
 const RELATORIO_OK = `# Relatório\n\n## Resultados\n\n${PARAGRAFO.repeat(8)}\n\n## Explicação\n\n${PARAGRAFO.repeat(16)}\n\n## Surpresas e limites\n\n${PARAGRAFO.repeat(8)}\n`;
-const REF_TS = await readFile(path.join(aqui, 'referencia', 'chamar.ts'), 'utf8');
-const REF_PY = await readFile(path.join(aqui, 'referencia', 'chamar.py'), 'utf8');
+// Normaliza CRLF: num checkout do Windows com autocrlf os arquivos vêm com CR+LF, e as trocas de texto dos mutantes não achariam o trecho.
+const lerReferencia = async (nome) => (await readFile(path.join(aqui, 'referencia', nome), 'utf8')).replace(/\r\n/g, '\n');
+const REF_TS = await lerReferencia('chamar.ts');
+const REF_PY = await lerReferencia('chamar.py');
 
 /** Cria uma pasta de entrega com o programa (e o relatório) e devolve o caminho. */
 async function entrega({ arquivo = 'chamar.ts', codigo = REF_TS, md = RELATORIO_OK } = {}) {
@@ -52,6 +55,12 @@ const temPython = await exec('python', ['--version']).then((r) => /Python 3\./.t
   || await exec('py', ['-3', '--version']).then((r) => /Python 3\./.test(r.stdout + r.stderr), () => false);
 const temTypeScript = Boolean(process.features.typescript);
 
+/** Liga um servidor falso, roda `fn` e SEMPRE o fecha (uma asserção que falha não deixa o servidor aberto pendurando o processo de teste). */
+async function comServidor(opcoes, fn) {
+  const s = await iniciarServidor(opcoes);
+  try { return await fn(s); } finally { await s.fechar(); }
+}
+
 describe('contrato e servidor falso', () => {
   it('o contrato tem nove tipos de erro, quatro deles repetíveis, e padrões que são texto de variável de ambiente', () => {
     assert.equal(NOMES_DOS_TIPOS.length, 9);
@@ -64,38 +73,72 @@ describe('contrato e servidor falso', () => {
     for (const [nome, c] of Object.entries(CENARIOS)) {
       assert.ok(c.descricao.length > 10 && c.passos.length >= 1, nome);
     }
-    const s = await iniciarServidor({ passos: CENARIOS.sucesso.passos });
-    const r = await fetch(`${s.url}/chat/completions`, { method: 'POST', headers: { authorization: 'Bearer abc', 'content-type': 'application/json' }, body: JSON.stringify({ model: 'm', messages: [], max_tokens: 5 }) });
-    const j = await r.json();
-    assert.equal(r.status, 200);
-    assert.equal(j.choices[0].message.content, 'Olá');
-    assert.equal(s.registro.length, 1);
-    assert.equal(s.registro[0].corpo.max_tokens, 5);
-    const outra = await fetch(`${s.url}/outra-rota`, { method: 'POST', body: '{}' });
-    assert.equal(outra.status, 404);
-    await s.fechar();
+    assert.equal(Object.keys(CENARIOS).length, 19);
+    await comServidor({ passos: CENARIOS.sucesso.passos }, async (s) => {
+      const r = await fetch(`${s.url}/chat/completions`, { method: 'POST', headers: { authorization: 'Bearer abc', 'content-type': 'application/json' }, body: JSON.stringify({ model: 'm', messages: [], max_tokens: 5 }) });
+      const j = await r.json();
+      assert.equal(r.status, 200);
+      assert.equal(j.choices[0].message.content, 'Olá');
+      assert.equal(s.registro.length, 1);
+      assert.equal(s.registro[0].corpo.max_tokens, 5);
+      assert.equal((await fetch(`${s.url}/outra-rota`, { method: 'POST', body: '{}' })).status, 404);
+    });
+  });
+
+  it('a resposta pode ser sobrescrita por execução (o verificador sorteia texto e usage para ninguém decorá-los)', async () => {
+    await comServidor({ passos: CENARIOS.sucesso.passos, resposta: { texto: 'Olá abc123', uso: { prompt_tokens: 41, completion_tokens: 5, total_tokens: 46 } } }, async (s) => {
+      const j = await (await fetch(`${s.url}/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'm', messages: [] }) })).json();
+      assert.equal(j.choices[0].message.content, 'Olá abc123');
+      assert.deepEqual(j.usage, { prompt_tokens: 41, completion_tokens: 5, total_tokens: 46 });
+    });
+    await comServidor({ passos: CENARIOS.truncado.passos, resposta: { texto: 'não deve aparecer', uso: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } } }, async (s) => {
+      const j = await (await fetch(`${s.url}/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'm', messages: [] }) })).json();
+      assert.equal(j.choices[0].finish_reason, 'length', 'a sobrescrita só vale para respostas normais (stop)');
+      assert.equal(j.choices[0].message.content, 'Olá, tudo be');
+    });
   });
 
   it('o 401 repete a chave recebida (é o que o cliente precisa saber esconder) e o provedor B recusa max_tokens e temperature', async () => {
-    let s = await iniciarServidor({ passos: CENARIOS['chave-invalida'].passos });
-    const r = await fetch(`${s.url}/chat/completions`, { method: 'POST', headers: { authorization: 'Bearer minha-chave-123' }, body: JSON.stringify({ model: 'm', messages: [] }) });
-    assert.match(JSON.stringify(await r.json()), /minha-chave-123/);
-    await s.fechar();
-    s = await iniciarServidor({ passos: CENARIOS['provedor-b'].passos, perfil: 'openai-novo' });
-    const pede = (corpo) => fetch(`${s.url}/chat/completions`, { method: 'POST', headers: { authorization: 'Bearer k', 'content-type': 'application/json' }, body: JSON.stringify({ model: 'm', messages: [], ...corpo }) });
-    assert.equal((await pede({ max_tokens: 5 })).status, 400);
-    assert.equal((await pede({ max_completion_tokens: 5, temperature: 0 })).status, 400);
-    assert.equal((await pede({ max_completion_tokens: 5 })).status, 200);
-    await s.fechar();
+    await comServidor({ passos: CENARIOS['chave-invalida'].passos }, async (s) => {
+      const r = await fetch(`${s.url}/chat/completions`, { method: 'POST', headers: { authorization: 'Bearer minha-chave-123' }, body: JSON.stringify({ model: 'm', messages: [] }) });
+      assert.match(JSON.stringify(await r.json()), /minha-chave-123/);
+    });
+    await comServidor({ passos: CENARIOS['provedor-b'].passos, perfil: 'openai-novo' }, async (s) => {
+      const pede = (corpo) => fetch(`${s.url}/chat/completions`, { method: 'POST', headers: { authorization: 'Bearer k', 'content-type': 'application/json' }, body: JSON.stringify({ model: 'm', messages: [], ...corpo }) });
+      assert.equal((await pede({ max_tokens: 5 })).status, 400);
+      assert.equal((await pede({ max_completion_tokens: 5, temperature: 0 })).status, 400);
+      assert.equal((await pede({ max_completion_tokens: 5 })).status, 200);
+    });
+  });
+
+  it('o 429 de teto de gasto no formato da Anthropic tem o mesmo type de um limite de taxa e não traz retry-after', async () => {
+    await comServidor({ passos: CENARIOS['cota-esgotada-formato-b'].passos }, async (s) => {
+      const r = await fetch(`${s.url}/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'm', messages: [] }) });
+      const j = await r.json();
+      assert.equal(r.status, 429);
+      assert.equal(r.headers.get('retry-after'), null);
+      assert.equal(j.error.type, 'rate_limit_error');
+      assert.equal(j.error.details.error_code, 'enforced_spend_limit_reached');
+    });
   });
 
   it('a porta "fechada" realmente recusa conexões, e passos se repetem depois do último', async () => {
     const porta = await portaFechada();
     await assert.rejects(fetch(`http://127.0.0.1:${porta}/v1/chat/completions`, { method: 'POST', signal: AbortSignal.timeout(2000) }));
-    const s = await iniciarServidor({ passos: CENARIOS['servidor-instavel'].passos });
-    const chama = async () => (await fetch(`${s.url}/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'm', messages: [] }) })).status;
-    assert.deepEqual([await chama(), await chama(), await chama(), await chama()], [500, 503, 200, 200]);
-    await s.fechar();
+    await comServidor({ passos: CENARIOS['servidor-instavel'].passos }, async (s) => {
+      const chama = async () => (await fetch(`${s.url}/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'm', messages: [] }) })).status;
+      assert.deepEqual([await chama(), await chama(), await chama(), await chama()], [500, 503, 200, 200]);
+    });
+  });
+});
+
+describe('dividirComando (--comando com aspas e espaços)', () => {
+  it('respeita aspas duplas, separa por espaços fora delas e aceita um executável simples', () => {
+    assert.deepEqual(dividirComando('python'), ['python']);
+    assert.deepEqual(dividirComando('uv run python'), ['uv', 'run', 'python']);
+    assert.deepEqual(dividirComando('"C:\\Program Files\\Python\\python.exe" -X utf8'), ['C:\\Program Files\\Python\\python.exe', '-X', 'utf8']);
+    assert.deepEqual(dividirComando('  py   -3  '), ['py', '-3']);
+    assert.deepEqual(dividirComando(''), []);
   });
 });
 
@@ -125,6 +168,7 @@ describe('teste de mutação do verificador: cada defeito reprova o critério ce
     ['ignora o Retry-After', [['const espera = pedida ?? esperaDeBackoff(', 'const espera = esperaDeBackoff(']], ['CA5'], ['CA5'], /honre o cabeçalho/],
     ['sem backoff (espera zero)', [['esperaDeBackoff(tentativa, cfg.backoffBaseMs, cfg.backoffTetoMs, ganchos.aleatorio)', '0']], ['CA5'], ['CA5'], /não há espera/],
     ['ignora o teto do backoff', [['const limite = Math.min(tetoMs, baseMs * 2 ** (tentativaQueFalhou - 1));', 'const limite = baseMs * 2 ** (tentativaQueFalhou - 1);'], ['return Math.floor(aleatorio() * limite);', 'return limite;']], ['CA5'], ['CA5'], /BACKOFF_TETO_MS=100 não foi respeitado/],
+    ['ignora o teto do backoff MESMO com jitter (o caso que a revisão achou: passava ~20% das vezes)', [['const limite = Math.min(tetoMs, baseMs * 2 ** (tentativaQueFalhou - 1));', 'const limite = baseMs * 2 ** (tentativaQueFalhou - 1);']], ['CA5'], ['CA5'], /BACKOFF_TETO_MS=100 não foi respeitado/],
     ['ignora BACKOFF_BASE_MS (espera fixa grande)', [['const limite = Math.min(tetoMs, baseMs * 2 ** (tentativaQueFalhou - 1));', 'const limite = Math.min(tetoMs, 5000 * 2 ** (tentativaQueFalhou - 1));'], ['return Math.floor(aleatorio() * limite);', 'return limite;']], ['CA5'], ['CA5'], /antes da 2ª tentativa/],
     ['espera o Retry-After de uma hora', [['if (pedida !== null && pedida > cfg.esperaMaxMs) throw erro; // o provedor pediu mais espera do que aceitamos: desista, não trave', '']], ['CA5'], ['CA1', 'CA5'], /desistir na hora/, { limiteMs: 4000 }],
     ['sem timeout', [['signal: AbortSignal.timeout(cfg.timeoutMs),', '']], ['CA6'], ['CA6'], /deveria dar erro "timeout"/],
@@ -143,6 +187,15 @@ describe('teste de mutação do verificador: cada defeito reprova o critério ce
       assert.match(res.resultados.filter((c) => !c.ok).map((c) => c.problemas.join('\n')).join('\n'), mensagem);
     });
   }
+
+  it('429 de teto de gasto no formato da Anthropic tratado como limite de taxa dá AVISO (o critério muda por provedor); a referência o trata como cota', async () => {
+    const semOCampo = estragar(['const detalhe = typeof e?.details?.error_code === \'string\' ? e.details.error_code : \'\';', 'const detalhe = \'\';']);
+    const comOAviso = await verificar(await entrega({ codigo: semOCampo }));
+    assert.deepEqual(falhas(comOAviso), [], 'não reprova: o critério de cota muda por provedor');
+    assert.match(comOAviso.avisos.join('\n'), /formato da Anthropic/);
+    const referencia = await verificar(await entrega());
+    assert.deepEqual(referencia.avisos, []);
+  });
 
   it('só dá AVISO (não reprova) para Retry-After em data e para timeout só por inatividade', async () => {
     const res = await verificar(await entrega({
@@ -216,6 +269,103 @@ describe('o verificador não trava nem quebra com entregas ruins', () => {
     assert.deepEqual(falhas(res), ['CA7']);
     assert.match(problemas(res, 'CA7'), /possível segredo no código/);
     assert.ok(!JSON.stringify(res).includes('a1b2c3d4e5f6'), 'a chave não pode aparecer na saída do verificador');
+  });
+});
+
+describe('variações corretas que o verificador DEVE aceitar (falsos negativos que a revisão encontrou)', () => {
+  const pythonDisponivel = ['python3', 'python'].find((c) => {
+    try { return /Python 3\./.test(execFileSync(c, ['--version'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })); } catch { return false; }
+  });
+
+  it('a ordem das chaves de objetos não importa (messages e usage em outra ordem; json.dumps com sort_keys)', { skip: !temTypeScript && 'este Node não executa .ts' }, async () => {
+    const codigo = estragar(
+      ["messages: [{ role: 'user', content: prompt }]", "messages: [{ content: prompt, role: 'user' }]"],
+      ['usage: { prompt_tokens: uso.prompt_tokens ?? 0, completion_tokens: uso.completion_tokens ?? 0, total_tokens: uso.total_tokens ?? 0 },', 'usage: { total_tokens: uso.total_tokens ?? 0, completion_tokens: uso.completion_tokens ?? 0, prompt_tokens: uso.prompt_tokens ?? 0 },'],
+    );
+    assert.deepEqual(falhas(await verificar(await entrega({ codigo }), { so: ['CA2'] })), []);
+  });
+
+  it('Python com sort_keys=True e com ensure_ascii desligado passa, também com --comando (o ambiente força UTF-8)', { skip: !pythonDisponivel && 'Python 3 não encontrado' }, async () => {
+    const trocar = (de, para) => { assert.equal(REF_PY.split(de).length, 2, de); return REF_PY.replace(de, () => para); };
+    let codigo = trocar('body=json.dumps(corpo).encode("utf-8")', 'body=json.dumps(corpo, sort_keys=True).encode("utf-8")');
+    codigo = codigo.replace('print(json.dumps({"ok": True, **r}))', 'print(json.dumps({"ok": True, **r}, sort_keys=True, ensure_ascii=False))');
+    const pasta = await entrega({ arquivo: 'chamar.py', codigo });
+    assert.deepEqual(falhas(await verificar(pasta, { so: ['CA2'] })), []);
+    assert.deepEqual(falhas(await verificar(pasta, { so: ['CA2'], comando: pythonDisponivel })), [], 'com --comando o texto acentuado continua certo');
+  });
+
+  it('constantes em MAIÚSCULAS que leem o ambiente (padrão de Python e de JavaScript) não reprovam o CA7', { skip: !temTypeScript && 'este Node não executa .ts' }, async () => {
+    const extra = ['', 'const env = process.env;', 'const MAX_TOKENS = Number(process.env.MAX_TOKENS ?? 64);', 'const API_KEY = process.env.OPENAI_API_KEY;', 'const CHAVE_API_KEY = env.OPENAI_API_KEY ?? "";', ''].join('\n');
+    const res = await verificar(await entrega({ codigo: `${REF_TS}${extra}` }), { so: ['CA7'] });
+    assert.deepEqual(falhas(res), [], problemas(res, 'CA7'));
+  });
+
+  it('o programa que lê o stdin recebe o fim do arquivo (não trava até o limite de tempo)', async () => {
+    const t0 = Date.now();
+    const res = await verificar(await entrega({ arquivo: 'chamar.mjs', codigo: "process.stdin.resume(); process.stdin.on('end', () => console.log('fim'));" }), { limiteMs: 6000 });
+    assert.ok(Date.now() - t0 < 5500, 'não esperou o limite de tempo');
+    assert.doesNotMatch(problemas(res, 'CA1'), /não terminou/);
+    assert.match(problemas(res, 'CA1'), /não é JSON válido/);
+  });
+
+  it('sintaxe que o Node não executa (um enum): o CA1 mostra o erro do stderr em vez de só "veio 0 linhas"', { skip: !temTypeScript && 'este Node não executa .ts' }, async () => {
+    const res = await verificar(await entrega({ codigo: `enum Cor { A, B }\n${REF_TS}` }));
+    assert.deepEqual(falhas(res).slice(0, 1), ['CA1']);
+    assert.match(problemas(res, 'CA1'), /stderr do programa: .*ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX/);
+  });
+
+  it('a pasta da entrega pode estar atrás de um symlink ou junction (o programa não "some" por causa disso)', { skip: !temTypeScript && 'este Node não executa .ts' }, async (t) => {
+    const pasta = await entrega();
+    const atalho = `${pasta}-atalho`;
+    try { symlinkSync(pasta, atalho, process.platform === 'win32' ? 'junction' : 'dir'); } catch { t.skip('não consegui criar o link nesta máquina'); return; }
+    temporarias.push(atalho);
+    assert.deepEqual(falhas(await verificar(atalho, { so: ['CA2'] })), []);
+  });
+
+  it('o limite de tempo não conta a partida lenta do interpretador (máquina carregada, antivírus, disco lento)', { skip: !temTypeScript && 'este Node não executa .ts' }, async () => {
+    const lento = estragar(['  process.exitCode = await principal(process.argv.slice(2), process.env);', '  await new Promise((resolve) => setTimeout(resolve, 2500)); // simula uma partida lenta\n  process.exitCode = await principal(process.argv.slice(2), process.env);']);
+    const res = await verificar(await entrega({ codigo: lento }), { so: ['CA6'] });
+    assert.deepEqual(falhas(res), [], problemas(res, 'CA6'));
+  });
+});
+
+describe('--arquivo e --comando', () => {
+  it('com dois programas na pasta, --comando exige dizer qual (--arquivo); sem --comando só avisa', { skip: !temTypeScript && 'este Node não executa .ts' }, async () => {
+    const pasta = await entrega();
+    await writeFile(path.join(pasta, 'chamar.py'), REF_PY);
+    const semArquivo = await verificar(pasta, { comando: process.execPath.includes(' ') ? `"${process.execPath}"` : process.execPath, so: ['CA2'] });
+    assert.match(problemas(semArquivo, 'CA1'), /diga qual verificar com --arquivo chamar\.ts/);
+    const inexistente = await verificar(pasta, { arquivo: 'chamar.rb', so: ['CA2'] });
+    assert.match(problemas(inexistente, 'CA1'), /não encontrei esse programa/);
+    const automatico = await verificar(pasta, { so: ['CA2'] });
+    assert.deepEqual(falhas(automatico), []);
+    assert.match(automatico.avisos.join('\n'), /mais de um programa.*--arquivo/);
+  });
+
+  it('--arquivo escolhe QUAL programa verificar quando há mais de um (o primeiro da ordem não é o único possível)', async () => {
+    const pasta = await entrega();
+    await writeFile(path.join(pasta, 'chamar.mjs'), "console.log('isto não é o JSON do contrato');");
+    const padrao = await verificar(pasta, { so: ['CA2'] });
+    assert.deepEqual(falhas(padrao), [], 'sem --arquivo vale o primeiro (chamar.ts)');
+    const escolhido = await verificar(pasta, { arquivo: 'chamar.mjs', so: ['CA2'] });
+    assert.ok(falhas(escolhido).includes('CA1'), 'com --arquivo chamar.mjs verifica o outro programa');
+    assert.match(problemas(escolhido, 'CA1'), /não é JSON válido/);
+  });
+
+  it('um programa que decora o texto da resposta (o servidor sorteia o texto e o usage a cada execução) reprova o CA2', async () => {
+    const decorado = [
+      'const r = await fetch(`${process.env.OPENAI_BASE_URL}/chat/completions`, { method: "POST", headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "content-type": "application/json" }, body: JSON.stringify({ model: process.env.MODELO_CHAT, messages: [{ role: "user", content: process.argv[2] }], max_tokens: 64, temperature: 0 }) });',
+      'const j = await r.json();',
+      'console.log(JSON.stringify({ ok: true, texto: "Olá", finish_reason: j.choices[0].finish_reason, usage: j.usage, tentativas: 1 }));',
+    ].join('\n');
+    const res = await verificar(await entrega({ arquivo: 'chamar.mjs', codigo: decorado }), { so: ['CA2'] });
+    assert.deepEqual(falhas(res), ['CA2']);
+    assert.match(problemas(res, 'CA2'), /texto deveria ser o que o servidor devolveu/);
+  });
+
+  it('--comando aceita um caminho entre aspas (com espaços, como o node.exe em "Program Files")', { skip: !temTypeScript && 'este Node não executa .ts' }, async () => {
+    const res = await verificar(await entrega(), { comando: `"${process.execPath}"`, so: ['CA2'] });
+    assert.deepEqual(falhas(res), [], problemas(res, 'CA2'));
   });
 });
 

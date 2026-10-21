@@ -31,6 +31,10 @@ export const CENARIOS = {
   'derruba-conexao': { descricao: 'aceita a conexão e a derruba sem responder', passos: [{ tipo: 'derruba' }] },
   'chave-invalida': { descricao: '401 que repete a chave recebida na mensagem', passos: [{ tipo: 'autenticacao' }] },
   'requisicao-invalida': { descricao: '400 de requisição inválida', passos: [http_(400, erroJson('Invalid value for messages', 'invalid_request_error', 'invalid_value'))] },
+  'cota-esgotada-formato-b': {
+    descricao: '429 de teto de gasto no formato da Anthropic: type "rate_limit_error", SEM retry-after; só error.details.error_code o distingue',
+    passos: [http_(429, { type: 'error', error: { type: 'rate_limit_error', message: 'You have reached your API usage limits.', details: { error_code: 'enforced_spend_limit_reached' } }, request_id: 'req_falso' })],
+  },
   'cota-esgotada': { descricao: '429 de cota esgotada (esperar não adianta)', passos: [http_(429, erroJson('You exceeded your current quota, please check your plan and billing details.', 'insufficient_quota', 'insufficient_quota'))] },
   'truncado': { descricao: '200 com finish_reason "length" (resposta cortada)', passos: [ok('Olá, tudo be', { finish_reason: 'length', uso: { prompt_tokens: 14, completion_tokens: 64, total_tokens: 78 } })] },
   'html-no-lugar-de-json': { descricao: '200 com uma página HTML (proxy ou balanceador no meio)', passos: [{ tipo: 'http', status: 200, corpo: '<html><body>Bad gateway page</body></html>', cabecalhos: { 'content-type': 'text/html' } }] },
@@ -57,7 +61,7 @@ function respostaDeChat(texto, modelo, finish_reason, uso) {
  * @param {{ passos: object[], perfil?: 'ollama'|'openai-novo', porta?: number }} opcoes
  * @returns {Promise<{ url: string, registro: object[], fechar: () => Promise<void> }>}
  */
-export async function iniciarServidor({ passos, perfil = 'ollama', porta = 0 }) {
+export async function iniciarServidor({ passos, perfil = 'ollama', porta = 0, resposta }) {
   const registro = [];
   const servidor = http.createServer(async (req, res) => {
     const texto = await lerCorpo(req);
@@ -77,7 +81,10 @@ export async function iniciarServidor({ passos, perfil = 'ollama', porta = 0 }) 
 
     const passo = passos[Math.min(indice, passos.length - 1)];
     const executar = async (p) => {
-      if (p.tipo === 'ok') return json(200, respostaDeChat(p.texto, corpo.model, p.finish_reason, p.uso));
+      if (p.tipo === 'ok') {
+        const [texto, uso] = resposta && p.finish_reason === 'stop' ? [resposta.texto, resposta.uso] : [p.texto, p.uso];
+        return json(200, respostaDeChat(texto, corpo.model, p.finish_reason, uso));
+      }
       if (p.tipo === 'http') {
         const cab = Object.fromEntries(Object.entries(p.cabecalhos ?? {}).map(([k, v]) => [k, resolver(v)]));
         if (typeof p.corpo === 'string') { res.writeHead(p.status, { 'content-type': 'text/plain', ...cab }); return res.end(p.corpo); }
@@ -100,7 +107,7 @@ export async function iniciarServidor({ passos, perfil = 'ollama', porta = 0 }) 
         res.on('close', () => { cancelado = true; });
         const fim = performance.now() + p.ms;
         while (!cancelado && performance.now() < fim) { res.write(' '); await new Promise((r) => setTimeout(r, 100)); }
-        return cancelado ? undefined : res.end(JSON.stringify(respostaDeChat('Olá', corpo.model, 'stop', { prompt_tokens: 14, completion_tokens: 2, total_tokens: 16 })));
+        return cancelado ? undefined : res.end(JSON.stringify(respostaDeChat(resposta?.texto ?? 'Olá', corpo.model, 'stop', resposta?.uso ?? { prompt_tokens: 14, completion_tokens: 2, total_tokens: 16 })));
       }
       return json(500, erroJson(`passo desconhecido: ${p.tipo}`, 'api_error', null));
     };
@@ -139,7 +146,7 @@ if (ehPrincipal(import.meta.url)) {
   let ja = 0;
   setInterval(() => {
     for (const r of srv.registro.slice(ja)) {
-      const auth = r.cabecalhos.authorization ? `${String(r.cabecalhos.authorization).slice(0, 10)}***` : '(sem chave)';
+      const auth = r.cabecalhos.authorization ? (/^Bearer /.test(r.cabecalhos.authorization) ? 'Bearer ***' : '(oculto)') : '(sem chave)';
       console.log(`#${r.n} ${r.metodo} ${r.caminho} auth=${auth} corpo=${(r.corpoBruto ?? '').slice(0, 160)}`);
     }
     ja = srv.registro.length;
