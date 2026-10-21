@@ -2,7 +2,13 @@
 // O núcleo é um TESTE DE MUTAÇÃO do verificador: pegamos a solução de referência em TypeScript, estragamos UMA coisa de cada vez (não repetir,
 // repetir demais, ignorar o Retry-After, vazar a chave...) e exigimos que o verificador reprove exatamente o critério certo.
 //
-//   node --test academia/licoes/02-apis-erros-e-integracao/licao.test.mjs
+// LENTO (cerca de 3 minutos): executa os programas de referência de verdade, centenas de vezes. Por isso o arquivo termina em
+// `.lento.mjs` e fica FORA do `node --test "academia/**/*.test.mjs"`. Rode com:
+//
+//   node academia/ferramentas/testar.mjs --lentos
+//   node --test academia/licoes/02-apis-erros-e-integracao/licao.lento.mjs     # só este arquivo
+//
+// Rode antes de mexer em `verificar.mjs`, `kit/` ou `referencia/`, e sempre no CI (`testar.mjs --tudo`).
 import assert from 'node:assert/strict';
 import { execFile, execFileSync } from 'node:child_process';
 import { symlinkSync } from 'node:fs';

@@ -6,7 +6,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { after, afterEach, before, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   analisarAluno, carregarConfig, criarAluno, criarSessao, frontMatter, gerarRegistros, inteiro, main, montarKit, renderProgresso,
@@ -16,7 +16,20 @@ import { acharSegredos, enderecoSeguro, limparSaida } from './comum.mjs';
 
 const RAIZ_REAL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const temporarios = [];
-afterEach(() => { while (temporarios.length) fs.rmSync(temporarios.pop(), { recursive: true, force: true }); });
+/**
+ * Apaga uma pasta temporária. Junções/symlinks (as cópias de `copiarRepo` apontam para pastas do repositório REAL) são desfeitas ANTES, uma a uma:
+ * assim, mesmo num Node que seguisse a junção ao apagar, nunca se toca no original.
+ */
+function apagarTmp(dir) {
+  try {
+    for (const nome of fs.readdirSync(dir)) {
+      const p = path.join(dir, nome);
+      if (fs.lstatSync(p).isSymbolicLink()) fs.unlinkSync(p);
+    }
+  } catch { /* pasta já removida */ }
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+afterEach(() => { while (temporarios.length) apagarTmp(temporarios.pop()); });
 
 const novoTmp = (prefixo) => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), prefixo));
@@ -32,11 +45,30 @@ function montarRaiz() {
   return raiz;
 }
 
-/** Cópia completa do repositório real (sem .git), para os testes que validam o conjunto. */
+/**
+ * Cópia do repositório real (sem .git) para os testes que validam o conjunto. Só `academia/` é copiado de verdade (é o que os testes
+ * alteram); as outras pastas do topo (modulos/, referencia/...) entram como ligação para o original, só para os links terem alvo.
+ * Copiar os ~1000 arquivos custava de 6 a 17 s por teste (o Windows examina cada arquivo recém-gravado); assim custa menos de 1 s.
+ * Se a ligação não puder ser criada (sem permissão), cai na cópia completa.
+ */
 function copiarRepo() {
   const raiz = novoTmp('academia-repo-');
-  fs.cpSync(RAIZ_REAL, raiz, { recursive: true, filter: (origem) => !/[\\/](\.git|node_modules)([\\/]|$)/.test(origem) });
+  preencherCopia(raiz);
   return raiz;
+}
+function preencherCopia(raiz) {
+  const semGitENodeModules = (origem) => !/[\\/](\.git|node_modules)([\\/]|$)/.test(origem);
+  for (const e of fs.readdirSync(RAIZ_REAL, { withFileTypes: true })) {
+    if (e.name === '.git' || e.name === 'node_modules') continue;
+    const origem = path.join(RAIZ_REAL, e.name);
+    const destino = path.join(raiz, e.name);
+    if (e.name === 'academia' || !e.isDirectory()) { fs.cpSync(origem, destino, { recursive: true, filter: semGitENodeModules }); continue; }
+    try {
+      fs.symlinkSync(origem, destino, 'junction');
+    } catch {
+      fs.cpSync(origem, destino, { recursive: true, filter: semGitENodeModules });
+    }
+  }
 }
 
 /** Configuração real com todas as etapas "prontas" (os testes de regras de XP usam etapas além da 1). */
@@ -753,12 +785,21 @@ describe('kit de colagem', () => {
 
 describe('seção 15 das lições (aplicação, reforço e desafios)', () => {
   const LICAO1 = 'academia/licoes/01-tokens-contexto-inferencia';
-  /** Copia o repositório, aplica a alteração a um arquivo e devolve só as mensagens de erro da validação. */
+  // Uma cópia só para a seção inteira (os casos rodam em sequência): cada caso altera um arquivo, valida e RESTAURA o original.
+  // Copiar o repositório de novo a cada caso era o que tornava esta seção lenta.
+  let base;
+  before(() => { base = fs.mkdtempSync(path.join(os.tmpdir(), 'academia-secao15-')); preencherCopia(base); });
+  after(() => { if (base) apagarTmp(base); });
+  /** Aplica a alteração a um arquivo da cópia, devolve só as mensagens de erro da validação e restaura o arquivo. */
   function errosCom(rel, alterar) {
-    const copia = copiarRepo();
-    const arq = path.join(copia, rel);
-    fs.writeFileSync(arq, alterar(fs.readFileSync(arq, 'utf8').replace(/\r\n/g, '\n')));
-    return validarTudo(copia).erros.map((e) => `${e.arquivo}: ${e.mensagem}`).join('\n');
+    const arq = path.join(base, rel);
+    const original = fs.readFileSync(arq);
+    try {
+      fs.writeFileSync(arq, alterar(original.toString('utf8').replace(/\r\n/g, '\n')));
+      return validarTudo(base).erros.map((e) => `${e.arquivo}: ${e.mensagem}`).join('\n');
+    } finally {
+      fs.writeFileSync(arq, original);
+    }
   }
 
   it('o conteúdo real tem os cinco blocos na ordem, V1 a V5 na lição 1 e a correção de cada uma no gabarito', () => {

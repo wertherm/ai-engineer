@@ -437,7 +437,7 @@ OpenAI, citada na Lição 1, bloqueia clientes automatizados).
 4. o nome do campo do teto de saída e os modelos que recusam `temperature` (Lição 1);
 5. a versão do TypeScript que entende `erasableSyntaxOnly` (5.8 ou superior).
 
-**Limitação desta versão:** o laboratório e o verificador foram testados **só contra o servidor falso** (`licao.test.mjs`, com teste de mutação do verificador: 20 defeitos
+**Limitação desta versão:** o laboratório e o verificador foram testados **só contra o servidor falso** (`licao.lento.mjs`, o teste lento: `node academia/ferramentas/testar.mjs --lentos`; com teste de mutação do verificador: 20 defeitos
 injetados na referência, cada um reprovando o critério esperado) e contra as duas referências (TypeScript, no Node 22.22.0 do Windows 11, e Python, na versão 3.12 só com a biblioteca padrão, que o código exige em 3.10 ou superior; o
 repositório mira o Python 3.14). A referência em TypeScript também foi conferida à mão com o `tsc` 5.9.3 em modo `strict` e `erasableSyntaxOnly` (isso não faz parte dos testes do repositório,
 que não têm dependências). **Nada foi executado contra um LLM ou um provedor real**: a extensão `opcional` (a) é a primeira chance de fazer isso, e deve registrar o modelo e o que o servidor

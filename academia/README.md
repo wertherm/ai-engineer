@@ -72,7 +72,7 @@ Atualizado em 2026-10-19, depois dos PRs #2 (extensões), #3 (versão Python dos
    (começando pelo núcleo de memória e pelo registro de ferramentas, que são pequenos e têm testes que viram `pytest`). Decisão do Werther e do responsável pelo projeto.
 7. **Completar o time de agentes:** `--veredito` (o seu veredito final virar lição candidata), ferramenta de busca para o P5, papel `tutor` para o P6, verificador de comandos de README para o P2 e um
    conjunto de tarefas de ouro (fase F5) para medir cada mudança de prompt ou limiar.
-8. **CI mínimo.** Não existe `.github/`. Um workflow que rode `validar` e `node --test "academia/**/*.test.mjs"` em cada PR evita regressões silenciosas (os testes Python dos módulos dependem de `uv` e,
+8. **CI mínimo.** Não existe `.github/`. Um workflow que rode `validar` e `node academia/ferramentas/testar.mjs --tudo` (rápidos e lentos) em cada PR evita regressões silenciosas (os testes Python dos módulos dependem de `uv` e,
    alguns, de serviços locais: ficam fora do primeiro corte).
 9. **Decisões em aberto:** o formato de sessão em JSON (lição como prompt e comando `aplicar`) discutido antes do PR #2 não foi implementado; registre uma decisão (ADR) ou descarte.
 
@@ -101,8 +101,13 @@ node academia/ferramentas/academia.mjs validar --aluno <aluno> # conteúdo, link
 node academia/ferramentas/academia.mjs progresso <aluno>      # recria o retomada.md dele e o PROGRESS.md
 node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"
 node academia/ferramentas/academia.mjs validar                # tudo, de todos os alunos (mantenedores)
-node --test "academia/**/*.test.mjs"                          # testes da ferramenta e das lições
+node academia/ferramentas/testar.mjs                          # testes rápidos (o dia a dia, 1 a 2 min); o mesmo que node --test "academia/**/*.test.mjs"
+node academia/ferramentas/testar.mjs --lentos                 # testes lentos (executam programas de verdade, 3 a 10 min)
+node academia/ferramentas/testar.mjs --tudo                   # os dois grupos: o que o CI deve rodar
 ```
+
+**Testes rápidos × lentos.** Um teste é lento quando executa programas de verdade (hoje, o verificador da Lição 2 rodando as referências e 20 mutantes). Esses arquivos terminam em
+`.lento.mjs`, não em `.test.mjs`, e por isso o comando de sempre não os pega. Rode `--lentos` antes de mexer no verificador, no `kit/` ou nas `referencia/` de uma lição, e `--tudo` antes de abrir um PR que os toque.
 
 Precisa de **Node 22 ou superior** (o repositório usa o Node 24). Não há dependências para instalar. Os laboratórios
 usam um endpoint de LLM compatível com a API de chat: o Ollama do repositório (`bash infra/subir-ia.sh`) ou um

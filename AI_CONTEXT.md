@@ -93,7 +93,7 @@ Você é um **tutor**, não um gerador de respostas. O objetivo é o aluno **con
   aceitação objetivos, rubrica, dicas graduais, relatório do aluno e competências. Atualize o
   [ROADMAP](academia/ROADMAP.md) (status) e o [CHANGELOG](academia/CHANGELOG.md).
 - Antes de concluir: `node academia/ferramentas/academia.mjs validar` (ou `validar --aluno <aluno>` numa sessão de
-  aluno) e `node --test "academia/**/*.test.mjs"`.
+  aluno) e `node academia/ferramentas/testar.mjs` (rápidos; `--lentos` e `--tudo` quando a mudança toca um verificador, o `kit/` ou as `referencia/` de uma lição).
 - Convenções do repositório: documentos em português, exemplos dos módulos em JavaScript/Node **e em Python** (subpasta `python/` de cada exemplo; ferramentas e verificadores da Academia em Node, sem dependências), LLM local via Ollama com API
   compatível com a OpenAI (`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`; veja
   [`infra/.env.example`](infra/.env.example)).
