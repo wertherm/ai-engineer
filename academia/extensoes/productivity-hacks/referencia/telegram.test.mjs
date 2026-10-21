@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { criarRegistro } from '../../harness-de-agentes/referencia/registro-de-ferramentas.mjs';
-import { ErroTelegram, consumirAtualizacoes, criarCanalDeAprovacao, criarClienteTelegram, criarProcessador, criarVistos, dividirTexto, escaparHtml, mascararToken } from './ponte-telegram.mjs';
+import { ErroTelegram, aguardarTratadores, consumirAtualizacoes, criarCanalDeAprovacao, criarClienteTelegram, criarProcessador, criarVistos, dividirTexto, escaparHtml, mascararToken } from './ponte-telegram.mjs';
 import { executarDemonstracao } from './demo-aprovacao.mjs';
 import { CREDENCIAL_DE_TESTE, iniciarTelegramFalso } from './telegram-falso.mjs';
 
@@ -481,11 +481,31 @@ describe('processador: quem pode falar e updates repetidos', () => {
     const auditoria = [];
     const processador = criarProcessador({
       permitidos: [DONO], auditoria: (e) => auditoria.push(e),
-      aoMensagem: (e) => { if (e.texto === 'quebra') throw new Error(`falhou com ${CREDENCIAL_DE_TESTE} e sk-abcdefghijklmnopqrstuvwx`); },
+      aoMensagem: (e) => { if (e.texto === 'quebra') throw new Error(`falhou: GET https://api.telegram.org/bot${CREDENCIAL_DE_TESTE}/sendMessage e sk-abcdefghijklmnopqrstuvwx e outro 987654321:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw`); },
     });
     assert.equal((await processador.processar(msg(DONO, 'quebra', 1))).resultado, 'erro');
     assert.equal((await processador.processar(msg(DONO, 'normal', 2))).resultado, 'processado');
-    assert.ok(!JSON.stringify(auditoria).includes('abcdefghijklmnopqrstuvwx'));
+    const gravado = JSON.stringify(auditoria);
+    assert.ok(gravado.includes('"resultado":"erro"'), 'o erro foi registrado');
+    for (const segredo of ['abcdefghijklmnopqrstuvwx', 'TOKEN-FALSO', 'AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw']) assert.ok(!gravado.includes(segredo), `${segredo} vazou para a auditoria`);
+  });
+
+  it('update com mensagem E clique ao mesmo tempo (o Telegram nunca manda) é recusado; edited_message do dono é "tipo ignorado", não "não permitido"', async () => {
+    const { processador, mensagens, callbacks, auditoria } = montar();
+    const dois = { update_id: 1, message: { message_id: 1, from: { id: DONO }, chat: { id: DONO }, text: 'oi' }, callback_query: { id: 'x', from: { id: 666 }, data: 'ok:aaaaaaaaaaaa', message: { message_id: 1, chat: { id: DONO } } } };
+    assert.equal((await processador.processar(dois)).resultado, 'invalido');
+    assert.deepEqual([mensagens.length, callbacks.length], [0, 0]);
+    const editada = { update_id: 2, edited_message: { message_id: 1, from: { id: DONO }, chat: { id: DONO }, text: 'oi de novo' } };
+    assert.equal((await processador.processar(editada)).resultado, 'tipo_ignorado');
+    assert.equal(auditoria.at(-1).de, DONO);
+    const deEstranho = { update_id: 3, edited_message: { message_id: 1, from: { id: ESTRANHO }, chat: { id: ESTRANHO }, text: 'x' } };
+    assert.equal((await processador.processar(deEstranho)).resultado, 'nao_permitido');
+  });
+
+  it('IDs de usuário precisam ser positivos e diferentes de zero (chats de grupo, que são negativos, vão em permitidosChats)', () => {
+    for (const ruim of [[0], ['-0'], [-5], [42, -1]]) assert.throws(() => criarProcessador({ permitidos: ruim }), TypeError, JSON.stringify(ruim));
+    assert.doesNotThrow(() => criarProcessador({ permitidos: [42], permitidosChats: [-100123, 42] }));
+    assert.throws(() => criarProcessador({ permitidos: [42], permitidosChats: [0] }), TypeError);
   });
 
   it('uma auditoria que lança nunca derruba o bot', async () => {
@@ -510,11 +530,44 @@ describe('consumirAtualizacoes: confirma só o que foi processado e não repete'
       falso.injetarMensagem({ de: ESTRANHO, texto: 'intruso' });
       falso.injetarMensagem({ de: DONO, texto: 'dois' });
       const r1 = await consumirAtualizacoes(cliente, processador, estado);
-      assert.deepEqual(r1.map((r) => r.resultado), ['processado', 'nao_permitido', 'processado']);
+      // mensagens rodam em segundo plano (ver o teste do impasse); o resultado final vem em `concluido`
+      assert.deepEqual(r1.map((r) => r.resultado), ['iniciado', 'nao_permitido', 'iniciado']);
+      assert.deepEqual((await Promise.all(r1.filter((r) => r.concluido).map((r) => r.concluido))).map((r) => r.resultado), ['processado', 'processado']);
+      await aguardarTratadores(estado);
       assert.deepEqual(vistos, ['um', 'dois']);
       assert.equal(falso.updatesPendentes(), 3, 'a confirmação só acontece na PRÓXIMA chamada, com o offset');
       assert.deepEqual(await consumirAtualizacoes(cliente, processador, estado), []);
       assert.equal(falso.updatesPendentes(), 0);
+    });
+  });
+
+  it('pede só message e callback_query ao Telegram (o resto seria marcado como visto à toa)', async () => {
+    await comFalso(async (falso) => {
+      const { cliente } = clienteDoFalso(falso);
+      const processador = criarProcessador({ permitidos: [DONO], aoMensagem: () => {} });
+      await consumirAtualizacoes(cliente, processador, {});
+      assert.deepEqual(falso.chamadasDe('getUpdates')[0].params.allowed_updates, ['message', 'callback_query']);
+    });
+  });
+
+  it('mensagens do MESMO chat rodam uma de cada vez e em ordem; chats diferentes andam juntos', async () => {
+    await comFalso(async (falso) => {
+      const { cliente } = clienteDoFalso(falso);
+      const linha = [];
+      const processador = criarProcessador({
+        permitidos: [DONO, ESTRANHO],
+        aoMensagem: async (e) => { linha.push(`ini-${e.texto}`); await new Promise((ok) => setTimeout(ok, e.texto === 'a1' ? 60 : 5)); linha.push(`fim-${e.texto}`); },
+      });
+      const estado = {};
+      falso.injetarMensagem({ de: DONO, texto: 'a1' });
+      falso.injetarMensagem({ de: DONO, texto: 'a2' });
+      falso.injetarMensagem({ de: ESTRANHO, texto: 'b1' });
+      await consumirAtualizacoes(cliente, processador, estado);
+      await aguardarTratadores(estado);
+      assert.ok(linha.indexOf('fim-a1') < linha.indexOf('ini-a2'), `a2 não pode começar antes de a1 acabar: ${linha}`);
+      assert.ok(linha.indexOf('ini-b1') < linha.indexOf('fim-a1'), `o outro chat não espera: ${linha}`);
+      assert.equal(estado.emAndamento.size, 0);
+      assert.equal(estado.cadeias.size, 0, 'nada fica preso na memória');
     });
   });
 
@@ -658,48 +711,327 @@ describe('canal de aprovação por botões', () => {
   });
 
   it('configuração inválida é recusada', () => {
+    const minimo = { chamar() {}, editarTexto() {}, responderCallback() {} };
     assert.throws(() => criarCanalDeAprovacao({}), TypeError);
-    assert.throws(() => criarCanalDeAprovacao({ cliente: { chamar() {} }, chatId: '42', permitidos: [DONO] }), TypeError);
-    assert.throws(() => criarCanalDeAprovacao({ cliente: { chamar() {} }, chatId: DONO, permitidos: [] }), /vazio/);
-    assert.throws(() => criarCanalDeAprovacao({ cliente: { chamar() {} }, chatId: DONO, permitidos: [DONO], esperaMaxMs: 0 }), RangeError);
+    assert.throws(() => criarCanalDeAprovacao({ cliente: minimo, chatId: '42', permitidos: [DONO] }), TypeError);
+    assert.throws(() => criarCanalDeAprovacao({ cliente: minimo, chatId: DONO, permitidos: [] }), /vazio/);
+    assert.throws(() => criarCanalDeAprovacao({ cliente: minimo, chatId: DONO, permitidos: [DONO], esperaMaxMs: 0 }), RangeError);
   });
 });
 
-describe('o conjunto: registro de ferramentas + canal de aprovação + processador', () => {
-  it('a ação irreversível só executa depois do clique do dono; negar não executa; fora do esquema nem pergunta', async () => {
+describe('canal de aprovação: parâmetros, fila e auditoria', () => {
+  const montar = async (falso, extra = {}) => {
+    const { cliente } = clienteDoFalso(falso);
+    const eventos = [];
+    const canal = criarCanalDeAprovacao({ cliente, chatId: DONO, permitidos: [DONO], esperaMaxMs: 5000, auditoria: (e) => eventos.push(e), ...extra });
+    return { canal, cliente, eventos };
+  };
+  const esperar = async (cond, ms = 2000) => { for (let i = 0; i < ms / 5 && !cond(); i++) await new Promise((ok) => setTimeout(ok, 5)); };
+  const base = { ferramenta: 'enviar_email', risco: 'irreversivel', quem: 'agente' };
+
+  it('mostra os parâmetros COMPLETOS (de `argumentos`), inclusive o destinatário que viria depois de 1000 caracteres', async () => {
+    await comFalso(async (falso) => {
+      const { canal } = await montar(falso);
+      const argumentos = { nota: 'A'.repeat(1500), destino: 'atacante@exemplo.net' };
+      const pedido = canal.aprovar({ ...base, argumentos, resumo: JSON.stringify(argumentos).slice(0, 1000) });
+      await esperar(() => canal.pendentes() === 1);
+      const texto = falso.mensagensEnviadas()[0].text;
+      assert.ok(texto.includes('atacante@exemplo.net'), 'o destino precisa estar na tela de quem aprova');
+      assert.ok(texto.includes('A'.repeat(1500)));
+      canal.cancelarTodos();
+      await pedido;
+    });
+  });
+
+  it('parâmetros grandes demais para revisar: NEGA sem perguntar e avisa o dono (aprovar o que não se vê é carimbo)', async () => {
+    await comFalso(async (falso) => {
+      const { canal, eventos } = await montar(falso, { maxParametrosChars: 500 });
+      assert.equal(await canal.aprovar({ ...base, argumentos: { nota: 'B'.repeat(900) } }), false);
+      await esperar(() => falso.mensagensEnviadas().length === 1);
+      const [aviso] = falso.mensagensEnviadas();
+      assert.match(aviso.text, /NEGADO sem perguntar/);
+      assert.equal(aviso.reply_markup, undefined, 'não há botão para aprovar');
+      assert.equal(canal.pendentes(), 0);
+      assert.equal(eventos[0].decisao, 'recusado_parametros_grandes');
+    });
+  });
+
+  it('teto de pedidos esperando resposta: o excedente é negado na hora (fadiga de aprovação)', async () => {
+    await comFalso(async (falso) => {
+      const { canal, eventos } = await montar(falso, { maxPendentes: 1 });
+      const primeiro = canal.aprovar({ ...base, argumentos: { n: 1 } });
+      await esperar(() => canal.pendentes() === 1);
+      assert.equal(await canal.aprovar({ ...base, argumentos: { n: 2 } }), false);
+      assert.equal(falso.mensagensEnviadas().length, 1, 'o excedente nem chegou ao celular');
+      assert.equal(eventos.at(-1).decisao, 'recusado_fila_cheia');
+      canal.cancelarTodos();
+      await primeiro;
+    });
+  });
+
+  it('auditoria: quem decidiu, quando e o quê; nunca os valores dos parâmetros', async () => {
+    await comFalso(async (falso) => {
+      const { canal, eventos } = await montar(falso);
+      const pedido = canal.aprovar({ ...base, argumentos: { destino: 'ana@exemplo.net', texto: 'conteúdo sigiloso' } });
+      await esperar(() => canal.pendentes() === 1);
+      const m = falso.mensagensEnviadas()[0];
+      await canal.tratarCallback({ id: 'cb-1', dado: m.reply_markup.inline_keyboard[0][0].callback_data, de: DONO, mensagem: { message_id: m.message_id, chat: m.chat } });
+      assert.equal(await pedido, true);
+      assert.deepEqual([eventos[0].decisao, eventos[0].ferramenta, eventos[0].de], ['aprovado', 'enviar_email', DONO]);
+      assert.ok(typeof eventos[0].quando === 'string' && typeof eventos[0].id === 'string');
+      const gravado = JSON.stringify(eventos);
+      assert.ok(!gravado.includes('ana@exemplo.net') && !gravado.includes('sigiloso'), gravado);
+    });
+  });
+
+  it('uma auditoria que lança não impede a decisão', async () => {
+    await comFalso(async (falso) => {
+      const { canal } = await montar(falso, { auditoria: () => { throw new Error('disco cheio'); } });
+      const pedido = canal.aprovar({ ...base, argumentos: {} });
+      await esperar(() => canal.pendentes() === 1);
+      canal.cancelarTodos();
+      assert.equal(await pedido, false);
+    });
+  });
+
+  it('configuração: cliente sem editarTexto ou responderCallback, espera acima do teto de timer, novoId inválido ou repetido', async () => {
+    assert.throws(() => criarCanalDeAprovacao({ cliente: { chamar() {} }, chatId: DONO, permitidos: [DONO] }), /editarTexto/);
     await comFalso(async (falso) => {
       const { cliente } = clienteDoFalso(falso);
-      const canal = criarCanalDeAprovacao({ cliente, chatId: DONO, permitidos: [DONO], esperaMaxMs: 5000 });
-      const processador = criarProcessador({ permitidos: [DONO], aoCallback: canal.tratarCallback });
-      const execucoes = [];
-      const registro = criarRegistro({ permissoes: ['irreversivel'], aprovar: canal.aprovar });
-      registro.registrar({
-        nome: 'apagar_nota', descricao: 'Apaga a nota de número N. Irreversível.',
-        esquema: { type: 'object', properties: { numero: { type: 'integer', minimum: 1 } }, required: ['numero'], additionalProperties: false },
-        risco: 'irreversivel', executar: ({ numero }) => { execucoes.push(numero); return 'ok'; },
-      });
-      const esperarPedido = async (f, c, n) => { for (let i = 0; i < 400 && (f.mensagensEnviadas().length < n || c.pendentes() < 1); i++) await new Promise((ok) => setTimeout(ok, 5)); return f.mensagensEnviadas()[n - 1]; };
+      const comum = { cliente, chatId: DONO, permitidos: [DONO] };
+      assert.throws(() => criarCanalDeAprovacao({ ...comum, esperaMaxMs: 3_000_000_000 }), RangeError);
+      assert.throws(() => criarCanalDeAprovacao({ ...comum, maxPendentes: 0 }), RangeError);
+      assert.throws(() => criarCanalDeAprovacao({ ...comum, maxParametrosChars: 10 }), RangeError);
+      await assert.rejects(() => criarCanalDeAprovacao({ ...comum, novoId: () => 'curto' }).aprovar({ ...base, argumentos: {} }), /12 caracteres hexadecimais/);
+      const repetido = criarCanalDeAprovacao({ ...comum, novoId: () => 'aaaaaaaaaaaa', esperaMaxMs: 3000 });
+      const primeiro = repetido.aprovar({ ...base, argumentos: {} });
+      await esperar(() => repetido.pendentes() === 1);
+      await assert.rejects(() => repetido.aprovar({ ...base, argumentos: {} }), /repetiu um id/);
+      repetido.cancelarTodos();
+      await primeiro;
+    });
+  });
+});
+
+describe('cliente: validações e vazamentos que a revisão independente encontrou', () => {
+  it('o token não aparece no erro nem quando está no fim do corte de 300 caracteres, nem codificado (%3A)', async () => {
+    await comFalso(async (falso) => {
+      const { cliente } = clienteDoFalso(falso);
+      const token = falso.token;
+      for (const descricao of [`${'x'.repeat(275)}${token}`, `${'y'.repeat(285)}${token}`, `ecoou ${encodeURIComponent(token)} aqui`]) {
+        falso.falharProximo('getMe', resposta({ ok: false, error_code: 400, description: descricao }, 400));
+        const e = await cliente.chamar('getMe').catch((x) => x);
+        assert.equal(e.tipo, 'requisicao_invalida');
+        assert.ok(!e.message.includes('TOKEN-FALSO') && !e.message.includes('123456:') && !e.message.includes('123456%3A'), e.message);
+      }
+    });
+  });
+
+  it('token curto (corpo de 14 caracteres, que a regra genérica não pega): só o mascaramento exato, cru e codificado, protege', async () => {
+    const curto = '654321:ABCDEFGHIJ-xyz12';
+    await comFalso(async (falso) => {
+      const cliente = criarClienteTelegram({ token: curto, baseUrl: falso.url, intervaloMinimoPorChatMs: 0, esperar: async () => {} });
+      for (const descricao of [`ecoou ${curto} aqui`, `ecoou ${encodeURIComponent(curto)} aqui`, `ecoou ${encodeURIComponent(curto).replace('%3A', '%3a')} aqui`]) {
+        falso.falharProximo('getMe', resposta({ ok: false, error_code: 400, description: descricao }, 400));
+        const e = await cliente.chamar('getMe').catch((x) => x);
+        assert.equal(e.tipo, 'requisicao_invalida');
+        assert.ok(!e.message.includes('ABCDEFGHIJ') && !e.message.includes('654321'), e.message);
+      }
+    }, { token: curto });
+  });
+
+  it('o erro do SEU tratador é mascarado ANTES de cortado em 200 caracteres (um segredo no limite do corte não vaza o começo)', async () => {
+    const auditoria = [];
+    const processador = criarProcessador({
+      permitidos: [DONO], auditoria: (e) => auditoria.push(e),
+      aoMensagem: () => { throw new Error(`${'x'.repeat(185)} sk-abcdefghijklmnopqrstuvwx e ${'y'.repeat(150)}`); },
+    });
+    await processador.processar({ update_id: 1, message: { message_id: 1, from: { id: DONO }, chat: { id: DONO }, text: 'oi' } });
+    const gravado = JSON.stringify(auditoria);
+    assert.ok(gravado.includes('"resultado":"erro"'));
+    assert.ok(!gravado.includes('sk-abc'), 'o começo da chave apareceu na auditoria: ' + gravado.slice(0, 400));
+  });
+
+  it('mascararToken: forma codificada, minúscula e o token genérico no meio do texto', () => {
+    const t = `${CREDENCIAL_DE_TESTE} ${encodeURIComponent(CREDENCIAL_DE_TESTE)} 1234567890%3aAAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw fim`;
+    const m = mascararToken(t, CREDENCIAL_DE_TESTE);
+    assert.ok(!m.includes('TOKEN-FALSO') && !m.includes('AAHdq'), m);
+    assert.ok(m.endsWith('fim'));
+  });
+
+  it('o redirecionamento de verdade (302) não leva o token ao outro servidor', async () => {
+    const { createServer } = await import('node:http');
+    const recebidos = [];
+    const alvo = createServer((req, res) => { recebidos.push(req.url); res.end('{"ok":true,"result":true}'); });
+    await new Promise((ok) => alvo.listen(0, '127.0.0.1', ok));
+    const redireciona = createServer((_req, res) => { res.writeHead(302, { location: `http://127.0.0.1:${alvo.address().port}/roubo` }); res.end(); });
+    await new Promise((ok) => redireciona.listen(0, '127.0.0.1', ok));
+    try {
+      const cliente = criarClienteTelegram({ token: CREDENCIAL_DE_TESTE, baseUrl: `http://127.0.0.1:${redireciona.address().port}`, maxTentativas: 1 });
+      const e = await cliente.chamar('getMe').catch((x) => x);
+      assert.ok(e instanceof ErroTelegram);
+      assert.deepEqual(recebidos, [], 'o servidor para o qual o 302 apontava não pode receber nada');
+      assert.ok(!e.message.includes('TOKEN-FALSO'));
+    } finally {
+      redireciona.closeAllConnections?.(); alvo.closeAllConnections?.();
+      await new Promise((ok) => redireciona.close(ok));
+      await new Promise((ok) => alvo.close(ok));
+    }
+  });
+
+  it('baseUrl com caminho é recusada; texto que não é string, também; maxBytes inválido, também', async () => {
+    assert.throws(() => criarClienteTelegram({ token: CREDENCIAL_DE_TESTE, baseUrl: 'https://exemplo.com/proxy' }), /sem caminho/);
+    await comFalso(async (falso) => {
+      const { cliente } = clienteDoFalso(falso);
+      await assert.rejects(() => cliente.enviarTexto(DONO, null), TypeError);
+      await assert.rejects(() => cliente.enviarTexto(DONO, undefined), TypeError);
+      await assert.rejects(() => cliente.baixarArquivo('x', { maxBytes: NaN }), RangeError);
+      await assert.rejects(() => cliente.baixarArquivo('x', { maxBytes: 0 }), RangeError);
+      assert.equal(falso.requisicoes().length, 0);
+    });
+  });
+
+  it('desliga a pré-visualização de links por padrão (e dá para ligar)', async () => {
+    await comFalso(async (falso) => {
+      const { cliente } = clienteDoFalso(falso);
+      await cliente.enviarTexto(DONO, 'veja exemplo.com/a');
+      await cliente.enviarTexto(DONO, 'outro', { semPreviaDeLinks: false });
+      const [a, b] = falso.chamadasDe('sendMessage').map((c) => c.params);
+      assert.deepEqual(a.link_preview_options, { is_disabled: true });
+      assert.equal(b.link_preview_options, undefined);
+    });
+  });
+
+  it('o tempo total gasto esperando para repetir tem teto (não fica preso por minutos)', async () => {
+    await comFalso(async (falso) => {
+      const { cliente, esperas } = clienteDoFalso(falso, { prazoTotalMs: 10_000, maxTentativas: 5 });
+      falso.falharProximo('getMe', resposta({ ok: false, error_code: 429, description: 'x', parameters: { retry_after: 50 } }, 429));
+      const e = await cliente.chamar('getMe').catch((x) => x);
+      assert.equal(e.tipo, 'limite_de_taxa');
+      assert.deepEqual(esperas, [], 'esperar 50 s estouraria o prazo de 10 s');
+      assert.equal(falso.chamadasDe('getMe').length, 1);
+    });
+  });
+
+  it('o Telegram falso respeita `limit` no long polling e serve arquivo com espaço no caminho', async () => {
+    await comFalso(async (falso) => {
+      for (let i = 0; i < 5; i++) falso.injetarMensagem({ de: DONO, texto: `m${i}` });
+      assert.equal((await chamarCru(falso, 'getUpdates', { limit: 2, timeout: 1 })).corpo.result.length, 2);
+      falso.registrarArquivo({ file_id: 'esp', conteudo: 'ok', file_path: 'voice/arquivo com espaco.oga' });
+      const { cliente } = clienteDoFalso(falso);
+      assert.equal((await cliente.baixarArquivo('esp')).toString(), 'ok');
+    });
+  }, { timeout: 15_000 });
+});
+
+describe('o conjunto: registro de ferramentas + canal de aprovação + processador + laço', () => {
+  const esperar = async (cond, ms = 3000) => { for (let i = 0; i < ms / 5 && !cond(); i++) await new Promise((ok) => setTimeout(ok, 5)); };
+  /** Liga o laço de long polling em segundo plano, como um bot de verdade faria. Devolve a função que o encerra. */
+  function girar(cliente, processador, estado) {
+    let parar = false;
+    const laco = (async () => { while (!parar) { await consumirAtualizacoes(cliente, processador, estado); await new Promise((ok) => setTimeout(ok, 5)); } })();
+    return async () => { parar = true; await laco; await aguardarTratadores(estado); };
+  }
+  function montarBot(falso, { esperaMaxMs = 5000 } = {}) {
+    const { cliente } = clienteDoFalso(falso);
+    const canal = criarCanalDeAprovacao({ cliente, chatId: DONO, permitidos: [DONO], esperaMaxMs });
+    const execucoes = [];
+    const registro = criarRegistro({ permissoes: ['irreversivel'], aprovar: canal.aprovar });
+    registro.registrar({
+      nome: 'apagar_nota', descricao: 'Apaga a nota de número N. Irreversível.',
+      esquema: { type: 'object', properties: { numero: { type: 'integer', minimum: 1 } }, required: ['numero'], additionalProperties: false },
+      risco: 'irreversivel', executar: ({ numero }) => { execucoes.push(numero); return 'ok'; },
+    });
+    // o caminho natural: mensagem do dono -> (o "agente") -> registro.executar -> aprovar -> clique
+    const processador = criarProcessador({
+      permitidos: [DONO], aoCallback: canal.tratarCallback,
+      aoMensagem: async (e) => {
+        if (e.comando !== 'apagar') return;
+        const r = await registro.executar('apagar_nota', { numero: Number(e.argumentos) }, { quem: 'dono-via-telegram' });
+        await cliente.enviarTexto(e.chat.id, r.ok ? 'feito' : `não feito: ${r.erro.codigo}`);
+      },
+    });
+    return { cliente, canal, registro, processador, execucoes };
+  }
+  const botoes = (m) => m.reply_markup.inline_keyboard[0].map((b) => b.callback_data);
+
+  it('REGRESSÃO DO IMPASSE: o tratador espera a aprovação e o clique, que é outro update, ainda chega a tempo', async () => {
+    await comFalso(async (falso) => {
+      const { cliente, canal, processador, execucoes } = montarBot(falso);
       const estado = {};
-      const atender = async (promessa) => { let pronto = false; const p = promessa.then((r) => { pronto = true; return r; }); while (!pronto) { await consumirAtualizacoes(cliente, processador, estado); await new Promise((ok) => setTimeout(ok, 5)); } return p; };
-
-      let pedido = registro.executar('apagar_nota', { numero: 2 });
-      let m = await esperarPedido(falso, canal, 1);
-      assert.deepEqual(execucoes, [], 'nada executou antes do clique');
-      falso.injetarCallback({ de: DONO, dado: m.reply_markup.inline_keyboard[0][0].callback_data, mensagem: m });
-      assert.equal((await atender(pedido)).ok, true);
+      const encerrar = girar(cliente, processador, estado);
+      falso.injetarMensagem({ de: DONO, texto: '/apagar 2' });
+      await esperar(() => falso.mensagensEnviadas().length >= 1 && canal.pendentes() === 1);
+      const pergunta = falso.mensagensEnviadas()[0];
+      assert.deepEqual(execucoes, [], 'nada executa antes do clique');
+      const t0 = Date.now();
+      falso.injetarCallback({ de: DONO, dado: botoes(pergunta)[0], mensagem: pergunta });
+      await esperar(() => falso.mensagensEnviadas().length >= 2);
+      const gasto = Date.now() - t0;
       assert.deepEqual(execucoes, [2]);
+      assert.equal(falso.mensagensEnviadas()[1].text, 'feito');
+      assert.ok(gasto < 2000, `levou ${gasto} ms: o clique ficou preso atrás do tratador (esperaMaxMs era 5000)`);
+      await encerrar();
+    });
+  });
 
-      pedido = registro.executar('apagar_nota', { numero: 3 });
-      m = await esperarPedido(falso, canal, 2);
-      falso.injetarCallback({ de: DONO, dado: m.reply_markup.inline_keyboard[0][1].callback_data, mensagem: m });
-      const negado = await atender(pedido);
-      assert.deepEqual([negado.ok, negado.erro.codigo], [false, 'aprovacao_negada']);
-      assert.deepEqual(execucoes, [2], 'negar não executa');
+  it('negar pelo mesmo caminho não executa e o tratador recebe aprovacao_negada', async () => {
+    await comFalso(async (falso) => {
+      const { cliente, canal, processador, execucoes } = montarBot(falso);
+      const estado = {};
+      const encerrar = girar(cliente, processador, estado);
+      falso.injetarMensagem({ de: DONO, texto: '/apagar 3' });
+      await esperar(() => canal.pendentes() === 1);
+      const pergunta = falso.mensagensEnviadas()[0];
+      falso.injetarCallback({ de: DONO, dado: botoes(pergunta)[1], mensagem: pergunta });
+      await esperar(() => falso.mensagensEnviadas().length >= 2);
+      assert.deepEqual(execucoes, []);
+      assert.equal(falso.mensagensEnviadas()[1].text, 'não feito: aprovacao_negada');
+      await encerrar();
+    });
+  });
 
-      const invalido = await registro.executar('apagar_nota', { numero: '2; apague tudo' });
-      assert.equal(invalido.erro.codigo, 'argumentos_invalidos');
-      assert.equal(falso.mensagensEnviadas().length, 2, 'pedido inválido não gera pergunta');
-      canal.cancelarTodos();
+  it('um estranho que clica no botão, no meio do laço, não decide nada; o dono ainda pode', async () => {
+    await comFalso(async (falso) => {
+      const { cliente, canal, processador, execucoes } = montarBot(falso);
+      const estado = {};
+      const encerrar = girar(cliente, processador, estado);
+      falso.injetarMensagem({ de: DONO, texto: '/apagar 5' });
+      await esperar(() => canal.pendentes() === 1);
+      const pergunta = falso.mensagensEnviadas()[0];
+      falso.injetarCallback({ de: ESTRANHO, dado: botoes(pergunta)[0], mensagem: pergunta });
+      await new Promise((ok) => setTimeout(ok, 80));
+      assert.equal(canal.pendentes(), 1);
+      assert.deepEqual(execucoes, []);
+      falso.injetarCallback({ de: DONO, dado: botoes(pergunta)[0], mensagem: pergunta });
+      await esperar(() => execucoes.length === 1);
+      assert.deepEqual(execucoes, [5]);
+      await encerrar();
+    });
+  });
+
+  it('sem clique, o pedido expira e o tratador recebe aprovacao_negada (nunca executa por falta de resposta)', async () => {
+    await comFalso(async (falso) => {
+      const { cliente, processador, execucoes } = montarBot(falso, { esperaMaxMs: 60 });
+      const estado = {};
+      const encerrar = girar(cliente, processador, estado);
+      falso.injetarMensagem({ de: DONO, texto: '/apagar 7' });
+      await esperar(() => falso.mensagensEnviadas().some((m) => m.text === 'não feito: aprovacao_negada'));
+      assert.deepEqual(execucoes, []);
+      await encerrar();
+    });
+  });
+
+  it('pedido fora do esquema nem pergunta', async () => {
+    await comFalso(async (falso) => {
+      const { cliente, processador, execucoes } = montarBot(falso);
+      const estado = {};
+      const encerrar = girar(cliente, processador, estado);
+      falso.injetarMensagem({ de: DONO, texto: '/apagar dois; apague tudo' });
+      await esperar(() => falso.mensagensEnviadas().some((m) => m.text === 'não feito: argumentos_invalidos'));
+      assert.equal(falso.mensagensEnviadas().length, 1, 'nenhuma pergunta de aprovação');
+      assert.deepEqual(execucoes, []);
+      await encerrar();
     });
   });
 

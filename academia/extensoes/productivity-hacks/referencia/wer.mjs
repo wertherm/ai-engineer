@@ -12,7 +12,9 @@ import { ehPrincipal } from '../../../ferramentas/comum.mjs';
 
 /** Palavras de um texto: letras e dígitos, com hífen ou apóstrofo no meio ("guarda-chuva", "d'água"). */
 export function palavras(texto, { semAcentos = false } = {}) {
-  let t = String(texto).normalize('NFC').toLocaleLowerCase('pt-BR');
+  // `String(undefined)` é "undefined": sem esta checagem, `wer(undefined, 'undefined')` daria 0% (nota perfeita) por engano
+  if (typeof texto !== 'string') throw new TypeError(`o texto deve ser uma string (veio ${texto === null ? 'null' : typeof texto})`);
+  let t = texto.normalize('NFC').toLocaleLowerCase('pt-BR');
   if (semAcentos) t = t.normalize('NFD').replace(/\p{M}/gu, '');
   return t.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [];
 }
@@ -67,6 +69,11 @@ export function wer(referencia, hipotese, opcoes = {}) {
  */
 export function werDoConjunto(pares, opcoes = {}) {
   if (!Array.isArray(pares) || pares.length === 0) throw new RangeError('passe ao menos um par {referencia, hipotese}');
+  pares.forEach((p, i) => {
+    if (!p || typeof p !== 'object' || typeof p.referencia !== 'string' || typeof p.hipotese !== 'string') {
+      throw new TypeError(`o par ${i + 1} precisa ser {referencia: string, hipotese: string} (nomes dos campos exatos)`);
+    }
+  });
   const frases = pares.map((p) => wer(p.referencia, p.hipotese, opcoes));
   const erros = frases.reduce((s, f) => s + f.erros, 0);
   const total = frases.reduce((s, f) => s + f.palavrasReferencia, 0);

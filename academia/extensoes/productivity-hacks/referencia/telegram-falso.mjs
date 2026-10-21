@@ -85,7 +85,7 @@ export async function iniciarTelegramFalso({ token = CREDENCIAL_DE_TESTE, porta 
           while (fila.length && fila[0].update_id < off) fila.shift();
         }
         const limite = Math.min(Math.max(Number(p.limit ?? 100) || 100, 1), 100);
-        return { status: 200, corpo: { ok: true, result: fila.slice(0, limite) }, aguardar: fila.length === 0 ? Math.min(Number(p.timeout ?? 0) * 1000 || 0, esperaMaxLongPollMs) : 0 };
+        return { status: 200, corpo: { ok: true, result: fila.slice(0, limite) }, limite, aguardar: fila.length === 0 ? Math.min(Number(p.timeout ?? 0) * 1000 || 0, esperaMaxLongPollMs) : 0 };
       }
       case 'sendMessage': {
         if (p.chat_id === undefined || p.chat_id === '') return { status: 400, corpo: erro(400, 'Bad Request: chat_id is empty') };
@@ -162,7 +162,9 @@ export async function iniciarTelegramFalso({ token = CREDENCIAL_DE_TESTE, porta 
         const arq = url.pathname.match(/^\/file\/bot([^/]+)\/(.+)$/);
         if (arq) {
           if (arq[1] !== token) return responder(401, erro(401, 'Unauthorized'));
-          const a = [...arquivos.values()].find((x) => x.file_path === arq[2]);
+          let caminho = arq[2];
+          try { caminho = decodeURIComponent(caminho); } catch { /* deixa como veio */ }
+          const a = [...arquivos.values()].find((x) => x.file_path === caminho);
           if (!a || !a.conteudo) return responder(404, erro(404, 'Not Found'));
           return responder(200, a.conteudo, 'application/octet-stream');
         }
@@ -185,7 +187,7 @@ export async function iniciarTelegramFalso({ token = CREDENCIAL_DE_TESTE, porta 
         if (r.aguardar > 0) {
           const fim = Date.now() + r.aguardar;
           while (Date.now() < fim && fila.length === 0) await new Promise((ok) => setTimeout(ok, 10));
-          return responder(200, { ok: true, result: fila.slice(0, 100) });
+          return responder(200, { ok: true, result: fila.slice(0, r.limite ?? 100) });
         }
         return responder(r.status, r.corpo);
       } catch (e) {

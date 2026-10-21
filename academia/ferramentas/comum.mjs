@@ -34,6 +34,7 @@ export const SEGREDOS = [
   { nome: 'token do npm', re: /(?<![A-Za-z0-9])npm_[A-Za-z0-9]{30,200}/ },
   { nome: 'token do GitLab', re: /(?<![A-Za-z0-9])glpat-[A-Za-z0-9_-]{15,200}/ },
   { nome: 'chave da AWS', re: /(?<![A-Za-z0-9])AKIA[0-9A-Z]{16}/ },
+  { nome: 'token de bot do Telegram', re: /(?<!\d)\d{6,12}(?::|%3[Aa])[A-Za-z0-9_-]{30,}/ },
   { nome: 'chave do Google', re: /(?<![A-Za-z0-9])AIza[0-9A-Za-z_-]{35}/ },
   { nome: 'token do Hugging Face', re: /(?<![A-Za-z0-9])hf_[A-Za-z0-9]{30,200}/ },
   { nome: 'token do Slack', re: /(?<![A-Za-z0-9])xox[abprs]-[A-Za-z0-9-]{10,200}/ },

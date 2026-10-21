@@ -16,30 +16,49 @@ import { ehPrincipal } from './comum.mjs';
 export const DIR_PH = 'academia/extensoes/productivity-hacks';
 export const TRILHAS = { voz: 'VOZ', 'email-e-agenda': 'EMA', automacoes: 'AUT', telegram: 'TEL', ganhar: 'GAN' };
 const ARQUIVO_PROJETOS = 'projetos-que-rendem.md';
-const ID_DICA = /PH-(?:VOZ|EMA|AUT|TEL|GAN)-\d{2}/g;
-const ID_PROJETO = /PP-\d{2}/g;
+const CODIGOS = Object.values(TRILHAS);
+const ID_DICA = new RegExp(`(?<![A-Za-z0-9-])PH-(?:${CODIGOS.join('|')})-\\d{2}(?!\\d)`, 'g');
+const ID_PROJETO = /(?<![A-Za-z0-9-])PP-\d{2}(?!\d)/g;
 const ETAPAS = 16;
 const CAMPOS_DICA = ['Faça:', 'Tempo e custo:', 'Cuidado:', 'Entra em:', 'Vira projeto?', 'Fontes:'];
 const CAMPOS_PROJETO = ['Tempo:', 'O que se ganha:', 'Dicas:', 'Critérios de aceitação:', 'Riscos:'];
 const MIN_CRITERIOS = 4;
 
-const ler = (arq) => fs.readFileSync(arq, 'utf8').replace(/\r\n?/g, '\n');
+const ler = (arq) => fs.readFileSync(arq, 'utf8').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+/** Lê um arquivo do catálogo; se não der (é uma pasta, sem permissão), devolve null e registra o erro em vez de lançar. */
+function lerSeguro(abs, rel, erros) {
+  try { return ler(abs); } catch (err) { erros.push({ arquivo: rel, mensagem: `não consegui ler o arquivo (${err.code ?? 'erro'})` }); return null; }
+}
 /** Troca o conteúdo de blocos de código por linhas vazias (mantém a contagem de linhas para apontar o erro). */
-const semCodigo = (t) => t.replace(/^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm, (m) => m.replace(/[^\n]/g, ''));
+function semCodigo(t) {
+  let cerca = null; // { c: '`' | '~', n: tamanho }
+  return String(t).split('\n').map((l) => {
+    const m = /^ {0,3}(`{3,}|~{3,})/.exec(l);
+    if (cerca) {
+      if (m && m[1][0] === cerca.c && m[1].length >= cerca.n && /^\s*$/.test(l.slice(m[0].length))) cerca = null;
+      return '';
+    }
+    if (m) { cerca = { c: m[1][0], n: m[1].length }; return ''; }
+    return l;
+  }).join('\n');
+}
 
 /** Divide em cartões: cada `### ...` até o próximo título de nível 1 a 3. Devolve [{titulo, linha, corpo}]. */
 function cartoes(texto) {
   const linhas = semCodigo(texto).split('\n');
   const saida = [];
   let atual = null;
+  let secao = '';
   linhas.forEach((l, i) => {
+    if (/^## /.test(l)) secao = l.replace(/^## /, '').trim();
+    if (/^ {0,3}#{4,6}\s+(?:PH|PP)-/.test(l)) saida.push({ titulo: l.replace(/^ {0,3}#+\s*/, '').trim(), linha: i + 1, linhas: [], nivelErrado: true });
     if (/^#{1,3} /.test(l)) {
       if (atual) saida.push(atual);
-      atual = /^### /.test(l) ? { titulo: l.replace(/^### /, '').trim(), linha: i + 1, linhas: [] } : null;
+      atual = /^### /.test(l) ? { titulo: l.replace(/^### /, '').trim(), linha: i + 1, linhas: [], secao } : null;
     } else if (atual) atual.linhas.push(l);
   });
   if (atual) saida.push(atual);
-  return saida.map((c) => ({ titulo: c.titulo, linha: c.linha, corpo: c.linhas.join('\n') }));
+  return saida.map((c) => ({ titulo: c.titulo, linha: c.linha, corpo: c.linhas.join('\n'), secao: c.secao ?? '', nivelErrado: Boolean(c.nivelErrado) }));
 }
 
 /** O texto de um campo "- **Rótulo** ..." (a linha do rótulo e as seguintes até o próximo campo ou o fim). */
@@ -66,10 +85,17 @@ export function lerCatalogo(raiz) {
     const rel = `${DIR_PH}/trilhas/${arquivo}.md`;
     const abs = path.join(raiz, rel);
     if (!fs.existsSync(abs)) { erros.push({ arquivo: rel, mensagem: 'trilha não encontrada' }); continue; }
-    for (const c of cartoes(ler(abs))) {
+    const texto = lerSeguro(abs, rel, erros);
+    if (texto === null) continue;
+    for (const c of cartoes(texto)) {
+      if (c.nivelErrado) { erros.push({ arquivo: `${rel}:${c.linha}`, mensagem: `título de dica no nível errado (use "### PH-XXX-NN · Título", com três #): ${JSON.stringify(c.titulo.slice(0, 60))}` }); continue; }
       const m = c.titulo.match(/^(PH-[A-Z]{3}-\d{2}) · (.+)$/);
-      if (!m) continue;
+      if (!m) {
+        if (/^\s*PH-/i.test(c.titulo) || /^#+\s*PH-/.test(c.titulo)) erros.push({ arquivo: `${rel}:${c.linha}`, mensagem: `título de dica fora do padrão (use "### PH-XXX-NN · Título", com o ponto médio e dois dígitos): ${JSON.stringify(c.titulo.slice(0, 60))}` });
+        continue;
+      }
       if (dicas.has(m[1])) { erros.push({ arquivo: `${rel}:${c.linha}`, mensagem: `id repetido: ${m[1]}` }); continue; }
+      if (c.secao !== 'Dicas') { erros.push({ arquivo: `${rel}:${c.linha}`, mensagem: `${m[1]}: a dica está fora da seção "## Dicas" (está em "## ${c.secao || '(sem seção)'}")` }); continue; }
       dicas.set(m[1], { arquivo: rel, linha: c.linha, titulo: m[2], codigo, corpo: c.corpo, tituloCompleto: c.titulo });
     }
   }
@@ -77,9 +103,14 @@ export function lerCatalogo(raiz) {
   const absP = path.join(raiz, relP);
   if (!fs.existsSync(absP)) erros.push({ arquivo: relP, mensagem: 'arquivo de projetos não encontrado' });
   else {
-    for (const c of cartoes(ler(absP))) {
+    const textoP = lerSeguro(absP, relP, erros);
+    for (const c of cartoes(textoP ?? '')) {
+      if (c.nivelErrado) { erros.push({ arquivo: `${relP}:${c.linha}`, mensagem: `título de projeto no nível errado (use "### PP-NN · Título", com três #): ${JSON.stringify(c.titulo.slice(0, 60))}` }); continue; }
       const m = c.titulo.match(/^(PP-\d{2}) · (.+)$/);
-      if (!m) continue;
+      if (!m) {
+        if (/^\s*PP-/i.test(c.titulo)) erros.push({ arquivo: `${relP}:${c.linha}`, mensagem: `título de projeto fora do padrão (use "### PP-NN · Título"): ${JSON.stringify(c.titulo.slice(0, 60))}` });
+        continue;
+      }
       if (projetos.has(m[1])) { erros.push({ arquivo: `${relP}:${c.linha}`, mensagem: `id repetido: ${m[1]}` }); continue; }
       projetos.set(m[1], { arquivo: relP, linha: c.linha, titulo: m[2], corpo: c.corpo, tituloCompleto: c.titulo });
     }
@@ -154,12 +185,22 @@ export function validarProdutividade(raiz) {
       }
       const fontes = valores['Fontes:'];
       if (fontes) {
-        const temUrl = /https:\/\//.test(fontes);
-        if (!temUrl && !/\[opinião\]/i.test(fontes)) e(onde, `${id}: "Fontes" precisa de uma URL https ou da marca [opinião]`);
-        if (temUrl && !/\[(?:não )?verificado\]/i.test(fontes)) e(onde, `${id}: as fontes com URL precisam da marca [verificado] ou [não verificado]`);
+        const urls = [...fontes.matchAll(/https:\/\/[^\s;\]\[]+/g)];
+        if (urls.length === 0 && !/\[opinião\]/i.test(fontes)) e(onde, `${id}: "Fontes" precisa de uma URL https ou da marca [opinião]`);
+        for (const u of urls) {
+          const depois = fontes.slice(u.index + u[0].length, u.index + u[0].length + 40);
+          if (!/^\s*\[(?:não )?verificado/i.test(depois)) e(onde, `${id}: a fonte ${u[0].slice(0, 60)} precisa da marca [verificado] ou [não verificado] logo depois da URL`);
+        }
       }
     }
     sequencia(daTrilha.map(([id]) => id), `PH-${codigo}`, rel, daTrilha.map(([, d]) => d.linha), erros);
+    // a seção "Projetos desta trilha" lista exatamente os projetos que as dicas da trilha citam
+    const textoTrilha = lerSeguro(path.join(raiz, rel), rel, erros) ?? '';
+    const secProj = /^## Projetos desta trilha\n([\s\S]*?)(?=^## |\Z)/m.exec(semCodigo(textoTrilha));
+    const listados = new Set(secProj ? secProj[1].match(ID_PROJETO) ?? [] : []);
+    const citados = new Set(daTrilha.flatMap(([, d]) => campo(d.corpo, 'Vira projeto?').texto.match(ID_PROJETO) ?? []));
+    for (const p of citados) if (!listados.has(p)) e(rel, `a seção "Projetos desta trilha" não lista ${p}, que uma dica da trilha cita`);
+    for (const p of listados) if (!citados.has(p)) e(rel, `a seção "Projetos desta trilha" lista ${p}, mas nenhuma dica da trilha o cita`);
   }
 
   const relP = `${DIR_PH}/${ARQUIVO_PROJETOS}`;
@@ -192,7 +233,20 @@ export function validarProdutividade(raiz) {
   const absR = path.join(raiz, relR);
   if (!fs.existsSync(absR)) e(relR, 'README do catálogo não encontrado');
   else {
-    const r = aplicarMapa(ler(absR), gerarMapaPorEtapa(dicas));
+    const r = aplicarMapa(lerSeguro(absR, relR, erros) ?? '', gerarMapaPorEtapa(dicas));
+    // a tabela das trilhas do README (nº de dicas e projetos) precisa bater com o catálogo
+    const readme = lerSeguro(absR, relR, erros) ?? '';
+    for (const [arquivo] of Object.entries(TRILHAS)) {
+      const linha = readme.split('\n').find((l) => l.includes(`(trilhas/${arquivo}.md)`) && l.startsWith('|'));
+      if (!linha) { e(relR, `a tabela de trilhas do README não tem a linha de ${arquivo}.md`); continue; }
+      const celulas = linha.split('|').map((c) => c.trim()).filter(Boolean);
+      const doCatalogo = [...dicas.values()].filter((d) => d.arquivo.endsWith(`/trilhas/${arquivo}.md`));
+      const projetosDaTrilha = new Set(doCatalogo.flatMap((d) => campo(d.corpo, 'Vira projeto?').texto.match(ID_PROJETO) ?? []));
+      const nDicas = Number(celulas.at(-2));
+      const listados = new Set(celulas.at(-1).match(ID_PROJETO) ?? []);
+      if (nDicas !== doCatalogo.length) e(relR, `a tabela do README diz ${celulas.at(-2)} dicas para ${arquivo}.md, mas o catálogo tem ${doCatalogo.length}`);
+      if ([...projetosDaTrilha].sort().join() !== [...listados].sort().join()) e(relR, `a tabela do README lista os projetos [${[...listados].sort().join(', ')}] para ${arquivo}.md, mas as dicas citam [${[...projetosDaTrilha].sort().join(', ')}]`);
+    }
     if (!r) e(relR, `faltam as marcas do mapa por etapa (${MARCA_INICIO.slice(0, 30)}... e ${MARCA_FIM})`);
     else if (r.mudou) e(relR, 'o mapa por etapa está desatualizado: rode `node academia/ferramentas/produtividade.mjs mapa --escrever`');
   }
@@ -228,7 +282,7 @@ export function gerarMapaPorEtapa(dicas) {
   const rotulo = (k) => (k === -2 ? 'Qualquer momento' : k === -1 ? 'Missão 0' : `Etapa ${k}`);
   return [...grupos.keys()].sort((a, b) => a - b).map((k) => [
     `- **${rotulo(k)}:**`,
-    ...grupos.get(k).sort(([a], [b]) => a.localeCompare(b)).map(([id, d]) => `  - [${id}](${ARQUIVO_DA_DICA(d)}) · ${d.titulo}`),
+    ...[...new Map(grupos.get(k)).entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([id, d]) => `  - [${id}](${ARQUIVO_DA_DICA(d)}) · ${d.titulo}`),
   ].join('\n')).join('\n');
 }
 
@@ -243,7 +297,7 @@ function aplicarMapa(texto, mapa) {
 
 /** Confere o bloco 15.6 de uma lição. Devolve a lista de mensagens de erro (vazia se estiver certo). */
 export function conferirBlocoHack(textoLicao, dicas) {
-  const bloco = blocoHack(textoLicao);
+  const bloco = blocoHack(textoLicao).replace(/<!--[\s\S]*?-->/g, '');
   const problemas = [];
   if (!bloco) return ['falta o bloco 15.6 (Hack de produtividade)'];
   if (!bloco.includes('**Sabia que você pode**')) problemas.push('o bloco 15.6 deve conter "**Sabia que você pode**"');

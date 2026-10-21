@@ -37,7 +37,7 @@ Senhas, chaves de API e tokens (inclusive o do próprio bot), frases-semente e c
 
 - Token só em variável de ambiente ou cofre; se vazou, `/token` no @BotFather e troque em todos os serviços; confira o que o bot fez.
 - Lista de **IDs numéricos** no início de **todo** tratador; quem não está nela recebe silêncio. Em grupo, confira também o chat e mantenha o modo de privacidade ligado.
-- Webhook: HTTPS, `secret_token` aleatório (32 ou mais caracteres, só os permitidos), comparação em tempo constante, resposta 200 rápida e fila para o trabalho longo.
+- Webhook: HTTPS, `secret_token` aleatório (a documentação aceita de 1 a 256 caracteres, só `A-Z a-z 0-9 _ -`; a recomendação de usar 32 ou mais é de quem escreveu [opinião]), comparação em tempo constante, resposta 200 rápida e fila para o trabalho longo.
 - Idempotência por `update_id` (chave única) antes de qualquer efeito.
 - `callback_data` leva só um id curto, nunca o comando; valide quem clicou e se o pedido ainda existe; sempre `answerCallbackQuery`.
 - Ação irreversível (apagar, enviar, pagar) só depois de confirmação por botão.
@@ -62,8 +62,8 @@ Fontes: https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/secur
 
 ## A própria pesquisa também é entrada não confiável
 
-Durante a pesquisa que deu origem a este catálogo, **quatro dos cinco agentes** que liam páginas da web relataram texto com instruções embutido no que a ferramenta devolveu: numa página da documentação do n8n, numa página de termos da Meta e, em dois casos, num trecho que alegava que o e-mail e a memória do usuário teriam mudado. Todos trataram como dado e ignoraram. Não foi verificado de onde veio cada trecho (a página, a ferramenta de leitura ou outro ponto da cadeia). Serve de exemplo concreto da regra 1: se o seu assistente lê páginas, uma delas pode tentar dar ordens a ele.
+Durante a pesquisa que deu origem a este catálogo, **quatro dos cinco agentes** que liam páginas da web relataram, nos resumos finais, texto com instruções embutido no que a ferramenta devolveu: numa página da documentação do n8n, numa página de termos da Meta (esses dois casos também estão nos relatórios de pesquisa) e, em dois outros, num trecho que alegava que o e-mail e a memória do usuário teriam mudado. Todos trataram como dado e ignoraram. Não foi verificado de onde veio cada trecho (a página, a ferramenta de leitura ou outro ponto da cadeia). Serve de exemplo concreto da regra 1: se o seu assistente lê páginas, uma delas pode tentar dar ordens a ele.
 
 ## Casos documentados (para ler com calma)
 
-Todos foram corrigidos ou contestados pelos fornecedores e as fontes abertas lidas não relatam exploração em larga escala; são provas de conceito e relatos de pesquisadores. Veja a lista, com fonte e marca, na [trilha de e-mail e agenda](trilhas/email-e-agenda.md) (casos 0DIN, EchoLeak, PromptArmor, Nassi et al. e LayerX) e o incidente de tokens de bot embutidos em pacotes maliciosos na [trilha do Telegram](trilhas/telegram.md).
+Todos foram corrigidos ou contestados pelos fornecedores e as fontes abertas lidas não relatam exploração em larga escala; são provas de conceito e relatos de pesquisadores. Veja a lista, com fonte e marca, na [trilha de e-mail e agenda](trilhas/email-e-agenda.md) (casos 0DIN, EchoLeak, PromptArmor, Nassi et al., GeminiJack e LayerX) e o incidente de tokens de bot embutidos em pacotes maliciosos na [trilha do Telegram](trilhas/telegram.md).

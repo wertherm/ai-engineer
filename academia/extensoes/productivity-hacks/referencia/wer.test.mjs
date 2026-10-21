@@ -66,3 +66,18 @@ describe('werDoConjunto', () => {
     assert.throws(() => werDoConjunto('texto'), RangeError);
   });
 });
+
+describe('entrada errada não vira nota perfeita', () => {
+  it('texto que não é string (undefined, null, número) é erro, não "undefined" contra "undefined" = 0%', () => {
+    for (const ruim of [undefined, null, 42, {}, ['a']]) {
+      assert.throws(() => wer(ruim, 'undefined'), TypeError, String(ruim));
+      assert.throws(() => wer('uma frase', ruim), TypeError, String(ruim));
+    }
+  });
+
+  it('werDoConjunto recusa pares com os nomes de campo errados (antes dava 0% de erro)', () => {
+    assert.throws(() => werDoConjunto([{ ref: 'a b', hip: 'x y' }]), /par 1 precisa ser {referencia: string, hipotese: string}/);
+    assert.throws(() => werDoConjunto([{ referencia: 'a b', hipotese: 'a b' }, null]), TypeError);
+    assert.throws(() => werDoConjunto([{ referencia: 'a b' }]), TypeError);
+  });
+});

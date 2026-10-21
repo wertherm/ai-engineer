@@ -16,6 +16,7 @@ const TOKENS = {
   'token do GitLab': `glpat-${'abcdEFGH12345678wxyz'}`,
   'chave da AWS': `AKIA${'ABCDEFGH12345678'}`,
   'chave do Google': `AIza${'A1b2C3d4E5'.repeat(3)}abcde`,
+  'token de bot do Telegram': `GET https://api.telegram.org/bot${'1234567890'}:${'AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw'}/getMe`,
   'token do Hugging Face': `hf_${'aB3d'.repeat(8)}`,
   'token do Slack': `xoxb-${'1234567890-abcdef'}`,
   JWT: `eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.${'abcdefghijk123'}`,

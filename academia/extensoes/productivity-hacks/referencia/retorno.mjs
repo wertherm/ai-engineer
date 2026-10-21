@@ -9,8 +9,11 @@
 
 const SEMANAS_POR_MES = 52 / 12;
 
-function numero(nome, v, { min = 0, inteiro = false, maiorQueMin = false } = {}) {
-  if (typeof v !== 'number' || !Number.isFinite(v)) throw new TypeError(`${nome} deve ser um número finito`);
+const MAX_ENTRADA = 1e12; // acima disso as contas perdem sentido (e podem virar NaN)
+
+function numero(nome, v, { min = 0, max = MAX_ENTRADA, inteiro = false, maiorQueMin = false } = {}) {
+  if (typeof v !== 'number' || !Number.isFinite(v)) throw new TypeError(`${nome} deve ser um número finito (veio ${v === null ? 'null' : typeof v === 'number' ? v : typeof v})`);
+  if (v > max) throw new RangeError(`${nome} deve ser no máximo ${max}`);
   if (maiorQueMin ? v <= min : v < min) throw new RangeError(`${nome} deve ser ${maiorQueMin ? 'maior que' : 'pelo menos'} ${min}`);
   if (inteiro && !Number.isInteger(v)) throw new RangeError(`${nome} deve ser um número inteiro`);
   return v;
@@ -27,12 +30,13 @@ function numero(nome, v, { min = 0, inteiro = false, maiorQueMin = false } = {})
  * @param {number} [p.semanasDeUso] por quanto tempo a tarefa vai existir (padrão 52)
  */
 export function retornoDaAutomacao(p) {
+  if (!p || typeof p !== 'object') throw new TypeError('passe um objeto com os parâmetros');
   const horasEconomizadasPorSemana = numero('horasEconomizadasPorSemana', p.horasEconomizadasPorSemana);
   const valorDaHora = numero('valorDaHora', p.valorDaHora);
   const horasParaConstruir = numero('horasParaConstruir', p.horasParaConstruir);
   const horasDeManutencaoPorMes = numero('horasDeManutencaoPorMes', p.horasDeManutencaoPorMes ?? 0);
   const custoDeUsoPorMes = numero('custoDeUsoPorMes', p.custoDeUsoPorMes ?? 0);
-  const semanasDeUso = numero('semanasDeUso', p.semanasDeUso ?? 52, { min: 1, inteiro: true });
+  const semanasDeUso = numero('semanasDeUso', p.semanasDeUso ?? 52, { min: 1, max: 5200, inteiro: true });
 
   const ganhoBrutoSemanal = horasEconomizadasPorSemana * valorDaHora;
   const custoDeManutencaoSemanal = (horasDeManutencaoPorMes * valorDaHora) / SEMANAS_POR_MES;
@@ -41,6 +45,7 @@ export function retornoDaAutomacao(p) {
   const custoParaConstruir = horasParaConstruir * valorDaHora;
   const paybackEmSemanas = ganhoSemanal > 0 ? custoParaConstruir / ganhoSemanal : Infinity;
   const ganhoNoPeriodo = ganhoSemanal * semanasDeUso - custoParaConstruir;
+  if (![ganhoSemanal, custoParaConstruir, ganhoNoPeriodo].every(Number.isFinite)) throw new RangeError('a conta não cabe em números normais: confira as unidades das entradas');
   return {
     ganhoBrutoSemanal, custoDeManutencaoSemanal, custoDeUsoSemanal, ganhoSemanal, custoParaConstruir,
     paybackEmSemanas, semanasDeUso, ganhoNoPeriodo, vale: ganhoNoPeriodo > 0,
@@ -49,9 +54,10 @@ export function retornoDaAutomacao(p) {
 
 /** O mesmo cálculo com a economia real menor que a prevista (a revisão sempre toma mais tempo do que se imagina). */
 export function cenarioPessimista(p, fatorDaEconomia = 0.5) {
-  numero('fatorDaEconomia', fatorDaEconomia, { min: 0, maiorQueMin: true });
-  if (fatorDaEconomia > 1) throw new RangeError('fatorDaEconomia deve ser no máximo 1');
-  return retornoDaAutomacao({ ...p, horasEconomizadasPorSemana: p.horasEconomizadasPorSemana * fatorDaEconomia });
+  if (!p || typeof p !== 'object') throw new TypeError('passe um objeto com os parâmetros');
+  numero('fatorDaEconomia', fatorDaEconomia, { min: 0, max: 1, maiorQueMin: true });
+  const horas = numero('horasEconomizadasPorSemana', p.horasEconomizadasPorSemana); // valida ANTES de multiplicar ('1.5' ou null virariam número)
+  return retornoDaAutomacao({ ...p, horasEconomizadasPorSemana: horas * fatorDaEconomia });
 }
 
 /**
@@ -93,7 +99,7 @@ export function margemDaAssinatura(p) {
   const precoMensal = numero('precoMensal', p.precoMensal);
   const fatorDeUso = numero('fatorDeUso', p.fatorDeUso ?? 1, { min: 0, maiorQueMin: true });
   const cambio = numero('cambio', p.cambio, { min: 0, maiorQueMin: true });
-  const taxaPercentual = numero('taxaPercentual', p.taxaPercentual ?? 0);
+  const taxaPercentual = numero('taxaPercentual', p.taxaPercentual ?? 0, { max: 1 }); // fração: 0.0469 = 4,69% (escrever 4.69 seria 469%)
   const taxaFixa = numero('taxaFixa', p.taxaFixa ?? 0);
   const mensagens = numero('mensagensPorMes', p.mensagensPorMes) * fatorDeUso;
   const custoNaMoedaDoProvedor = custoDeInferencia({
@@ -105,5 +111,7 @@ export function margemDaAssinatura(p) {
   const custoDeInferenciaMensal = custoNaMoedaDoProvedor * cambio;
   const taxasDePagamento = precoMensal * taxaPercentual + taxaFixa;
   const sobra = precoMensal - custoDeInferenciaMensal - taxasDePagamento;
-  return { custoDeInferenciaMensal, taxasDePagamento, sobra, margem: precoMensal > 0 ? sobra / precoMensal : -Infinity, dandoPrejuizo: sobra < 0 };
+  if (![custoDeInferenciaMensal, taxasDePagamento, sobra].every(Number.isFinite)) throw new RangeError('a conta não cabe em números normais: confira as unidades das entradas');
+  // preço zero: não existe margem percentual (devolve null, não -Infinity); só há prejuízo se houver custo
+  return { custoDeInferenciaMensal, taxasDePagamento, sobra, margem: precoMensal > 0 ? sobra / precoMensal : null, dandoPrejuizo: sobra < 0 };
 }

@@ -506,4 +506,4 @@ Depois, confronte com o que aconteceu e escreva uma frase por previsão ("previ 
 
 - **Dica do catálogo:** [PH-TEL-01 · Aviso de qualquer script em uma linha](../../extensoes/productivity-hacks/trilhas/telegram.md) · 10 a 15 min · R$ 0.
 - **Faça agora:** com o seu cliente robusto da Lição 2, envie "terminei" ao seu bot e confira dois casos: o token errado vira erro de **autenticação** (não se repete) e o 429 com `retry_after` espera o tempo pedido. Sem token real, treine contra o [Telegram falso](../../extensoes/productivity-hacks/referencia/telegram-falso.mjs).
-- **Cuidado:** o token vai na URL (nunca em log, histórico do shell ou repositório) e o chat com um bot não tem criptografia de ponta a ponta: não mande segredos. Opcional e sem XP.
+- **Cuidado:** o token vai na URL (nunca em log, histórico do shell ou repositório) e o chat com um bot não tem criptografia de ponta a ponta: não mande segredos. Na primeira execução real, use um bot de teste e um chat só seu. Opcional e sem XP.

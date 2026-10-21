@@ -554,8 +554,8 @@ com a confiança que você marcou em cada questão do quiz. Se a confiança alta
 
 ### 15.6 Hack de produtividade
 
-**Sabia que você pode** transformar tokens em dinheiro (entrada e saída, modelo pequeno e grande) **para melhorar** a margem de qualquer automação ou bot que você construir, antes de escrever uma linha dele?
+**Sabia que você pode** converter tokens em custo em reais (entrada e saída, modelo pequeno e grande) **para melhorar** a margem de qualquer automação ou bot que você construir, antes de escrever uma linha dele?
 
-- **Dica do catálogo:** [PH-GAN-03 · Modelo pequeno na triagem, grande nos casos difíceis](../../extensoes/productivity-hacks/trilhas/ganhar.md) · 30 min · R$ 0.
+- **Dica do catálogo:** [PH-GAN-03 · Modelo pequeno na triagem, grande nos casos difíceis](../../extensoes/productivity-hacks/trilhas/ganhar.md) · 30 a 60 min · R$ 0.
 - **Faça agora:** pegue os tokens de entrada e de saída que o seu laboratório mediu, multiplique pelo preço por milhão de tokens de **dois** modelos (na página oficial do seu provedor, anotando a data) e depois por um usuário 5 vezes mais pesado que o médio. A conta pronta está em [retorno.mjs](../../extensoes/productivity-hacks/referencia/retorno.mjs) (`custoDeInferencia`, `margemDaAssinatura`).
 - **Cuidado:** preços mudam; nunca copie uma tabela de blog. Não coloque chaves de API em arquivos nem em prompts. Opcional e sem XP.

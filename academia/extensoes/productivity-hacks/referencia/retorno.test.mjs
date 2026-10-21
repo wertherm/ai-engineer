@@ -96,3 +96,34 @@ describe('assinatura de bot: o usuário pesado quebra a conta', () => {
     assert.throws(() => margemDaAssinatura({ ...ASSINATURA, precoMensal: -5 }), RangeError);
   });
 });
+
+describe('entrada errada é recusada em vez de virar um número plausível', () => {
+  it('cenarioPessimista valida ANTES de multiplicar (string, null, true e lista não viram número)', () => {
+    for (const ruim of ['1.5', null, true, [2], undefined]) {
+      assert.throws(() => cenarioPessimista({ ...BASE, horasEconomizadasPorSemana: ruim }), TypeError, String(ruim));
+      assert.throws(() => retornoDaAutomacao({ ...BASE, horasEconomizadasPorSemana: ruim }), TypeError, String(ruim));
+    }
+    assert.throws(() => retornoDaAutomacao(null), TypeError);
+    assert.throws(() => cenarioPessimista(undefined), TypeError);
+  });
+
+  it('valores gigantes não viram NaN em silêncio', () => {
+    assert.throws(() => retornoDaAutomacao({ ...BASE, valorDaHora: 1e200 }), RangeError);
+    assert.throws(() => retornoDaAutomacao({ ...BASE, semanasDeUso: 1e9 }), RangeError);
+    assert.throws(() => retornoDaAutomacao({ ...BASE, horasParaConstruir: Infinity }), TypeError);
+  });
+
+  it('taxaPercentual é uma fração: 4.69 (por cento) seria 469% e é recusado; 0.0469 vale', () => {
+    const base = { precoMensal: 49, mensagensPorMes: 200, tokensEntradaPorMensagem: 4000, tokensSaidaPorMensagem: 600, precoEntradaPorMTok: 2, precoSaidaPorMTok: 10, cambio: 5.5 };
+    assert.throws(() => margemDaAssinatura({ ...base, taxaPercentual: 4.69 }), RangeError);
+    assert.doesNotThrow(() => margemDaAssinatura({ ...base, taxaPercentual: 0.0469 }));
+  });
+
+  it('preço zero: não existe margem percentual (null, não -Infinity); só é prejuízo se houver custo', () => {
+    const base = { precoMensal: 0, mensagensPorMes: 200, tokensEntradaPorMensagem: 4000, tokensSaidaPorMensagem: 600, precoEntradaPorMTok: 2, precoSaidaPorMTok: 10, cambio: 5.5 };
+    const r = margemDaAssinatura(base);
+    assert.equal(r.margem, null);
+    assert.equal(r.dandoPrejuizo, true);
+    assert.equal(margemDaAssinatura({ ...base, mensagensPorMes: 0 }).dandoPrejuizo, false);
+  });
+});

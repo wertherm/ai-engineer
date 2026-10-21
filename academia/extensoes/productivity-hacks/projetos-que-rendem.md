@@ -1,6 +1,6 @@
 # Projetos que rendem
 
-Onze projetos práticos para quem quer, além de aprender, **ganhar** algo medido: tempo (o caso comum), um serviço pequeno (o caso do PP-11) ou um portfólio. Cada um nasceu de dicas das [trilhas](README.md#as-cinco-trilhas) e tem **critérios de aceitação testáveis**, um jeito de **testar sem credenciais reais** e os **riscos** de segurança e privacidade. Eles não rendem XP por conta própria: registre como desafio `opcional` da etapa em que você os faz, se couber nas [regras de XP](../../GAMIFICACAO.md#desafios-opcionais).
+Onze projetos práticos para quem quer, além de aprender, **ganhar** algo medido: tempo (quando você mede), um serviço pequeno (o caso do PP-11) ou um portfólio. O ganho de tempo, quando existe, é o que você mede, não o que se presume. Cada um nasceu de dicas das [trilhas](README.md#as-cinco-trilhas) e tem **critérios de aceitação testáveis**, um jeito de **testar sem credenciais reais** e os **riscos** de segurança e privacidade. Eles não rendem XP por conta própria: registre como desafio `opcional` da etapa em que você os faz, se couber nas [regras de XP](../../GAMIFICACAO.md#desafios-opcionais).
 
 **Como usar este arquivo**
 
@@ -88,6 +88,8 @@ Onze projetos práticos para quem quer, além de aprender, **ganhar** algo medid
   5. O texto mostrado ao dono traz os parâmetros exatos da ação, já com segredos mascarados e sem caracteres de controle.
   6. O registro de auditoria tem quem decidiu, quando e o quê, **sem** os valores dos argumentos.
   7. Uma ação irreversível registrada no [registro de ferramentas](../harness-de-agentes/README.md) só executa após o clique (o mesmo teste da demonstração, agora na sua CLI).
+  8. O caso natural funciona: a mensagem do dono dispara a tarefa e o tratador dessa mensagem **espera** a aprovação; o clique, que chega como outro update, ainda é entregue a tempo (teste que mede o tempo até a ação, bem abaixo do prazo de espera). Um laço que espera o tratador antes de ler o próximo update trava a aprovação até o prazo.
+  9. Parâmetros grandes demais para o dono revisar: o pedido é negado e o dono é avisado, em vez de mostrar uma versão cortada.
 - **Como testar sem credenciais reais:** Telegram falso; o "dono" é um roteiro que injeta cliques.
 - **Riscos:** fadiga de aprovação (clicar sem ler: por isso o texto exato); lista de IDs errada; token vazado dá a um terceiro a chance de ler as perguntas; o texto das tarefas pode conter injeção e moldar o que você vê. Aprovar não elimina a injeção de prompt.
 
@@ -138,7 +140,7 @@ Onze projetos práticos para quem quer, além de aprender, **ganhar** algo medid
 
 ### PP-09 · Agente de e-mail com aprovação, testado contra injeção de prompt
 - **Tempo:** 5 a 6 h
-- **O que se ganha:** um número honesto, a taxa de sucesso do ataque no seu corpus de teste, em vez de uma sensação de segurança. É o projeto de portfólio mais forte desta lista.
+- **O que se ganha:** um número honesto, a taxa de sucesso do ataque no seu corpus de teste, em vez de uma sensação de segurança. Na opinião de quem escreveu [opinião], é um bom projeto de portfólio.
 - **Dicas:** PH-EMA-07, PH-EMA-08
 - **Stack mínima:** Python ou Node; um LLM com chamada de ferramentas; o [canal de aprovação](referencia/ponte-telegram.mjs); [saida-segura.mjs](referencia/saida-segura.mjs); arquivos `.eml` sintéticos e um simulador de caixa.
 - **Critérios de aceitação:**
@@ -159,7 +161,7 @@ Onze projetos práticos para quem quer, além de aprender, **ganhar** algo medid
 - **Critérios de aceitação:**
   1. Reproduz os números do exemplo fictício do `retorno.test.mjs` (ganho semanal R$ 49,62; payback de cerca de 9,7 semanas; ganho no ano de cerca de R$ 2.100).
   2. Mostra o cenário base e o pessimista lado a lado.
-  3. Avisa quando a tarefa roda menos que um limite por ano (a tarefa que acontece 2 vezes por ano não paga uma construção de 12 h).
+  3. Avisa quando a tarefa roda menos que um limite por ano (a tarefa que acontece 2 vezes por ano só empata com uma construção de 12 h depois de 4 anos).
   4. Permite lançar os tempos MEDIDOS depois (antes e depois) e recalcula com eles.
   5. Exporta o histórico (CSV).
   6. Não coleta dado pessoal além do necessário (de preferência nenhum).
@@ -180,4 +182,4 @@ Onze projetos práticos para quem quer, além de aprender, **ganhar** algo medid
   6. Meta de exemplo: pelo menos 30% de redução do tempo total da tarefa, **incluindo a revisão**, medida com a mesma régua antes e depois (ajuste com o cliente).
   7. O escopo, o limite de horas de suporte e o que fica de fora estão por escrito.
 - **Como testar sem credenciais reais:** dados sintéticos do tipo do negócio; o piloto real só com o consentimento do cliente e sem dados de terceiros nos testes.
-- **Riscos:** formalização (a lista de ocupações do MEI lida não inclui desenvolvimento de software: veja o quadro "Brasil"); LGPD; erro da IA que fala com terceiros é seu; no WhatsApp, a seção 4.7 dos termos restringe provedores cuja IA é a função principal, e a cobrança por mensagem mudou em 1/10/2026; dependência de uma API cujo preço muda. **Isto não é aconselhamento jurídico, contábil nem tributário.**
+- **Riscos:** formalização (a lista de ocupações do MEI lida não inclui desenvolvimento de software: veja o quadro "Brasil"); LGPD; erro da IA que fala com terceiros é seu; no WhatsApp, a seção 4.7 dos termos restringe provedores cuja IA é a função principal, e mensagens antes gratuitas passaram a ser cobradas a partir de 1/10/2026 (via resumo); dependência de uma API cujo preço muda. **Isto não é aconselhamento jurídico, contábil nem tributário.**
