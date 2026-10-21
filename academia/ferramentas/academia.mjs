@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { acharSegredos, ehPrincipal } from './comum.mjs';
+import { conferirBlocoHack, lerCatalogo, validarProdutividade } from './produtividade.mjs';
 
 const RAIZ_PADRAO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -24,10 +25,11 @@ const TITULOS_LICAO = [
   'Rubrica de avaliação', 'Dicas graduais', 'Modelo de relatório do aluno', 'Competências registradas',
   'Referências e última revisão', 'Aplicação, reforço e desafios',
 ];
-// A seção 15 tem cinco blocos fixos. O 15.2 traz as perguntas de revisão V1..V5 (a correção fica no gabarito.md).
+// A seção 15 tem seis blocos fixos. O 15.2 traz as perguntas de revisão V1..V5 (a correção fica no gabarito.md); o 15.6 traz uma dica
+// do catálogo de Productivity Hacks (academia/extensoes/productivity-hacks), conferida por produtividade.mjs.
 const SUBTITULOS_15 = [
   'Onde isso aparece no trabalho', 'Reforço (revisão espaçada)', 'Desafio de transferência',
-  'Ponte com o projeto e com a prática', 'Calibragem',
+  'Ponte com o projeto e com a prática', 'Calibragem', 'Hack de produtividade',
 ];
 const MIN_PERGUNTAS_REVISAO = 5;
 const STATUS_ETAPA = ['em-andamento', 'pausada', 'concluida'];
@@ -814,6 +816,7 @@ export function validarSegredos(raiz) {
 export function validarLicoes(raiz, config) {
   const erros = [];
   const dirLicoes = path.join(raiz, 'academia', 'licoes');
+  const catalogo = lerCatalogo(raiz);
   const confere = (arquivo, rel, etapaEsperada) => {
     const e = (mensagem) => erros.push({ arquivo: rel, mensagem });
     const { dados, corpo, tem } = frontMatter(lerTexto(arquivo));
@@ -840,6 +843,8 @@ export function validarLicoes(raiz, config) {
       if (!subs[i] || subs[i][0] !== i + 1 || subs[i][1] !== t) e(`a seção 15 deve ter "### 15.${i + 1} ${t}"`);
     });
     if (subs.length > SUBTITULOS_15.length) e(`a seção 15 tem blocos além do 15.${SUBTITULOS_15.length}`);
+    // 15.6: a lição de verdade (não o template) cita uma dica que existe no catálogo
+    if (etapaEsperada !== null) for (const p of conferirBlocoHack(corpo, catalogo.dicas)) e(p);
     let nRevisao = 0;
     if (etapaEsperada !== null && etapaEsperada > 0) {
       const bloco152 = sec15.split(/^### 15\.3\b/m)[0].split(/^### 15\.2\b/m)[1] ?? '';
@@ -913,7 +918,7 @@ export function validarTudo(raiz, { aluno = null } = {}) {
     if (aluno && !slugs.includes(aluno)) erros.push({ arquivo: `academia/alunos/${aluno}`, mensagem: 'aluno não encontrado (precisa de perfil.md)' });
     if (!aluno) erros.push(...pastasSemPerfil(raiz));
     for (const a of aluno ? slugs.filter((s) => s === aluno) : slugs) erros.push(...analisarAluno(raiz, a, config).erros);
-    erros.push(...validarLinks(raiz), ...validarSegredos(raiz));
+    erros.push(...validarProdutividade(raiz), ...validarLinks(raiz), ...validarSegredos(raiz));
     if (!aluno || slugs.includes(aluno)) erros.push(...gerarRegistros(raiz, config, { somenteChecar: true, aluno }).erros);
   } catch (err) {
     erros.push({ arquivo: 'academia/ferramentas/academia.mjs', mensagem: `falha inesperada durante a validação: ${err.message}` });
@@ -994,7 +999,8 @@ export function montarKit(raiz, config, slugAluno, { hoje = new Date().toLocaleD
     'Você é o tutor da Academia de Engenharia de IA do repositório ai-engineer. Siga as regras do AI_CONTEXT.md abaixo.',
     `Eu sou o aluno ${slugAluno}. Esta conversa não tem acesso ao repositório: tudo o que você precisa está neste texto.`,
     'Comece pelas revisões sugeridas (do retomada.md), depois conduza a lição uma atividade por vez, sem entregar solução',
-    'antes das dicas. Não revele gabaritos: eu os colo depois de responder. No fim eu vou pedir o relatório da sessão.',
+    'antes das dicas. Não revele gabaritos: eu os colo depois de responder. Perto do fim, apresente em 2 minutos o hack de produtividade',
+    'da seção 15.6 e pergunte se quero tentar (opcional, não vale XP; nunca me peça token, senha ou chave). No fim eu vou pedir o relatório da sessão.',
     '',
     'DADOS DA SESSÃO A REGISTRAR (use exatamente estes valores no front matter do relatório):',
     `  aluno: ${slugAluno}`,

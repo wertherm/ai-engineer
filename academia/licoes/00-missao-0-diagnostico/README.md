@@ -259,3 +259,11 @@ ambiente. Os módulos do repositório têm versões em JavaScript e em Python (v
 
 A autoavaliação do diagnóstico **é** a calibragem: compare a sua nota (0 a 3) com a nota do gabarito pergunta a pergunta. Se a distância média passar de 1 ponto, ou se ela for
 sempre para cima, a ação combinada é fazer o quiz de cada etapa **antes** de ler o material. Registre a distância média no relatório da sessão.
+
+### 15.6 Hack de produtividade
+
+**Sabia que você pode** apertar Win + H (Windows) ou usar o ditado nativo do seu sistema **para melhorar** o tempo que você gasta escrevendo o `ambiente.md`, o diagnóstico e os relatórios de sessão?
+
+- **Dica do catálogo:** [PH-VOZ-01 · Ditar antes de pagar por qualquer coisa](../../extensoes/productivity-hacks/trilhas/voz.md) · 5 min · R$ 0.
+- **Faça agora:** escreva o primeiro parágrafo do `ambiente.md` digitando e o segundo ditando; cronometre os dois **incluindo a revisão** e compare.
+- **Cuidado:** o ditado padrão do Windows é online (o áudio vai para um serviço da Microsoft). Não dite chaves, senhas nem dados de terceiros. Opcional e sem XP: o que vale é o seu número, não o de propaganda.

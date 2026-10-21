@@ -499,3 +499,11 @@ o que **não** mudou entre as duas APIs (a política) e o que mudou (o mapeament
 
 Antes de rodar o verificador pela primeira vez, anote três previsões: (1) em que faixa (mínimo e máximo, em ms) deve ficar o tempo total **esperando** no cenário `servidor-instavel` (500, 503, 200) com `BACKOFF_BASE_MS` de 150 e jitter; (2) quanto tempo o cenário `lento` deve levar com `TIMEOUT_MS` de 1000 e 2 tentativas; (3) se o seu cliente passará no CA5 de primeira, e qual critério você acha mais provável de reprovar.
 Depois, confronte com o que aconteceu e escreva uma frase por previsão ("previ X, aconteceu Y, errei porque..."). Registre na seção **Surpresas e limites** do `relatorio.md`, junto com a confiança que você marcou em cada questão do quiz. Se a confiança alta tiver acertos baixos, refaça o quiz antes de abrir a lição 3.
+
+### 15.6 Hack de produtividade
+
+**Sabia que você pode** mandar um aviso do seu script para o seu celular com uma chamada HTTP ao Telegram **para melhorar** a visibilidade do que roda sozinho (backup, testes, o laboratório desta lição)?
+
+- **Dica do catálogo:** [PH-TEL-01 · Aviso de qualquer script em uma linha](../../extensoes/productivity-hacks/trilhas/telegram.md) · 10 a 15 min · R$ 0.
+- **Faça agora:** com o seu cliente robusto da Lição 2, envie "terminei" ao seu bot e confira dois casos: o token errado vira erro de **autenticação** (não se repete) e o 429 com `retry_after` espera o tempo pedido. Sem token real, treine contra o [Telegram falso](../../extensoes/productivity-hacks/referencia/telegram-falso.mjs).
+- **Cuidado:** o token vai na URL (nunca em log, histórico do shell ou repositório) e o chat com um bot não tem criptografia de ponta a ponta: não mande segredos. Opcional e sem XP.

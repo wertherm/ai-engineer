@@ -84,7 +84,7 @@ revisado_em: AAAA-MM-DD
 
 ## 15. Aplicação, reforço e desafios
 
-> Fecha o ciclo: do conceito ao uso real e do uso real de volta ao conceito (recuperação ativa). Cinco blocos, **nesta
+> Fecha o ciclo: do conceito ao uso real e do uso real de volta ao conceito (recuperação ativa). Seis blocos, **nesta
 > ordem e com estes títulos** (o validador confere). Nada aqui cria XP novo: os desafios `opcional` seguem a regra de
 > 20 XP e no máximo 3 por etapa ([GAMIFICACAO.md](../GAMIFICACAO.md#desafios-opcionais)).
 
@@ -119,3 +119,11 @@ revisado_em: AAAA-MM-DD
 > Uma previsão **antes** de executar o laboratório ("prevejo X") e o confronto **depois** ("medi Y; a diferença foi Z porque...").
 > Registre no relatório do aluno, junto com a confiança de cada resposta do quiz. Quem se superestima sistematicamente
 > (confiança alta, acerto baixo) revê o quiz antes de ler o material da etapa seguinte.
+
+### 15.6 Hack de produtividade
+
+> Uma dica do [catálogo de Productivity Hacks](../extensoes/productivity-hacks/README.md) que combina com o assunto da lição e que o aluno pode
+> aplicar HOJE, no formato: **Sabia que você pode** <ação concreta> **para melhorar** <resultado que se mede>? Cite o id da dica
+> (`PH-XXX-NN`, precisa existir no catálogo: o validador confere), o "faça agora" em até 3 passos, tempo e custo, e o **cuidado** (o que não enviar à nuvem
+> e o que exige aprovação humana). Se a dica vira um dos projetos práticos, linke-o. Opcional e **sem XP**: o objetivo é o aluno medir o
+> ganho (tempo, custo ou erro) com os próprios números, nunca acreditar em promessa.
