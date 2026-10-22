@@ -1,40 +1,38 @@
 <!-- Gerado por `node academia/ferramentas/academia.mjs progresso`. Não edite: a fonte são os arquivos de sessoes/. -->
 # Retomada · Werther
 
-**Nível:** Aprendiz · **XP:** 40 · **Etapa atual:** Etapa 1 · Tokens, contexto, inferência e limites dos LLMs
+**Nível:** Aprendiz · **XP:** 50 · **Etapa atual:** Etapa 1 · Tokens, contexto, inferência e limites dos LLMs
 
-**Próxima sessão:** s02 (dados para o relatório: `aluno: werther`, `sessao: 2`)
+**Próxima sessão:** s03 (dados para o relatório: `aluno: werther`, `sessao: 3`)
 
-Para Construtor: faltam 110 XP e checkpoint CP1.
+Para Construtor: faltam 100 XP e checkpoint CP1.
 
 ## Onde parei
 
-- Última sessão: **2026-10-19** (s01), etapa 0, status `concluida`.
+- Última sessão: **2026-10-22** (s02), etapa 1, status `em-andamento`.
 - Lição: [Etapa 1 · Tokens, contexto, inferência e limites dos LLMs](../../licoes/01-tokens-contexto-inferencia/README.md)
-- Resumo: Missão 0 completa. O ambiente foi verificado por script: Ollama local com `qwen3.5:4b` e todos os itens `[ok]`. O perfil
+- Resumo: Primeira das três sessões planejadas para a Lição 1. O quiz foi feito antes de ler a microlição, como recomendado na s01.
 
 ## Próxima missão
 
-Abrir a Lição 1 e responder o quiz antes de ler a microlição.
+Ler a microlição da Lição 1 e anotar as três previsões da seção 15.5 antes de começar o `medir.mjs`.
 
 ## Último feedback
 
-> - **Bem:** respostas próprias e honestas, com "não sei" onde cabia, e uma dúvida específica (RAG). O ambiente está
->   descrito o bastante para ser reproduzido sem perguntas.
-> - **Calibragem:** nota média de 0,69 contra autoavaliação de 1,69 (distância média de 1,0), sempre para cima. A maior
->   diferença está em Agentes e Ecossistema, onde o uso diário de ferramentas dá familiaridade com os termos, mas não
->   com o mecanismo. Ação: fazer o quiz de cada etapa **antes** de ler o material.
-> - **Equívocos a desfazer cedo:** API de chat sem estado (a aplicação reenvia `messages`, etapa 1); RAG não é
->   fine-tuning e deve se abster sem evidência (etapas 6 e 7); function calling não é legado, quem executa é o código da
->   aplicação e o MCP se apoia nele (etapas 9 e 12); embedding é vetor e não busca por palavra-chave (etapa 5).
-> - **Anotações da revisão:** corretas, mas curtas (só o enunciado). Nas próximas, escreva também uma consequência
->   prática de cada correção: é isso que fixa o conceito.
-> - **Ritmo:** realista e com horário. O plano para pausas ("um dia ou outro") vale. Na volta, o `retomada.md` traz um
->   aquecimento.
+> - **Calibragem melhorou muito desde a Missão 0:** tudo o que foi marcado com confiança alta ou média estava certo, e os
+>   três erros vieram com confiança baixa. O aluno se subestimou em Q3 e Q7.
+> - **Honestidade:** declarar "chute" foi útil. A correção passou a ser explicar o certo, não justificar o errado.
+> - **Respostas curtas demais nas questões abertas:** em Q8 e Q9 faltaram o porquê e o como. Nas perguntas abertas,
+>   responda com mecanismo e consequência ("X acontece porque Y; por isso o código faz Z").
+> - **Q9 ainda parcial:** mais texto piora **mesmo cabendo** na janela: custo em toda chamada, prefill mais lento e
+>   informação no meio usada pior (*Lost in the Middle*). Revisitar na microlição (seção 4.2).
+> - **Para o laboratório:** o `finish_reason` e o reenvio do histórico, corrigidos hoje, são justamente o que os
+>   experimentos 3 (truncamento) e 4 (sem memória) medem.
 
 ## Pendências
 
-- Nenhuma.
+- Microlição (seção 4) e exemplos 1 e 2 da Lição 1 ainda não feitos.
+- `E01-lab` (medidor de tokens) e `E01-explicacao` ainda não feitos.
 
 ## Revisões sugeridas
 
@@ -52,15 +50,15 @@ Etapas concluídas: `░░░░░░░░░░░░░░░░` 0/16
 | 4 | 12–14 | `░░░░░░░░░░` 0/3 |
 | 5 | 15–16 | `░░░░░░░░░░` 0/2 |
 
-XP até Construtor: `████░░░░░░░░░░░░` 40/150
+XP até Construtor: `█████░░░░░░░░░░░` 50/150
 
 ## Competências
 
 | ID | Competência | Nível | Evidência mais recente |
 |---|---|---|---|
-| C01 | Explicar tokens e tokenização e o impacto deles em custo e em limites | ○○○ 0 | — |
-| C02 | Dimensionar a janela de contexto e o orçamento de tokens de uma chamada | ○○○ 0 | — |
-| C03 | Explicar a inferência (prefill, decode, sampling, determinismo) e seu efeito na latência | ○○○ 0 | — |
+| C01 | Explicar tokens e tokenização e o impacto deles em custo e em limites | ●○○ 1 | s02: acertou Q1 e Q2 do quiz; razão PT/EN e custo fixo ainda não medidos (laboratório) |
+| C02 | Dimensionar a janela de contexto e o orçamento de tokens de uma chamada | ●○○ 1 | s02: acertou Q3; errou Q4 (esqueceu a resposta de 200 no histórico) e Q5, corrigidas na anotação |
+| C03 | Explicar a inferência (prefill, decode, sampling, determinismo) e seu efeito na latência | ●○○ 1 | s02: acertou Q7 e justificou na correção (lotes e hardware); errou Q6 (prefill × decode), corrigida na anotação |
 | C04 | Integrar um LLM por API com timeout, retry e tratamento de erros | ○○○ 0 | — |
 | C05 | Separar fundamentos de detalhes de fornecedor e trocar de provedor só por configuração | ○○○ 0 | — |
 | C06 | Escrever prompts como especificações versionadas e testáveis | ○○○ 0 | — |
@@ -120,5 +118,6 @@ Conquistas: 1/20
 
 | Sessão | Data | Etapa | Status | XP ganho |
 |---|---|---|---|---|
+| [s02](sessoes/2026-10-22-s02.md) | 2026-10-22 | 1 | em-andamento | 10 |
 | [s01](sessoes/2026-10-19-s01.md) | 2026-10-19 | 0 | concluida | 40 |
 
