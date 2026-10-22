@@ -134,8 +134,8 @@ n-ésima revisão fica **sugerida** quando já passaram o número de sessões da
 | 3 | 7 |
 | 4 | 15 |
 
-Uma revisão são de 3 a 5 perguntas de recuperação ativa (as perguntas ficam no quiz e na seção 7 de cada lição),
-respondidas de memória. Comece cada sessão com até três revisões sugeridas: o cartão de retomada
+Uma revisão são de 3 a 5 perguntas de recuperação ativa (as perguntas **V1 a V5** ficam no bloco 15.2 de cada lição, com a
+correção no `gabarito.md`; nas lições sem esse bloco, valem as do quiz da seção 7), respondidas de memória. Comece cada sessão com até três revisões sugeridas: o cartão de retomada
 (`alunos/<aluno>/retomada.md`) lista quais são. A conta é: a revisão `n` da etapa fica sugerida quando já passou o número de
 sessões da tabela desde a conclusão, e só vale XP a partir daí e depois da revisão `n − 1`.
 

@@ -3,6 +3,35 @@
 Mudanças relevantes no currículo e no sistema de acompanhamento. Formato: data, o que mudou, por quê. Mudanças nos
 módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) seguem o histórico do Git.
 
+## 2026-10-21 · Testes rápidos e lentos separados
+
+**Alterado**
+
+- O teste da Lição 2 (executa as referências e 20 mutantes de verdade, cerca de 3 minutos) deixou de ser `licao.test.mjs` e passou a ser `licao.lento.mjs`: o comando de sempre, `node --test "academia/**/*.test.mjs"`, não o pega mais.
+- Novo [`ferramentas/testar.mjs`](ferramentas/testar.mjs) (sem dependências, sem shell, igual em bash e PowerShell): sem opção roda os rápidos; `--lentos` roda os `*.lento.mjs`; `--tudo` roda os dois grupos (é o que um CI deve rodar). Opção desconhecida é erro, para um `--lento` digitado errado não rodar o grupo errado em silêncio.
+- `academia.test.mjs` ficou mais barato: a cópia do repositório copia só `academia/` (o que os testes alteram) e liga as demais pastas ao original, e a seção 15 usa uma única cópia (cada caso altera um arquivo e o restaura). Isso tirou cerca de 40 s; a suíte rápida leva de 1 a 2 minutos neste Windows (a variação entre execuções é grande: o custo restante é criar arquivos temporários).
+- Regra: um teste que executa programas de verdade ou leva mais de ~30 s termina em `.lento.mjs` e traz no cabeçalho o aviso `LENTO` e o comando (conferido por `testar.test.mjs`).
+
+## 2026-10-20 · Lição 2 e a seção 15 (aplicação, reforço e desafios)
+
+**Adicionado**
+
+- **Seção 15 em toda lição** ("Aplicação, reforço e desafios"), com cinco blocos fixos: onde isso aparece no trabalho (e os erros comuns), **reforço** (perguntas de revisão V1 a V5, com a correção no `gabarito.md`),
+  desafio de transferência (e "ensine a um colega"), ponte com o projeto evolutivo e com os projetos práticos, e calibragem (previsão antes de medir). O template, o validador e o `kit` conhecem a estrutura; as revisões
+  espaçadas passam a usar as perguntas V1 a V5 em vez de reaproveitar as do quiz. A Missão 0 e a Lição 1 receberam a seção 15.
+- **[Lição 2 · APIs, TypeScript, erros e integração com modelos](licoes/02-apis-erros-e-integracao/README.md)** (etapa 2, `pronta`; competências C04 e C05): microlição (taxonomia de nove tipos de erro, retry com backoff e jitter,
+  `Retry-After`, timeout total, TypeScript no Node), quiz de 10 questões e gabarito, rubrica, dicas graduais, seção 15 completa.
+  - **Laboratório "cliente de LLM robusto"**: o aluno escreve `chamar.ts`, `.mjs`, `.js` ou `.py` e o verificador **executa** o programa contra um [servidor falso](licoes/02-apis-erros-e-integracao/kit/servidor-falso.mjs)
+    com 19 cenários de falha (429 de taxa e de cota, 5xx, conexão derrubada, corpo em conta-gotas, `Retry-After` gigante, 401 que repete a chave, provedor que recusa `max_tokens`...), conferindo o que o servidor viu (tentativas, esperas, corpo) e o que o programa disse. `--so CA5` verifica só um critério.
+  - Soluções de referência em **TypeScript** e em **Python** (só biblioteca padrão), três exemplos executáveis e `licao.lento.mjs` (antes `licao.test.mjs`; veja a entrada de 2026-10-21) com **teste de mutação do verificador** (20 defeitos injetados, cada um reprovando o critério esperado, mais os casos de programas corretos que não podem ser reprovados).
+
+**Alterado**
+
+- Validador: 15 seções; a seção 15 tem cinco blocos; o bloco 15.2 exige V1 a V5 em sequência e o gabarito precisa corrigir cada uma. Títulos `## N.` dentro de blocos de código não contam como seção.
+- ROADMAP: etapa 2 `pronta`; o TypeScript sai da lista de lacunas.
+
+**Limites:** o laboratório foi testado só contra o servidor falso e as duas referências (Node 22.22.0, Python 3.12); **nada foi executado contra um provedor real** (a extensão `opcional` a da Lição 2 é a primeira chance).
+
 ## 2026-10-19 · Guia rápido
 
 **Adicionado**

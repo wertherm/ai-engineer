@@ -6,7 +6,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, it } from 'node:test';
+import { after, afterEach, before, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   analisarAluno, carregarConfig, criarAluno, criarSessao, frontMatter, gerarRegistros, inteiro, main, montarKit, renderProgresso,
@@ -16,7 +16,20 @@ import { acharSegredos, enderecoSeguro, limparSaida } from './comum.mjs';
 
 const RAIZ_REAL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const temporarios = [];
-afterEach(() => { while (temporarios.length) fs.rmSync(temporarios.pop(), { recursive: true, force: true }); });
+/**
+ * Apaga uma pasta temporária. Junções/symlinks (as cópias de `copiarRepo` apontam para pastas do repositório REAL) são desfeitas ANTES, uma a uma:
+ * assim, mesmo num Node que seguisse a junção ao apagar, nunca se toca no original.
+ */
+function apagarTmp(dir) {
+  try {
+    for (const nome of fs.readdirSync(dir)) {
+      const p = path.join(dir, nome);
+      if (fs.lstatSync(p).isSymbolicLink()) fs.unlinkSync(p);
+    }
+  } catch { /* pasta já removida */ }
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+afterEach(() => { while (temporarios.length) apagarTmp(temporarios.pop()); });
 
 const novoTmp = (prefixo) => {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), prefixo));
@@ -32,11 +45,30 @@ function montarRaiz() {
   return raiz;
 }
 
-/** Cópia completa do repositório real (sem .git), para os testes que validam o conjunto. */
+/**
+ * Cópia do repositório real (sem .git) para os testes que validam o conjunto. Só `academia/` é copiado de verdade (é o que os testes
+ * alteram); as outras pastas do topo (modulos/, referencia/...) entram como ligação para o original, só para os links terem alvo.
+ * Copiar os ~1000 arquivos custava de 6 a 17 s por teste (o Windows examina cada arquivo recém-gravado); assim custa menos de 1 s.
+ * Se a ligação não puder ser criada (sem permissão), cai na cópia completa.
+ */
 function copiarRepo() {
   const raiz = novoTmp('academia-repo-');
-  fs.cpSync(RAIZ_REAL, raiz, { recursive: true, filter: (origem) => !/[\\/](\.git|node_modules)([\\/]|$)/.test(origem) });
+  preencherCopia(raiz);
   return raiz;
+}
+function preencherCopia(raiz) {
+  const semGitENodeModules = (origem) => !/[\\/](\.git|node_modules)([\\/]|$)/.test(origem);
+  for (const e of fs.readdirSync(RAIZ_REAL, { withFileTypes: true })) {
+    if (e.name === '.git' || e.name === 'node_modules') continue;
+    const origem = path.join(RAIZ_REAL, e.name);
+    const destino = path.join(raiz, e.name);
+    if (e.name === 'academia' || !e.isDirectory()) { fs.cpSync(origem, destino, { recursive: true, filter: semGitENodeModules }); continue; }
+    try {
+      fs.symlinkSync(origem, destino, 'junction');
+    } catch {
+      fs.cpSync(origem, destino, { recursive: true, filter: semGitENodeModules });
+    }
+  }
 }
 
 /** Configuração real com todas as etapas "prontas" (os testes de regras de XP usam etapas além da 1). */
@@ -288,10 +320,10 @@ describe('XP e evidências', () => {
   it('etapas sem lição pronta no ROADMAP não rendem XP', () => {
     const raiz = montarRaiz();
     const dir = aluno(raiz, 'ana');
-    sessao(dir, { aluno: 'ana', etapa: 2, atividades: [['E02-quiz', 'quiz', 1, 'aprovado', evid(dir), 10]] });
+    sessao(dir, { aluno: 'ana', etapa: 3, atividades: [['E03-quiz', 'quiz', 1, 'aprovado', evid(dir), 10]] });
     const { config } = carregarConfig(raiz);
     const r = analisarAluno(raiz, 'ana', config);
-    assert.match(juntas(r), /etapa 2 ainda não tem lição pronta/);
+    assert.match(juntas(r), /etapa 3 ainda não tem lição pronta/);
     assert.equal(r.estado.xp, 0);
   });
 
@@ -726,6 +758,12 @@ describe('kit de colagem', () => {
 
   it('na etapa sem lição pronta, o kit traz o plano do ROADMAP e o template; nas revisões, só as perguntas', () => {
     const copia = copiarRepo();
+    // a etapa 2 já tem lição; para testar o caso "sem lição" na cópia, ela volta a ser roteiro (a pasta da lição não é lida pelo kit nesse caso)
+    const roadmap = path.join(copia, 'academia', 'ROADMAP.md');
+    const rm = fs.readFileSync(roadmap, 'utf8');
+    const linhaDaLicao2 = '| [Lição 2](licoes/02-apis-erros-e-integracao/README.md) | pronta |';
+    assert.ok(rm.includes(linhaDaLicao2));
+    fs.writeFileSync(roadmap, rm.replace(linhaDaLicao2, '| — | roteiro |'));
     const dir = path.join(copia, 'academia', 'alunos', 'werther');
     const preenchido = 'Texto do aluno com mais de vinte letras para valer como preenchido.';
     fs.writeFileSync(path.join(dir, 'perfil.md'), `---\nslug: werther\nnome: Werther\ncompartilhar_xp: nao\nritmo: 3 horas por semana\n---\n\n## Objetivo com o curso\n\n${preenchido}\n\n## Ponto de partida\n\n${preenchido}\n\n## Preferências de estudo\n\n${preenchido}\n\n## Ambiente\n\n${preenchido}\n`);
@@ -742,6 +780,101 @@ describe('kit de colagem', () => {
     assert.match(kit, /REVISÃO SUGERIDA: etapa 1, revisão 1 \(id R01-1\)/);
     assert.match(kit, /## 7\. Quiz de fixação/);
     assert.ok(!kit.includes('Corrigir com a resposta já escrita'), 'sem o gabarito da lição 1');
+  });
+});
+
+describe('seção 15 das lições (aplicação, reforço e desafios)', () => {
+  const LICAO1 = 'academia/licoes/01-tokens-contexto-inferencia';
+  // Uma cópia só para a seção inteira (os casos rodam em sequência): cada caso altera um arquivo, valida e RESTAURA o original.
+  // Copiar o repositório de novo a cada caso era o que tornava esta seção lenta.
+  let base;
+  before(() => { base = fs.mkdtempSync(path.join(os.tmpdir(), 'academia-secao15-')); preencherCopia(base); });
+  after(() => { if (base) apagarTmp(base); });
+  /** Aplica a alteração a um arquivo da cópia, devolve só as mensagens de erro da validação e restaura o arquivo. */
+  function errosCom(rel, alterar) {
+    const arq = path.join(base, rel);
+    const original = fs.readFileSync(arq);
+    try {
+      fs.writeFileSync(arq, alterar(original.toString('utf8').replace(/\r\n/g, '\n')));
+      return validarTudo(base).erros.map((e) => `${e.arquivo}: ${e.mensagem}`).join('\n');
+    } finally {
+      fs.writeFileSync(arq, original);
+    }
+  }
+
+  it('o conteúdo real tem os cinco blocos na ordem, V1 a V5 na lição 1 e a correção de cada uma no gabarito', () => {
+    const licao = fs.readFileSync(path.join(RAIZ_REAL, LICAO1, 'README.md'), 'utf8');
+    const blocos = [...licao.matchAll(/^### 15\.(\d) (.*)$/gm)].map((m) => `${m[1]} ${m[2].trim()}`);
+    assert.deepEqual(blocos, ['1 Onde isso aparece no trabalho', '2 Reforço (revisão espaçada)', '3 Desafio de transferência', '4 Ponte com o projeto e com a prática', '5 Calibragem']);
+    const gabarito = fs.readFileSync(path.join(RAIZ_REAL, LICAO1, 'gabarito.md'), 'utf8');
+    for (let n = 1; n <= 5; n++) assert.match(gabarito, new RegExp(`^## V${n} ·`, 'm'));
+  });
+
+  it('bloco ausente, fora de ordem ou com título diferente é erro; bloco a mais também', () => {
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.3 Desafio de transferência', '### 15.3 Outro título')), /a seção 15 deve ter "### 15\.3 Desafio de transferência"/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.5 Calibragem', '### 15.5 Calibragem\n\ntexto\n\n### 15.6 Extra')), /blocos além do 15\.5/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.2 Reforço (revisão espaçada)', '### 15.2 Reforço (revisão espaçada)').replace(/### 15\.4[^\n]*\n/, '')), /15\.4 Ponte/);
+  });
+
+  it('seção 15 inteira ausente e seção 16 a mais são erros', () => {
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.slice(0, t.indexOf('## 15.'))), /seção 15 deve ser "## 15\. Aplicação, reforço e desafios"/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => `${t}\n## 16. Sobra\n\ntexto\n`), /seções além da 15ª/);
+  });
+
+  it('exige V1 a V5 em sequência no início da linha: faltando uma, repetida ou fora de ordem reprova', () => {
+    const sem = (n) => (t) => t.replace(new RegExp(`^\\*\\*V${n}\\.\\*\\*`, 'm'), `V${n}.`);
+    assert.match(errosCom(`${LICAO1}/README.md`, sem(3)), /perguntas de revisão \*\*V1\.\*\* a \*\*V5\.\*\*/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('**V4.**', '**V5.**')), /perguntas de revisão/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace(/\*\*V5\.\*\*/, '**V6.**')), /perguntas de revisão/);
+  });
+
+  it('as perguntas V só valem dentro do bloco 15.2 (V1 a V5 em outro bloco não contam)', () => {
+    const msg = errosCom(`${LICAO1}/README.md`, (t) => {
+      const v = t.match(/\*\*V1\.\*\*[\s\S]*?(?=### 15\.3)/)[0];
+      return t.replace(v, '').replace('### 15.4', `${v}\n### 15.4`);
+    });
+    assert.match(msg, /perguntas de revisão/);
+  });
+
+  it('o gabarito precisa comentar cada V presente na lição', () => {
+    const msg = errosCom(`${LICAO1}/gabarito.md`, (t) => t.replace(/^## V3 ·/m, '## Terceira ·'));
+    assert.match(msg, /gabarito\.md: falta a correção da pergunta de revisão V3/);
+    assert.ok(!/V1|V2|V4|V5/.test(msg.replace(/V3/g, '')), 'só a V3 foi apontada');
+  });
+
+  it('um "## V3" que só aparece dentro de um bloco de código no gabarito não conta como correção', () => {
+    const msg = errosCom(`${LICAO1}/gabarito.md`, (t) => t.replace(/^## V3 ·.*$/m, '```md\n## V3 · só num bloco de código\n```'));
+    assert.match(msg, /gabarito\.md: falta a correção da pergunta de revisão V3/);
+  });
+
+  it('títulos "## 15." dentro de um bloco de código não contam como seção', () => {
+    const msg = errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.1 Onde isso aparece no trabalho', '### 15.1 Onde isso aparece no trabalho\n\n```md\n## 16. Isto está num bloco de código\n### 15.9 Idem\n```\n'));
+    assert.equal(msg, '', msg);
+  });
+
+  it('o template também precisa dos cinco blocos; a Missão 0 não exige V1 a V5 (não conclui competência)', () => {
+    assert.match(errosCom('academia/templates/licao.md', (t) => t.replace('### 15.1 Onde isso aparece no trabalho', '### 15.1 Sem título certo')), /templates\/licao\.md: a seção 15 deve ter "### 15\.1/);
+    const missao = errosCom('academia/licoes/00-missao-0-diagnostico/README.md', (t) => t.replace('### 15.3 Desafio de transferência', '### 15.3 Errado'));
+    assert.match(missao, /00-missao-0-diagnostico\/README\.md: a seção 15 deve ter "### 15\.3/);
+    assert.ok(!/perguntas de revisão/.test(missao));
+  });
+
+  it('o kit de uma revisão traz as perguntas V1 a V5 da lição (e nunca a correção do gabarito)', () => {
+    const copia = copiarRepo();
+    const dir = path.join(copia, 'academia', 'alunos', 'werther');
+    const preenchido = 'Texto do aluno com mais de vinte letras para valer como preenchido.';
+    fs.writeFileSync(path.join(dir, 'perfil.md'), `---\nslug: werther\nnome: Werther\ncompartilhar_xp: nao\nritmo: 3 horas por semana\n---\n\n## Objetivo com o curso\n\n${preenchido}\n\n## Ponto de partida\n\n${preenchido}\n\n## Preferências de estudo\n\n${preenchido}\n\n## Ambiente\n\n${preenchido}\n`);
+    const { config } = carregarConfig(copia);
+    const ev = (rel) => evid(dir, rel);
+    sessao(dir, { aluno: 'werther', numero: 1, etapa: 0, status: 'concluida', atividades: [['E00-quiz', 'quiz', 1, 'aprovado', ev('entregas/etapa-00/diagnostico.md'), 10], ['E00-lab', 'laboratorio', 1, 'aprovado', ev('entregas/etapa-00/ambiente.md'), 30]] });
+    sessao(dir, { aluno: 'werther', numero: 2, data: '2026-10-19', etapa: 1, status: 'concluida', atividades: [['E01-quiz', 'quiz', 1, 'aprovado', ev('entregas/etapa-01/quiz.md'), 10], ['E01-lab', 'laboratorio', 1, 'aprovado', ev('entregas/etapa-01/relatorio.md'), 30]] });
+    sessao(dir, { aluno: 'werther', numero: 3, data: '2026-10-20', etapa: 2 });
+    const kit = montarKit(copia, config, 'werther', { hoje: '2026-10-21' });
+    const revisao = kit.slice(kit.indexOf('REVISÃO SUGERIDA'));
+    assert.match(revisao, /### 15\.2 Reforço/);
+    for (let n = 1; n <= 5; n++) assert.match(revisao, new RegExp(`\\*\\*V${n}\\.\\*\\*`));
+    assert.ok(!/### 15\.3 Desafio/.test(revisao), 'o bloco termina antes do 15.3');
+    assert.ok(!revisao.includes('turno 4 = 750'), 'a correção de V1 nunca vai no kit');
   });
 });
 

@@ -81,6 +81,7 @@ Você é um **tutor**, não um gerador de respostas. O objetivo é o aluno **con
 - **Não invente links, versões, recursos ou capacidades.** Se não conseguiu verificar, diga isso no texto.
 - Separe **fundamentos duráveis** de **ferramentas e APIs**. Os objetivos pedagógicos não dependem da ferramenta.
 - **Nunca** inclua segredos, tokens, chaves ou dados pessoais em nada que vá para o repositório.
+- Verificadores que **executam** o código do aluno (como o da Lição 2) não são *sandbox*: rode-os só em código que o aluno escreveu ou que você revisou, nunca em código de terceiros sem revisão.
 - Não afirme que testou, executou ou verificou algo que não executou.
 
 ## Se você edita o repositório
@@ -88,11 +89,11 @@ Você é um **tutor**, não um gerador de respostas. O objetivo é o aluno **con
 - Trabalhe numa **branch**, nunca na branch padrão, e abra um pull request. Não faça merge.
 - Mudanças **mínimas e rastreáveis**. Não reorganize [`modulos/`](modulos/) nem reescreva o que já funciona; ligue-se
   a ele com links.
-- Uma lição nova usa o [template](academia/templates/licao.md): 14 seções, quiz com gabarito separado, critérios de
+- Uma lição nova usa o [template](academia/templates/licao.md): 15 seções (a 15 traz aplicação, perguntas de revisão V1 a V5 com correção no gabarito, transferência e calibragem), quiz com gabarito separado, critérios de
   aceitação objetivos, rubrica, dicas graduais, relatório do aluno e competências. Atualize o
   [ROADMAP](academia/ROADMAP.md) (status) e o [CHANGELOG](academia/CHANGELOG.md).
 - Antes de concluir: `node academia/ferramentas/academia.mjs validar` (ou `validar --aluno <aluno>` numa sessão de
-  aluno) e `node --test "academia/**/*.test.mjs"`.
+  aluno) e `node academia/ferramentas/testar.mjs` (rápidos; `--lentos` e `--tudo` quando a mudança toca um verificador, o `kit/` ou as `referencia/` de uma lição).
 - Convenções do repositório: documentos em português, exemplos dos módulos em JavaScript/Node **e em Python** (subpasta `python/` de cada exemplo; ferramentas e verificadores da Academia em Node, sem dependências), LLM local via Ollama com API
   compatível com a OpenAI (`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `MODELO_CHAT`; veja
   [`infra/.env.example`](infra/.env.example)).

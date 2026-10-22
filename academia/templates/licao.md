@@ -8,7 +8,7 @@ revisado_em: AAAA-MM-DD
 
 # Lição N · Título da lição
 
-> Copie este arquivo para `academia/licoes/NN-slug/README.md` e preencha as 14 seções, **na ordem e com estes
+> Copie este arquivo para `academia/licoes/NN-slug/README.md` e preencha as 15 seções, **na ordem e com estes
 > títulos**: o validador (`node academia/ferramentas/academia.mjs validar`) confere. Apague os comentários `>`.
 > No front matter: `etapa` (número do [ROADMAP](../ROADMAP.md)), `competencias` (IDs de
 > [competencias.md](../competencias.md)), `duracao_min` e `revisado_em` (data da última revisão do conteúdo).
@@ -81,3 +81,41 @@ revisado_em: AAAA-MM-DD
 
 > Fontes oficiais com data de verificação, separadas em **fundamentos duráveis** e **dependentes de ferramenta**.
 > Registre a data da última revisão e o que deve ser reverificado primeiro quando a lição envelhecer.
+
+## 15. Aplicação, reforço e desafios
+
+> Fecha o ciclo: do conceito ao uso real e do uso real de volta ao conceito (recuperação ativa). Cinco blocos, **nesta
+> ordem e com estes títulos** (o validador confere). Nada aqui cria XP novo: os desafios `opcional` seguem a regra de
+> 20 XP e no máximo 3 por etapa ([GAMIFICACAO.md](../GAMIFICACAO.md#desafios-opcionais)).
+
+### 15.1 Onde isso aparece no trabalho
+
+> Três situações reais (quem faz o quê e qual decisão o conceito muda), os **erros comuns** que aparecem quando o
+> conceito é ignorado e o **sinal de alerta** que os denuncia (o que você veria num log, numa conta ou num usuário
+> reclamando). Cite o que for verificado em fontes; não invente números.
+
+### 15.2 Reforço (revisão espaçada)
+
+> Cinco perguntas de revisão, **V1.** a **V5.**, no início da linha e em ordem. Elas são **diferentes** das do quiz (seção 7),
+> de formatos variados (prever um resultado, achar o erro num trecho, calcular, explicar com as próprias palavras, aplicar a um
+> caso novo) e respondidas **de memória**. Só as perguntas ficam aqui: a correção comentada de cada uma vai em `gabarito.md`,
+> em `## V1 · ...` a `## V5 · ...`. O `kit` e o cartão de retomada trazem este bloco nas revisões sugeridas (R<NN>-1 a R<NN>-4).
+> Não coloque aqui dicas nem a lista de erros comuns: ela revelaria as respostas (os erros comuns ficam no 15.1).
+
+### 15.3 Desafio de transferência
+
+> A mesma habilidade num contexto que o aluno não praticou (outro corpus, outro provedor, outra linguagem, um problema do
+> próprio trabalho), com critérios objetivos e sem verificador obrigatório. Se rende XP, é um dos `E<NN>-opcional-N` já
+> listados na seção 8 (no máximo 3 por etapa; diga qual e o que registrar como evidência); senão, diga que é **sem XP**.
+> Inclua o "ensine a um colega": explicar a lição em 5 minutos a alguém que não a estudou e anotar onde a pessoa se perdeu.
+
+### 15.4 Ponte com o projeto e com a prática
+
+> O marco do [projeto evolutivo](../projeto/README.md) que esta lição entrega, qual dos [projetos práticos do time de agentes](../extensoes/time-de-agentes/projetos-praticos.md)
+> usa o que foi aprendido e que módulo do repositório aprofunda (versões JavaScript e Python).
+
+### 15.5 Calibragem
+
+> Uma previsão **antes** de executar o laboratório ("prevejo X") e o confronto **depois** ("medi Y; a diferença foi Z porque...").
+> Registre no relatório do aluno, junto com a confiança de cada resposta do quiz. Quem se superestima sistematicamente
+> (confiança alta, acerto baixo) revê o quiz antes de ler o material da etapa seguinte.

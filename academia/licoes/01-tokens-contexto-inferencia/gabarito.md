@@ -128,6 +128,57 @@ Qualquer um destes é aceitável, desde que justificado:
 
 ---
 
+## V1 · Orçamento de uma conversa de 4 turnos: **turno 4 = 750; total = 1.800**
+
+A entrada de um turno é a mensagem `system` + tudo o que veio antes (perguntas e respostas) + a pergunta atual: `100 + (n − 1) × (50 + 150) + 50`.
+
+| Turno | Entrada enviada |
+|---|---|
+| 1 | 100 + 50 = 150 |
+| 2 | 100 + 200 + 50 = 350 |
+| 3 | 100 + 400 + 50 = 550 |
+| 4 | 100 + 600 + 50 = **750** |
+
+Soma: 150 + 350 + 550 + 750 = **1.800**, contra 800 tokens de conteúdo novo (4 × 200) mais o `system`. Erro comum: contar só a pergunta atual (50 por turno) ou esquecer que o `system`
+vai de novo em todas as chamadas.
+
+## V2 · `JSON.parse` de uma saída cortada
+
+O defeito é **não olhar o `finish_reason`**. Com `max_tokens: 50`, uma resposta maior que isso termina com `finish_reason: "length"` e o conteúdo vem **cortado no meio**; o `JSON.parse` lança erro
+justamente nos textos longos. (Modelos que "pensam" antes de responder também podem gastar o teto com o raciocínio e devolver conteúdo vazio.) Para detectar sem interpretar a resposta:
+confira `r.choices[0].finish_reason === 'stop'` **antes** do `JSON.parse`; se for `length`, trate como erro (aumente o teto, simplifique o pedido ou divida a tarefa) em vez de tentar consertar o JSON.
+
+## V3 · Troca de modelo e +30% de `prompt_tokens`
+
+Consequências possíveis (vale qualquer três bem justificadas):
+
+1. **Janela:** o prompt que cabia pode passar a estourar a janela efetiva (ou a configurada no servidor). Perceba por erro de validação ou `finish_reason: "length"`, e olhando `prompt_tokens` + `max_tokens` contra a janela.
+2. **Custo e limite de taxa:** o custo por chamada e o consumo do limite em tokens por minuto sobem na mesma proporção. Perceba na fatura, nos erros de taxa e somando o `usage` por chamada.
+3. **Estimativas locais:** contadores de outro fornecedor, ou regras como "caracteres ÷ 4", deixam de valer. Perceba comparando a estimativa com o `usage` real.
+4. **Reserva de saída:** menos espaço sobra para a resposta. Perceba pelo aumento de respostas cortadas.
+
+A lição de fundo: **tokenizer é do modelo**; qualquer número que não vem do `usage` do modelo atual é estimativa.
+
+## V4 · Por que a resposta longa é lenta
+
+A resposta é gerada **um token por vez**, e cada token depende dos anteriores (autorregressivo); o *prefill* do prompt acontece uma vez, em paralelo. Então o tempo da fase de decode cresce
+**linearmente com o número de tokens de saída**, mesmo que o prompt seja curto. Consequência prática: `max_tokens` é uma alavanca de **latência e custo** (e de risco de corte). Peça respostas
+curtas quando bastar, ajuste o teto ao que a tarefa precisa e use *streaming* só para melhorar a latência **percebida** (o total não diminui). Erro comum: achar que o prompt é o que pesa.
+
+## V5 · 120 páginas numa janela de 32.000 tokens
+
+Passos de uma boa resposta:
+
+1. **Medir, não supor:** com o próprio endpoint, enviar uma amostra (por exemplo, 5 páginas) com `max_tokens` pequeno e ler o `prompt_tokens`; calcular a inclinação em tokens por caractere
+   (e o custo fixo, como no experimento 2) e extrapolar para o total de caracteres do relatório.
+2. **Somar a reserva de saída:** entrada estimada + `max_tokens` desejado precisam caber na janela (entrada e saída dividem o limite).
+3. **Conferir a janela que você realmente tem:** a configurada no servidor pode ser menor que a anunciada (no Ollama, o padrão é 4k em máquinas com pouca VRAM).
+
+O que ainda pode dar errado mesmo que caiba: a **qualidade** cai com contexto muito longo (informação no meio é pior usada, *Lost in the Middle*), o **custo e a latência** de cada chamada sobem e a
+chance de prompt injection aumenta com texto de terceiros no contexto. É por isso que as etapas 4 a 8 ensinam a escolher **o que** entra na janela.
+
+---
+
 ## Pontuação e competências
 
 Mesma regra da seção 13 da lição:

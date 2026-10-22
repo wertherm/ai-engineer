@@ -45,7 +45,14 @@ export const SEGREDOS = [
   {
     nome: 'variável de segredo com valor',
     re: /\b[A-Z0-9_]{0,40}(?:PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY)[A-Z0-9_]{0,40}\s{0,5}[:=]\s{0,5}["']?([^\s"']{8,200})/,
-    filtro: (m) => !/^(process\.env|\$\{|\$[A-Z_]|<|\{\{|%)/i.test(m[1]),
+    filtro: (m) => {
+      const valor = m[1];
+      if (/^(process\.env|\$\{|\$[A-Z_]|<|\{\{|%)/i.test(valor)) return false; // referência a variável de ambiente ou marcador
+      const entreAspas = /[:=]\s{0,5}["']/.test(m[0]);
+      // sem aspas, um valor que é uma chamada ou o acesso a uma configuração (`int(os.environ.get(...))`, `os.environ[...]`, `env.CHAVE`) é código, não um segredo literal
+      if (!entreAspas && (/^[A-Za-z_][\w.]*[([]/.test(valor) || /^(?:os\.environ|os\.getenv|env|ENV|Deno\.env|System\.getenv|getenv|config|settings|cfg)\b/.test(valor))) return false;
+      return true;
+    },
   },
   {
     nome: 'senha em texto',
