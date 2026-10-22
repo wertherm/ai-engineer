@@ -3,6 +3,27 @@
 Mudanças relevantes no currículo e no sistema de acompanhamento. Formato: data, o que mudou, por quê. Mudanças nos
 módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) seguem o histórico do Git.
 
+## 2026-10-21 · Productivity Hacks (dicas, trilhas e projetos para ganhar tempo com IA)
+
+**Adicionado**
+
+- **[Extensão Productivity Hacks](extensoes/productivity-hacks/README.md)**, fruto de cinco pesquisas independentes (voz; e-mail e agenda; automações; Telegram; ganhos), lidas em 2026-10-21:
+  - **42 dicas** "Sabia que você pode ___ para melhorar ___?" em 5 [trilhas](extensoes/productivity-hacks/trilhas/voz.md), cada uma com passo a passo, tempo e custo, **cuidado** (o que não enviar à nuvem), etapa em que entra, projeto e **fontes com a marca [verificado] ou [não verificado]**.
+  - **11 [projetos que rendem](extensoes/productivity-hacks/projetos-que-rendem.md)** com critérios de aceitação testáveis e como testar sem credenciais reais (de um `tg-notify` a um agente de e-mail testado contra injeção de prompt e a um piloto de serviço para um pequeno negócio).
+  - [Segurança comum](extensoes/productivity-hacks/seguranca.md): regra de duas das três coisas, listas de verificação (e-mail e agenda, bot no Telegram, governança de automações) e o que nunca mandar à nuvem.
+  - Trilha de **ganhos com realismo**: a conta do retorno, cronometrar antes e depois, custo de inferência por usuário pesado, quadro do Brasil (MEI, nota fiscal, LGPD, com a ressalva de que não é aconselhamento) e golpes a evitar. Não promete renda e não traz preço de mercado: a pesquisa não achou fonte independente com metodologia.
+  - Código de referência testado **só contra simulações**: [Telegram falso](extensoes/productivity-hacks/referencia/telegram-falso.mjs), [ponte](extensoes/productivity-hacks/referencia/ponte-telegram.mjs) (cliente, lista de IDs, anti-repetição e canal de aprovação por botões que se encaixa no registro de ferramentas), [demonstração](extensoes/productivity-hacks/referencia/demo-aprovacao.mjs), [limpeza de entrada e saída](extensoes/productivity-hacks/referencia/saida-segura.mjs), [WER](extensoes/productivity-hacks/referencia/wer.mjs) e [retorno](extensoes/productivity-hacks/referencia/retorno.mjs). Testes de mutação: 36 defeitos injetados na ponte, 28 no limpador de saída e 24 no validador, todos pegos.
+- **Seção 15.6 "Hack de produtividade"** em toda lição (e no template): uma dica do catálogo para aplicar hoje, opcional e sem XP. A Missão 0, a Lição 1 e a Lição 2 receberam a sua. O `kit` manda o assistente apresentá-la perto do fim da sessão.
+- **Duas revisões independentes** (código/segurança e conteúdo/fatos) antes do PR; os achados confirmados foram corrigidos, cada um com teste: o laço de updates que travava a aprovação quando o tratador da mensagem a esperava; parâmetros cortados na tela de aprovação (agora completos, ou o pedido é negado); vazamentos do token por corte antes de mascarar e pela forma codificada (e o padrão de token de bot entrou no detector de segredos do `validar`); furos do limpador de saída (`//host`, `<img/src`, markdown aninhado, texto escondido por estilo, aspas simples, `!important`, aninhamento) e texto hostil que travava (orçamento de passos); conselhos que davam acesso demais (Apps Script com acesso total, token digitado na sessão do Claude Code, token na linha de comando do `curl`); a regra das Stars do Telegram, relida nos termos oficiais.
+- `ferramentas/produtividade.mjs`: valida o catálogo (formato de cada dica, numeração, campos obrigatórios, marcas nas fontes, ligação dicas ↔ projetos sem órfãos, o bloco 15.6 das lições citando dicas que existem) e gera o mapa "quando fazer cada dica" (`mapa --escrever`); o `validar` confere que o mapa está em dia.
+
+**Alterado**
+
+- Validador: a seção 15 passa a ter **seis** blocos (o sexto é o 15.6).
+- Regras do assistente ([AI_CONTEXT](../AI_CONTEXT.md)): apresentar a dica sem prometer ganho, nunca pedir token, senha ou acesso a e-mail ou agenda, tratar conteúdo lido como dado e não dar aconselhamento jurídico, contábil ou tributário.
+
+**Limites:** nada foi executado contra o Telegram, um provedor de e-mail ou um LLM reais; as dicas que citam produtos de terceiros seguem a documentação lida em 2026-10-21 por resumos de um modelo auxiliar (números críticos precisam de reconferência); um ponto ficou **sem resolução** porque as leituras discordaram (o que as páginas do Wispr Flow dizem sobre armazenamento); a discordância sobre as Stars do Telegram foi resolvida na revisão, relendo os termos oficiais; preços de assinaturas de Claude Code, Codex, Cursor e Copilot e o consolidado atual da lista de ocupações do MEI não foram pesquisados ou confirmados.
+
 ## 2026-10-21 · Testes rápidos e lentos separados
 
 **Alterado**

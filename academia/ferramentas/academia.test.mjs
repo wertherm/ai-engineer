@@ -802,18 +802,27 @@ describe('seção 15 das lições (aplicação, reforço e desafios)', () => {
     }
   }
 
-  it('o conteúdo real tem os cinco blocos na ordem, V1 a V5 na lição 1 e a correção de cada uma no gabarito', () => {
+  it('o conteúdo real tem os seis blocos na ordem, V1 a V5 na lição 1 e a correção de cada uma no gabarito', () => {
     const licao = fs.readFileSync(path.join(RAIZ_REAL, LICAO1, 'README.md'), 'utf8');
     const blocos = [...licao.matchAll(/^### 15\.(\d) (.*)$/gm)].map((m) => `${m[1]} ${m[2].trim()}`);
-    assert.deepEqual(blocos, ['1 Onde isso aparece no trabalho', '2 Reforço (revisão espaçada)', '3 Desafio de transferência', '4 Ponte com o projeto e com a prática', '5 Calibragem']);
+    assert.deepEqual(blocos, ['1 Onde isso aparece no trabalho', '2 Reforço (revisão espaçada)', '3 Desafio de transferência', '4 Ponte com o projeto e com a prática', '5 Calibragem', '6 Hack de produtividade']);
     const gabarito = fs.readFileSync(path.join(RAIZ_REAL, LICAO1, 'gabarito.md'), 'utf8');
     for (let n = 1; n <= 5; n++) assert.match(gabarito, new RegExp(`^## V${n} ·`, 'm'));
   });
 
   it('bloco ausente, fora de ordem ou com título diferente é erro; bloco a mais também', () => {
     assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.3 Desafio de transferência', '### 15.3 Outro título')), /a seção 15 deve ter "### 15\.3 Desafio de transferência"/);
-    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.5 Calibragem', '### 15.5 Calibragem\n\ntexto\n\n### 15.6 Extra')), /blocos além do 15\.5/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => `${t}\n\n### 15.7 Extra\n\ntexto\n`), /blocos além do 15\.6/);
     assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('### 15.2 Reforço (revisão espaçada)', '### 15.2 Reforço (revisão espaçada)').replace(/### 15\.4[^\n]*\n/, '')), /15\.4 Ponte/);
+  });
+
+  it('bloco 15.6 (hack de produtividade): precisa existir, ter "Sabia que você pode" e citar uma dica que EXISTE no catálogo', () => {
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace(/### 15\.6[\s\S]*$/, '')), /a seção 15 deve ter "### 15\.6 Hack de produtividade"/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace(/PH-GAN-03/g, 'PH-GAN-99')), /cita PH-GAN-99, que não existe no catálogo/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace('**Sabia que você pode**', 'Dica:')), /deve conter "\*\*Sabia que você pode\*\*"/);
+    assert.match(errosCom(`${LICAO1}/README.md`, (t) => t.replace(/PH-GAN-03/g, 'ph-gan-03')), /deve citar uma dica do catálogo/);
+    // o template não é uma lição: o id de exemplo dele não precisa existir
+    assert.equal(errosCom('academia/templates/licao.md', (t) => t), '');
   });
 
   it('seção 15 inteira ausente e seção 16 a mais são erros', () => {
@@ -852,7 +861,7 @@ describe('seção 15 das lições (aplicação, reforço e desafios)', () => {
     assert.equal(msg, '', msg);
   });
 
-  it('o template também precisa dos cinco blocos; a Missão 0 não exige V1 a V5 (não conclui competência)', () => {
+  it('o template também precisa dos seis blocos; a Missão 0 não exige V1 a V5 (não conclui competência)', () => {
     assert.match(errosCom('academia/templates/licao.md', (t) => t.replace('### 15.1 Onde isso aparece no trabalho', '### 15.1 Sem título certo')), /templates\/licao\.md: a seção 15 deve ter "### 15\.1/);
     const missao = errosCom('academia/licoes/00-missao-0-diagnostico/README.md', (t) => t.replace('### 15.3 Desafio de transferência', '### 15.3 Errado'));
     assert.match(missao, /00-missao-0-diagnostico\/README\.md: a seção 15 deve ter "### 15\.3/);

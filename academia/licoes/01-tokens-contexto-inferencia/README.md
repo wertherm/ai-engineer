@@ -551,3 +551,11 @@ Depois, **ensine a um colega**, em 5 minutos, por que o custo de uma conversa cr
 Antes de rodar o laboratório, anote três previsões: a razão PT/EN de tokens, o custo fixo por chamada (em tokens) e em que turno uma conversa de 100 + 200 tokens por turno estoura uma janela de 8.000.
 Depois do verificador, confronte com o que mediu e escreva uma frase por previsão ("previ X, medi Y, errei porque..."). Registre isso na seção **Surpresas e limites** do `relatorio.md`, junto
 com a confiança que você marcou em cada questão do quiz. Se a confiança alta tiver acertos baixos, refaça o quiz antes de abrir a lição 2.
+
+### 15.6 Hack de produtividade
+
+**Sabia que você pode** converter tokens em custo em reais (entrada e saída, modelo pequeno e grande) **para melhorar** a margem de qualquer automação ou bot que você construir, antes de escrever uma linha dele?
+
+- **Dica do catálogo:** [PH-GAN-03 · Modelo pequeno na triagem, grande nos casos difíceis](../../extensoes/productivity-hacks/trilhas/ganhar.md) · 30 a 60 min · R$ 0.
+- **Faça agora:** pegue os tokens de entrada e de saída que o seu laboratório mediu, multiplique pelo preço por milhão de tokens de **dois** modelos (na página oficial do seu provedor, anotando a data) e depois por um usuário 5 vezes mais pesado que o médio. A conta pronta está em [retorno.mjs](../../extensoes/productivity-hacks/referencia/retorno.mjs) (`custoDeInferencia`, `margemDaAssinatura`).
+- **Cuidado:** preços mudam; nunca copie uma tabela de blog. Não coloque chaves de API em arquivos nem em prompts. Opcional e sem XP.

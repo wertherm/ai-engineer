@@ -29,7 +29,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 | [SINCRONIZACAO.md](SINCRONIZACAO.md) | como iniciar, encerrar e retomar sessões, em qualquer assistente de IA |
 | [PROGRESS.md](PROGRESS.md) | visão geral dos alunos (gerada) |
 | [alunos/](alunos/) | uma pasta independente por aluno: perfil, sessões, entregas e `retomada.md` |
-| [extensoes/](extensoes/README.md) | prática avançada: memória por MCP, harness de agentes, engenharia reversa, RAG avançado e o **time de agentes** (com projetos para o dia a dia) |
+| [extensoes/](extensoes/README.md) | prática avançada: memória por MCP, harness de agentes, engenharia reversa, RAG avançado, o **time de agentes** (com projetos para o dia a dia) e os **[Productivity Hacks](extensoes/productivity-hacks/README.md)** (dicas, trilhas e projetos para ganhar tempo com IA) |
 | [templates/](templates/) | lição, relatório de sessão, relatório de laboratório, perfil |
 | [ferramentas/](ferramentas/) | `academia.mjs`: valida, gera o progresso e cria sessões (Node, sem dependências) |
 | [CHANGELOG.md](CHANGELOG.md) | mudanças no currículo e no sistema |
@@ -44,7 +44,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 | **Projeto evolutivo** | especificação do Assistente Técnico, com um marco e um critério de aceite por etapa | — |
 | **Acompanhamento** | uma sessão por arquivo; XP por atividade comprovada; 4 níveis (exigem XP **e** checkpoints); 20 conquistas; revisão espaçada; `retomada.md` e `PROGRESS.md` gerados; dois alunos independentes | testes de regras e teste de mutação das regras críticas |
 | **Ferramenta** | `academia.mjs`: `validar`, `progresso`, `sessao`, `kit`, `novo-aluno` | testes automatizados |
-| **Extensões** | memória persistente por MCP, harness de agentes (registro de ferramentas, personas, avaliadores, skills), engenharia reversa, RAG avançado (fluxo corretivo), time de agentes (orquestrador, agentes de LLM, CLI, 7 projetos práticos) | testes com funções e servidores simulados |
+| **Extensões** | memória persistente por MCP, harness de agentes (registro de ferramentas, personas, avaliadores, skills), engenharia reversa, RAG avançado (fluxo corretivo), time de agentes (orquestrador, agentes de LLM, CLI, 7 projetos práticos), Productivity Hacks (42 dicas em 5 trilhas, 11 projetos, Telegram falso, ponte com aprovação por botões, limpeza de saída, WER e retorno) | testes com funções e servidores simulados |
 | **Segurança** | varredura de segredos, evidência confinada à pasta do aluno, credenciais mascaradas em toda saída, lições só entram na memória com aprovação | testes |
 | **Limites conhecidos** | só a checagem de ambiente da Missão 0 falou com um LLM real (Ollama local); os laboratórios das Lições 1 e 2 e as extensões só rodaram com simulações (a Lição 2 testa o seu cliente contra um servidor falso, que não imita tudo de um provedor real); lições 3 a 16 não foram escritas; GraphRAG só conceitual | declarados nos documentos |
 
@@ -55,6 +55,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 - **Um agente com acesso ao repositório** (Claude Code, Codex, Cursor...): ele lê `AI_CONTEXT.md`, o `retomada.md` do aluno e a lição; conduz a sessão e roda os mesmos comandos.
 - **Só ler e rodar:** os módulos em [`../modulos/`](../modulos/) têm README, exemplos executáveis e exercícios com solução; a Academia só dá a ordem e o registro.
 - **Usar o time de agentes no seu dia a dia:** [extensão Time de agentes](extensoes/time-de-agentes/README.md) e os [projetos práticos](extensoes/time-de-agentes/projetos-praticos.md).
+- **Ganhar tempo com IA (e medir):** a dica da seção 15.6 de cada lição, o [catálogo de Productivity Hacks](extensoes/productivity-hacks/README.md) e os [projetos que rendem](extensoes/productivity-hacks/projetos-que-rendem.md). Sem XP; o ganho é o que você cronometra.
 
 ## Próximos passos
 
@@ -83,7 +84,7 @@ Atualizado em 2026-10-19, depois dos PRs #2 (extensões), #3 (versão Python dos
 | Microlições com objetivos explícitos | seções 2 e 4 de cada [lição](templates/licao.md) |
 | Quizzes curtos com correção comentada, sem spoiler | seção 7 + `gabarito.md` separado, aberto só depois de responder |
 | Recuperação ativa e revisão espaçada | revisões sugeridas no `retomada.md` ([intervalos em sessões](GAMIFICACAO.md#revisão-espaçada)), com perguntas V1 a V5 próprias por lição (bloco 15.2) |
-| Aplicação, transferência e calibragem | seção 15 de cada lição: onde aparece no trabalho, desafio de transferência, ponte com o projeto e a prática, previsão antes de medir |
+| Aplicação, transferência e calibragem | seção 15 de cada lição: onde aparece no trabalho, desafio de transferência, ponte com o projeto e a prática, previsão antes de medir, e uma dica de produtividade para aplicar hoje (15.6) |
 | Laboratórios com critérios objetivos | seção 9 + `verificar.mjs` quando possível |
 | Projeto incremental que reaproveita o código | [projeto/](projeto/) |
 | Feedback individual e checkpoints de domínio | relatório de sessão + [checkpoints](GAMIFICACAO.md#checkpoints-de-domínio) |
@@ -101,6 +102,7 @@ node academia/ferramentas/academia.mjs validar --aluno <aluno> # conteúdo, link
 node academia/ferramentas/academia.mjs progresso <aluno>      # recria o retomada.md dele e o PROGRESS.md
 node academia/ferramentas/academia.mjs novo-aluno <slug> "Nome"
 node academia/ferramentas/academia.mjs validar                # tudo, de todos os alunos (mantenedores)
+node academia/ferramentas/produtividade.mjs mapa --escrever   # atualiza o mapa "quando fazer cada dica" do catálogo de Productivity Hacks
 node academia/ferramentas/testar.mjs                          # testes rápidos (o dia a dia, 1 a 2 min); o mesmo que node --test "academia/**/*.test.mjs"
 node academia/ferramentas/testar.mjs --lentos                 # testes lentos (executam programas de verdade, 3 a 10 min)
 node academia/ferramentas/testar.mjs --tudo                   # os dois grupos: o que o CI deve rodar
@@ -116,7 +118,7 @@ provedor, só com variáveis de ambiente (`OPENAI_BASE_URL`, `OPENAI_API_KEY`, `
 
 ## Como adicionar uma lição
 
-1. Copie [templates/licao.md](templates/licao.md) para `licoes/NN-slug/README.md` e escreva as 15 seções; crie o
+1. Copie [templates/licao.md](templates/licao.md) para `licoes/NN-slug/README.md` e escreva as 15 seções (a seção 15 tem seis blocos; o 15.6 cita uma dica do [catálogo de Productivity Hacks](extensoes/productivity-hacks/README.md), e o `validar` confere); crie o
    `gabarito.md` ao lado. O plano da etapa já está no [ROADMAP](ROADMAP.md).
 2. Se o laboratório tem verificação automática, inclua `verificar.mjs` e um teste (veja a Lição 1).
 3. Marque a etapa como `pronta` no ROADMAP e registre no [CHANGELOG](CHANGELOG.md).

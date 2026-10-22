@@ -63,6 +63,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   resultado (como o da Lição 1, que aceita `medir.mjs`, `medir.py`, `medir.ts`...).
 - **A criar**: lacunas que as lições da Academia preenchem.
 - **Entrega no projeto**: o incremento do [projeto evolutivo](projeto/README.md) que comprova a etapa.
+- **Hack de produtividade**: toda lição `pronta` traz, na seção 15.6, uma dica do [catálogo de Productivity Hacks](extensoes/productivity-hacks/README.md) que combina com o assunto (opcional, sem XP). O [mapa "quando fazer cada dica"](extensoes/productivity-hacks/README.md#quando-fazer-cada-dica) mostra quais dicas e projetos encaixam em cada etapa: use-o ao escrever as lições que faltam.
 - **Conclusão**: o mínimo para marcar a etapa como `concluida` no relatório de sessão: `E<NN>-quiz` e `E<NN>-lab`
   aprovados (o validador exige). A explicação independente (`E<NN>-explicacao`) é recomendada, e as competências da
   etapa devem ser registradas; as que ficarem abaixo do nível 2 viram **pendência de reforço** no relatório. O nível 2

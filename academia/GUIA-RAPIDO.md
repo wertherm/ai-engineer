@@ -43,6 +43,8 @@ Seu aluno é uma pasta em [`alunos/`](alunos/). Aluno novo: `node academia/ferra
    ```
 4. **Salvar.** Commit numa **branch** e pull request. Nunca direto na `main`.
 
+**Quer ganhar tempo com o que aprendeu?** Perto do fim de cada sessão o assistente apresenta o *hack de produtividade* da lição (seção 15.6: "Sabia que você pode... para melhorar...?"). É opcional e não rende XP: cronometre antes e depois. O catálogo, os projetos e os cuidados estão em [Productivity Hacks](extensoes/productivity-hacks/README.md).
+
 **Voltando depois de dias?** É só repetir o passo 1: o `retomada.md` lembra o que você fez e a sessão começa com
 perguntas de revisão. Pausa não custa nada.
 
