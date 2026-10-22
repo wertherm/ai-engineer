@@ -3,6 +3,14 @@
 Mudanças relevantes no currículo e no sistema de acompanhamento. Formato: data, o que mudou, por quê. Mudanças nos
 módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) seguem o histórico do Git.
 
+## 2026-10-19 · Guia rápido
+
+**Adicionado**
+
+- [`GUIA-RAPIDO.md`](GUIA-RAPIDO.md): o fluxo de estudo em uma página (preparar uma vez, ciclo de sessão
+  abrir → estudar → registrar → salvar, e a ordem das etapas), com link no "Comece aqui" e no README da raiz.
+  Por quê: o README da Academia é completo, mas longo para quem só quer começar.
+
 ## 2026-10-18 · Versão Python dos módulos e atualização dos próximos passos
 
 **Contexto:** foram mergeados o PR #2 (extensões práticas, entrada abaixo) e o PR #3 (feito pelo Werther): versão Python de todos os exemplos e exercícios dos 12 módulos
@@ -15,13 +23,6 @@ O PR #3 não alterou nada em `academia/`; a ferramenta, os verificadores e as ex
 - [README da Academia](README.md#próximos-passos): nova seção "Próximos passos", reordenada e atualizada (substitui as listas "Pendente" abaixo como fonte de verdade).
 
 **Verificado** depois do merge, na `main` (0de58c3): `validar` sem erros e 362 testes de `academia/` passando. **Não reexecutei** os exemplos Python dos módulos: a verificação deles é a descrita no PR #3.
-## 2026-10-19 · Guia rápido
-
-**Adicionado**
-
-- [`GUIA-RAPIDO.md`](GUIA-RAPIDO.md): o fluxo de estudo em uma página (preparar uma vez, ciclo de sessão
-  abrir → estudar → registrar → salvar, e a ordem das etapas), com link no "Comece aqui" e no README da raiz.
-  Por quê: o README da Academia é completo, mas longo para quem só quer começar.
 
 ## 2026-10-18 · Extensões práticas (memória, harness, engenharia reversa, RAG avançado e time de agentes)
 

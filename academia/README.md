@@ -46,7 +46,7 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 | **Ferramenta** | `academia.mjs`: `validar`, `progresso`, `sessao`, `kit`, `novo-aluno` | testes automatizados |
 | **Extensões** | memória persistente por MCP, harness de agentes (registro de ferramentas, personas, avaliadores, skills), engenharia reversa, RAG avançado (fluxo corretivo), time de agentes (orquestrador, agentes de LLM, CLI, 7 projetos práticos) | testes com funções e servidores simulados |
 | **Segurança** | varredura de segredos, evidência confinada à pasta do aluno, credenciais mascaradas em toda saída, lições só entram na memória com aprovação | testes |
-| **Limites conhecidos** | nenhum laboratório foi executado contra um LLM real ainda; lições 2 a 16 não foram escritas; GraphRAG só conceitual | declarados nos documentos |
+| **Limites conhecidos** | só a checagem de ambiente da Missão 0 falou com um LLM real (Ollama local); o laboratório da Lição 1 e as extensões só rodaram com simulações; lições 2 a 16 não foram escritas; GraphRAG só conceitual | declarados nos documentos |
 
 ## Como interagir com o conteúdo
 
@@ -58,12 +58,12 @@ Referência de 16 semanas × 3 horas = 48 horas, **sem prazos rígidos**: pausar
 
 ## Próximos passos
 
-Atualizado em 2026-10-18, depois dos PRs #2 (extensões) e #3 (versão Python de todos os exemplos e exercícios dos módulos). Em ordem de prioridade:
+Atualizado em 2026-10-19, depois dos PRs #2 (extensões), #3 (versão Python dos módulos), #5 (guia rápido) e #6 (primeira sessão do Werther). Em ordem de prioridade:
 
-1. **Começar a estudar.** Os dois alunos estão em 0/16, sem XP, na [Missão 0](licoes/00-missao-0-diagnostico/README.md). Todo o acompanhamento só foi exercitado com simulações:
-   cada aluno abre a sua sessão (`sessao <aluno>`), faz a Missão 0 e depois a [Lição 1](licoes/01-tokens-contexto-inferencia/README.md).
-2. **Primeira execução com um LLM real.** Nenhuma lição ou extensão rodou contra um modelo de verdade; prompts, limiares do juiz e `maxTokens` são palpites. Suba o Ollama do repositório
-   (`bash infra/subir-ia.sh`), rode a solução de referência da Lição 1 e registre no [CHANGELOG](CHANGELOG.md) o modelo, as versões e o que precisou de ajuste.
+1. **Seguir estudando.** O Werther concluiu a Missão 0 (sessão s01, 40 XP) e está na [Lição 1](licoes/01-tokens-contexto-inferencia/README.md): a ação combinada é responder o quiz **antes** de ler a microlição.
+   O responsável pelo projeto ainda não começou (`sessao responsavel`, Missão 0). Dica da sessão do Werther: nas revisões, anote também a consequência prática de cada correção.
+2. **Executar de verdade o que ainda só rodou simulado.** A checagem de ambiente da Missão 0 já falou com o Ollama local (`qwen3.5:4b`, na máquina do Werther), mas o laboratório da Lição 1 e as extensões
+   (juiz, time, CRAG) só rodaram contra modelos falsos; prompts, limiares do juiz e `maxTokens` são palpites. Rode o laboratório da Lição 1 contra o Ollama e registre no [CHANGELOG](CHANGELOG.md) o modelo, as versões e o que precisou de ajuste.
 3. **Usar o time numa mudança sua** (projeto P1, com `--entrada` e `--raiz`) e anotar a concordância com o veredito do time: é a fase F1 da [extensão](extensoes/time-de-agentes/README.md#6-fases-de-evolução).
 4. **Escrever as lições 2 a 16.** Só a Missão 0 e a Lição 1 estão prontas. Como todo exemplo dos módulos agora existe em JavaScript e em Python, decida se cada laboratório aceita as duas linguagens
    (os verificadores que só conferem arquivos de resultado, como o da Lição 1, já aceitam).
