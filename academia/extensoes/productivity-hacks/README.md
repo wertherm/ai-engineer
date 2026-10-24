@@ -2,7 +2,7 @@
 
 Dicas do tipo **"Sabia que você pode ___ para melhorar ___?"**, projetos práticos com desenvolvimento e um olhar honesto sobre o que rende de verdade: o que você consegue medir (tempo, custo, erros) e, com muito mais cuidado, a chance de transformar uma automação em serviço. Cobre ditado e transcrição por voz, e-mail e agenda, automações e assistentes, o Telegram como interface e as contas de retorno.
 
-**O que isto é:** um catálogo de 42 dicas em cinco trilhas, 11 projetos com critérios de aceitação testáveis e um pequeno código de referência, tudo com a data da pesquisa (2026-10-21) e a marca do que foi e do que não foi verificado.
+**O que isto é:** um catálogo de 43 dicas em cinco trilhas, 11 projetos com critérios de aceitação testáveis e um pequeno código de referência, tudo com a data da pesquisa (2026-10-21) e a marca do que foi e do que não foi verificado.
 **O que isto NÃO é:** não promete ganho de tempo nem de dinheiro (o ganho é o que **você mede**), não recomenda produto pago, não é aconselhamento jurídico, contábil ou tributário e não é um convite para dar a um agente acesso irrestrito às suas contas.
 
 > Leia a [segurança comum](seguranca.md) antes de ligar qualquer dica a uma conta, a um bot ou a uma API paga.
@@ -17,7 +17,7 @@ Dicas do tipo **"Sabia que você pode ___ para melhorar ___?"**, projetos práti
 
 | Trilha | O que cobre | Dicas | Projetos |
 |---|---|---|---|
-| [Voz](trilhas/voz.md) | ditado nativo e local, teste cego com WER, voz que vira tarefa, transcrição de áudio longo, reunião com consentimento | 7 | PP-03 |
+| [Voz](trilhas/voz.md) | ditado nativo e local, teste cego com WER, o que conferir no Wispr Flow, voz que vira tarefa, transcrição de áudio longo, reunião com consentimento | 8 | PP-03 |
 | [E-mail e agenda](trilhas/email-e-agenda.md) | resumo e filtros nativos, foco e fusos, resumo da manhã no Telegram, texto invisível e injeção de prompt, agente com aprovação | 8 | PP-04, PP-09 |
 | [Automações e assistentes](trilhas/automacoes.md) | CLAUDE.md, skills, `claude -p`, hooks, relatórios agendados, notas fiscais, formulários, monitores, segundo cérebro, expansor de texto, no-code ou código, revisão de PR | 12 | PP-06, PP-07, PP-08 |
 | [Telegram como interface](trilhas/telegram.md) | aviso de script, relatório diário, bot só seu, botão de confirmar, idempotência, teste sem token, aprovação no n8n, Claude Code pelo celular | 8 | PP-01, PP-02, PP-05, PP-06 |
@@ -43,6 +43,7 @@ Gerado do campo "Entra em" de cada dica (`node academia/ferramentas/produtividad
   - [PH-VOZ-01](trilhas/voz.md) · Ditar antes de pagar por qualquer coisa
   - [PH-VOZ-03](trilhas/voz.md) · Ditado local e gratuito (Handy)
   - [PH-VOZ-07](trilhas/voz.md) · Reunião: grave e transcreva só com consentimento
+  - [PH-VOZ-08](trilhas/voz.md) · Wispr Flow: o que conferir nas configurações antes do primeiro ditado
 - **Etapa 1:**
   - [PH-GAN-03](trilhas/ganhar.md) · Modelo pequeno na triagem, grande nos casos difíceis
 - **Etapa 2:**
@@ -95,7 +96,7 @@ Gerado do campo "Entra em" de cada dica (`node academia/ferramentas/produtividad
 
 ## Código de referência
 
-Pequeno, sem dependências (Node 22+), com testes. **Tudo foi testado só contra simulações**: nada foi executado contra o Telegram, um provedor de e-mail ou um LLM reais, e as dicas que citam produtos de terceiros (Wispr Flow, n8n, Claude Code, Gmail...) **não** foram testadas por quem escreveu: seguem a documentação lida em 2026-10-21. A primeira execução real deve usar um bot de teste e um chat só seu, e ser registrada no [CHANGELOG](../../CHANGELOG.md).
+Pequeno, sem dependências (Node 22+), com testes. **Tudo foi testado só contra simulações**: nada foi executado contra o Telegram, um provedor de e-mail ou um LLM reais, e as dicas que citam produtos de terceiros (Wispr Flow, n8n, Claude Code, Gmail...) **não** foram testadas por quem escreveu: seguem a documentação lida em 2026-10-21 (Wispr Flow: Central de Ajuda oficial, 2026-10-24). A primeira execução real deve usar um bot de teste e um chat só seu, e ser registrada no [CHANGELOG](../../CHANGELOG.md).
 
 | Arquivo | Para quê | Dicas e projetos |
 |---|---|---|
@@ -126,7 +127,7 @@ Cinco pesquisas independentes em 2026-10-21, uma por tema (voz; e-mail e agenda;
 
 - As páginas foram lidas por **resumos de um modelo auxiliar**, não pelo HTML bruto: números críticos (preços, limites, taxas, multas) precisam de reconferência na fonte antes de virarem decisão.
 - Onde a fonte oficial não abriu (bloqueio, 403, 404, página que só carrega com script), a dica diz isso e marca `[não verificado]`.
-- Onde as leituras **discordaram**: o que cada página do Wispr Flow diz sobre armazenamento e uso para melhorar o modelo ficou como contradição não resolvida ([voz](trilhas/voz.md)). Uma discordância sobre as Stars do Telegram foi resolvida na revisão, relendo os termos oficiais ([ganhar](trilhas/ganhar.md)).
+- Onde as leituras **discordaram**, a Central de Ajuda oficial resolveu: no Wispr Flow, a página de privacidade diz que o áudio é apagado "a menos que o armazenamento em nuvem esteja ligado", e a Central de Ajuda diz que esse armazenamento vem **ligado por padrão** ([PH-VOZ-08](trilhas/voz.md), lido em 2026-10-24); nas Stars do Telegram, os termos oficiais trouxeram o valor ([ganhar](trilhas/ganhar.md)). Continuam sem resposta nos artigos lidos: o prazo de retenção do áudio e do texto de ditado, o "Privacy Mode" e o processamento local do Wispr Flow.
 - O nome certo do app de ditado que costuma ser citado como "Whisper Flow" é **Wispr Flow** (outra empresa, outro produto); "Whisper" é o modelo aberto da OpenAI.
 - Preço de assinatura de Claude Code, Codex, Cursor e Copilot **não foi pesquisado**; preços de planos pagos do Make e o consolidado atual da lista de ocupações do MEI também não foram confirmados.
 - Quatro dos cinco agentes de pesquisa relataram, nos resumos finais, texto com instruções embutido no que leram na web e o trataram como dado (dois também o registraram nos relatórios): veja o final da [segurança comum](seguranca.md).

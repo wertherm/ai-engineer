@@ -82,6 +82,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [LLMOps · exemplo 02 (tokens e sampling)](../trilhas-extras/llmops-vllm-openshift/exemplos/02-tokens-e-sampling/) ·
   [M04 · exemplo 05 (contexto)](../modulos/04-agentes-autonomos/exemplos/05-gerenciamento-de-contexto/) ·
   [M02 · doc 02 (custo)](../modulos/02-apis-ia-generativa/docs/02-consistencia-e-custo.md).
+- **Material externo (opcional, em inglês):** [Vizuara · *Building LLMs from scratch*](https://www.youtube.com/playlist?list=PLPTV0NXA_ZSgsLAr8YCgCwhPIJNNtexWu), aulas 3 a 8 (pré-treino × fine-tuning, transformers, GPT-3, etapas de construção, tokenizer e BPE) e, como aprofundamento, 13 a 15 (atenção). Só o título e a descrição curta de cada aula foram conferidos, no feed público da playlist, em 2026-10-24; **não assisti** nem li transcrições; o feed lista 15 aulas e a playlist pode ter mais.
 - **A criar:** a [Lição 1](licoes/01-tokens-contexto-inferencia/README.md), com laboratório de medição que roda em
   qualquer endpoint compatível com a API de chat (Ollama local ou provedor).
 - **Entrega no projeto:** a linha de base de tokens (`medir.mjs` + `relatorio.json`), reaproveitada no cliente da etapa 2
@@ -137,6 +138,7 @@ código da etapa anterior, então pular uma etapa exige fazer a entrega dela dep
   [M01 · `lib/rag.js`](../modulos/01-fundamentos-ia-llms/lib/rag.js) ·
   [M08 · exemplo 04 (padrões de RAG)](../modulos/08-arquitetura-de-sistemas-com-ia/exemplos/04-padroes-de-rag/) ·
   [infra](../infra/instalacao.md) (Postgres + pgvector).
+- **Material externo (opcional, em inglês):** [Vizuara · *Building LLMs from scratch*](https://www.youtube.com/playlist?list=PLPTV0NXA_ZSgsLAr8YCgCwhPIJNNtexWu), aulas 10 a 12 (embeddings de token e posicionais, pipeline de dados): mostram como o modelo forma os embeddings **por dentro**, que é um assunto diferente da busca vetorial entre documentos (interpretação minha a partir dos títulos). Só o título e a descrição curta de cada aula foram conferidos, no feed público da playlist, em 2026-10-24; **não assisti** nem li transcrições.
 - **A criar:** limites da similaridade por cosseno (negação, números, nomes próprios); escolha entre armazenamento em memória e pgvector.
 - **Entrega no projeto:** `buscar(pergunta, k)` sobre os chunks, com índice persistente.
 - **Conclusão:** quiz + laboratório (consulta devolve os trechos esperados em casos de teste) + explicação.

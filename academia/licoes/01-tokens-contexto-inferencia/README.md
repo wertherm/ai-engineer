@@ -195,6 +195,7 @@ onde indicado.
 | [Documentação do Ollama · compatibilidade com a API da OpenAI](https://docs.ollama.com/api/openai-compatibility) | quais campos o servidor local aceita (`max_tokens`, `temperature`, `seed`, `reasoning_effort`...) |
 | [Liu et al. · *Lost in the Middle: How Language Models Use Long Contexts* (arXiv:2307.03172)](https://arxiv.org/abs/2307.03172) | evidência de que a posição da informação no contexto muda o desempenho; justifica "mais contexto não é melhor" |
 | [Karpathy · *Let's build the GPT Tokenizer* (vídeo)](https://www.youtube.com/watch?v=zduSFxRajkE) | *opcional, longo*: constrói um tokenizer do zero e explica por que tantos comportamentos estranhos de LLMs vêm da tokenização |
+| [Vizuara · *Building LLMs from scratch*, aula 7 (tokenizer em Python)](https://www.youtube.com/watch?v=rsy5Ragmso8) e [aula 8 (Byte Pair Encoding)](https://www.youtube.com/watch?v=fKd8s29e-l4) | *opcional, em inglês*: constroem um tokenizer simples em Python e depois o BPE, que a descrição do vídeo diz ser o tokenizer do GPT-2, GPT-3 e GPT-4. Complementa o vídeo do Karpathy. A [playlist](https://www.youtube.com/playlist?list=PLPTV0NXA_ZSgsLAr8YCgCwhPIJNNtexWu) segue com transformers, GPT-3 e atenção (aulas 4 a 6 e 13 a 15). Só o título e a descrição curta de cada aula foram conferidos, no feed público da playlist, em 2026-10-24; **não assisti** nem li transcrições, e a duração não aparece no feed |
 | [tiktoken (OpenAI)](https://github.com/openai/tiktoken) | *opcional*: conta tokens offline para as codificações da OpenAI; lembre que isso não vale para outros modelos |
 | Referência da API de chat da OpenAI (`https://platform.openai.com/docs/api-reference/chat/create`) | descreve `messages`, `usage`, `finish_reason` e o teto de saída. **Não verificado automaticamente**: o servidor responde 403 a clientes automatizados (2026-10-17); abra no navegador |
 | [M01 · doc 03](../../../modulos/01-fundamentos-ia-llms/docs/03-llms-e-prompt-engineering.md) e [LLMOps · doc 02](../../../trilhas-extras/llmops-vllm-openshift/docs/02-fundamentos-de-llm.md) | o mesmo assunto com os exemplos e números deste repositório (prefill, decode, KV cache, sampling) |
@@ -481,7 +482,7 @@ IDs de atividade desta lição: `E01-quiz` (10 XP), `E01-lab` (30 XP), `E01-expl
 ## 14. Referências e última revisão
 
 **Última revisão:** 2026-10-17. Links da seção 5 abertos nessa data (exceto a referência da OpenAI, que responde
-403 a clientes automatizados).
+403 a clientes automatizados). A linha da playlist da Vizuara foi acrescentada em 2026-10-24 e **não foi assistida** (só título e descrição no feed).
 
 **Fundamentos duráveis:** tokens e tokenizers (Hugging Face), efeito do contexto longo (Liu et al., 2023),
 prefill/decode e KV cache ([LLMOps · doc 02](../../../trilhas-extras/llmops-vllm-openshift/docs/02-fundamentos-de-llm.md)).

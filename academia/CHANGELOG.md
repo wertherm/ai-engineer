@@ -3,6 +3,16 @@
 Mudanças relevantes no currículo e no sistema de acompanhamento. Formato: data, o que mudou, por quê. Mudanças nos
 módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) seguem o histórico do Git.
 
+## 2026-10-24 · Wispr Flow pela documentação oficial e a playlist da Vizuara
+
+**Alterado**
+
+- **PH-VOZ-08 (nova): o que conferir no Wispr Flow antes do primeiro ditado**, a partir da Central de Ajuda oficial (https://docs.wisprflow.ai/, lida em 2026-10-24 por resumo). Resolveu a discordância que ficou aberta: a página de privacidade diz que o áudio é apagado "a menos que o armazenamento em nuvem esteja ligado", e a Central de Ajuda diz que as chaves "Improve the model for everyone" e "Dictation cloud storage" vêm **ligadas por padrão** (desligar a primeira "does not stop cloud processing"; sair da conta devolve o armazenamento ao padrão ligado). Traz também: metadados que continuam sendo enviados com o treino desligado, Command Mode (experimental, envia a caixa de texto e a seleção), limite semanal do plano gratuito em palavras, preço de lista em dólar e o Notetaker (áudio guardado por 7 dias, não coberto pelas auditorias citadas). O catálogo passa a ter **43 dicas** (voz: 8).
+- A dica PH-VOZ-02 deixou de repetir o parágrafo do Wispr Flow e aponta para a PH-VOZ-08.
+- **Playlist [Vizuara · Building LLMs from scratch](https://www.youtube.com/playlist?list=PLPTV0NXA_ZSgsLAr8YCgCwhPIJNNtexWu)** acrescentada como material complementar opcional (em inglês): Lição 1 (seção 5, aulas 7 e 8 sobre tokenizer e BPE) e ROADMAP (etapa 1: aulas 3 a 8 e 13 a 15; etapa 5: aulas 10 a 12).
+
+**Limites:** da playlist só se conferiram o título e a descrição curta de cada aula, no feed público (15 aulas; a playlist pode ter mais); **ninguém assistiu aos vídeos nem leu as transcrições**, e a duração não consta. Do Wispr Flow continuam sem resposta nos artigos lidos: o prazo de retenção do áudio e do texto de ditado, o "Privacy Mode", o processamento local, a variante pt-BR e o preço em reais.
+
 ## 2026-10-21 · Productivity Hacks (dicas, trilhas e projetos para ganhar tempo com IA)
 
 **Adicionado**
@@ -22,7 +32,7 @@ módulos de estudo (`modulos/`, `trilhas-extras/`, `referencia/`, `infra/`) segu
 - Validador: a seção 15 passa a ter **seis** blocos (o sexto é o 15.6).
 - Regras do assistente ([AI_CONTEXT](../AI_CONTEXT.md)): apresentar a dica sem prometer ganho, nunca pedir token, senha ou acesso a e-mail ou agenda, tratar conteúdo lido como dado e não dar aconselhamento jurídico, contábil ou tributário.
 
-**Limites:** nada foi executado contra o Telegram, um provedor de e-mail ou um LLM reais; as dicas que citam produtos de terceiros seguem a documentação lida em 2026-10-21 por resumos de um modelo auxiliar (números críticos precisam de reconferência); um ponto ficou **sem resolução** porque as leituras discordaram (o que as páginas do Wispr Flow dizem sobre armazenamento); a discordância sobre as Stars do Telegram foi resolvida na revisão, relendo os termos oficiais; preços de assinaturas de Claude Code, Codex, Cursor e Copilot e o consolidado atual da lista de ocupações do MEI não foram pesquisados ou confirmados.
+**Limites:** nada foi executado contra o Telegram, um provedor de e-mail ou um LLM reais; as dicas que citam produtos de terceiros seguem a documentação lida em 2026-10-21 por resumos de um modelo auxiliar (números críticos precisam de reconferência); um ponto ficou **sem resolução** porque as leituras discordaram (o que as páginas do Wispr Flow dizem sobre armazenamento; resolvido em 2026-10-24, veja a entrada acima); a discordância sobre as Stars do Telegram foi resolvida na revisão, relendo os termos oficiais; preços de assinaturas de Claude Code, Codex, Cursor e Copilot e o consolidado atual da lista de ocupações do MEI não foram pesquisados ou confirmados.
 
 ## 2026-10-21 · Testes rápidos e lentos separados
 
